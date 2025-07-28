@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../widgets/bottom_nav.dart';
 
-// 👇 Import your 8 respective screens here
+// Screens
 import '../screens/profile_gallery_screen.dart';
 import '../screens/call_rate_screen.dart';
 import '../screens/withdraws_screen.dart';
@@ -22,14 +22,46 @@ class _AccountScreenState extends State<AccountScreen> {
   bool isOnline = false;
 
   final List<Map<String, dynamic>> menuItems = [
-    {'icon': Icons.person, 'label': 'My profile & gallery'},
-    {'icon': Icons.phone, 'label': 'My Call rate'},
-    {'icon': Icons.work, 'label': 'My Withdraws'},
-    {'icon': Icons.people, 'label': 'My Followers'},
-    {'icon': Icons.monetization_on, 'label': 'My Earnings'},
-    {'icon': Icons.person_add_alt_1, 'label': 'My Streamers'},
-    {'icon': Icons.support_agent, 'label': 'Support Service'},
-    {'icon': Icons.settings, 'label': 'Settings'},
+    {
+      'iconPath': 'assets/profile&gallery.png',
+      'label': 'My profile & gallery',
+      'screen': ProfileGalleryScreen(),
+    },
+    {
+      'iconPath': 'assets/callrate.png',
+      'label': 'My Call rate',
+      'screen': MyCallRateScreen(),
+    },
+    {
+      'iconPath': 'assets/wallet.png',
+      'label': 'My Withdraws',
+      'screen': MyWithdrawsScreen(),
+    },
+    {
+      'iconPath': 'assets/followers.png',
+      'label': 'My Followers',
+      'screen': MyFollowersScreen(),
+    },
+    {
+      'iconPath': 'assets/earnings.png',
+      'label': 'My Earnings',
+      'screen': MyEarningsScreen(),
+    },
+    {
+      'iconPath': 'assets/profile.png',
+      'label': 'My Streamers',
+      'screen': MyStreamersScreen(),
+    },
+    {
+      'iconPath': 'assets/supportservice.png',
+      'label': 'Support Service',
+      'screen': SupportServiceScreen(),
+    },
+    {
+      'iconPath': 'assets/settings.png',
+      'label': 'Settings',
+      'screen': SettingsScreen(),
+    },
   ];
 
   @override
@@ -40,7 +72,10 @@ class _AccountScreenState extends State<AccountScreen> {
         preferredSize: const Size.fromHeight(60),
         child: AppBar(
           automaticallyImplyLeading: false,
-          title: const Text("Account", style: TextStyle(color: Colors.white)),
+          title: const Text(
+            "Account",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
           actions: [
             const Padding(
               padding: EdgeInsets.only(right: 10),
@@ -73,77 +108,25 @@ class _AccountScreenState extends State<AccountScreen> {
         itemBuilder: (context, index) {
           final item = menuItems[index];
           return ListTile(
-            leading: CircleAvatar(
-              backgroundColor: Colors.pink.shade100,
-              child: Icon(
-                item['icon'],
-                color: const Color.fromARGB(255, 233, 30, 199),
-              ),
+            leading: Image.asset(
+              item['iconPath'],
+              height: 40,
+              width: 40,
+              fit: BoxFit.contain,
             ),
             title: Text(
               item['label'],
-              style: const TextStyle(fontWeight: FontWeight.w500),
+              style: TextStyle(
+                color: Colors.grey[800],
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+            trailing: const Icon(Icons.chevron_right, color: Colors.black),
             onTap: () {
-              switch (index) {
-                case 0:
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => ProfileGalleryScreen()),
-                  );
-                  break;
-                case 1:
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MyCallRateScreen()),
-                  );
-                  break;
-                case 2:
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const MyWithdrawsScreen(),
-                    ),
-                  );
-                  break;
-                case 3:
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const MyFollowersScreen(),
-                    ),
-                  );
-                  break;
-                case 4:
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MyEarningsScreen()),
-                  );
-                  break;
-                case 5:
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const MyStreamersScreen(),
-                    ),
-                  );
-                  break;
-                case 6:
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const SupportServiceScreen(),
-                    ),
-                  );
-                  break;
-                case 7:
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                  );
-                  break;
-              }
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => item['screen']),
+              );
             },
           );
         },
