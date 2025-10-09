@@ -10,13 +10,16 @@ class ApiController extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
   Map<String, dynamic>? _signupResponse;
+  String? _authToken;
+  bool _isOtpVerified = false;
 
   bool get isLoading => _isLoading;
   String? get error => _error;
   Map<String, dynamic>? get signupResponse => _signupResponse;
+  String? get authToken => _authToken;
+  bool get isOtpVerified => _isOtpVerified;
 
-  /// Signup returns true if backend indicates success (success == true).
-  /// On failure returns false and sets [_error] with a user-friendly message.
+  // ---------- SIGNUP ----------
   Future<bool> signup({required String mobile, required String email}) async {
     _isLoading = true;
     _error = null;
@@ -31,44 +34,22 @@ class ApiController extends ChangeNotifier {
       debugPrint("📤 Signup request: $payload");
 
       final res = await _apiService.postData(ApiEndPoints.signup, payload);
-
-      debugPrint("📥 Signup raw returned map: $res");
+      debugPrint("📥 Signup response: $res");
 
       _signupResponse = res;
       _isLoading = false;
 
-      // status from server
-      final int status = (res["_status"] as int?) ?? 0;
-
-      // If server returned a success boolean, treat it
-      if (res.containsKey("success")) {
-        final ok = res["success"] == true;
-        if (ok) {
-          notifyListeners();
-          return true;
-        } else {
-          // Backend says success=false — try to surface message or error
-          final message =
-              (res["message"] ?? res["error"] ?? "Signup failed") as String;
-          _error = _friendlyMessageFromServerMessage(message);
-          notifyListeners();
-          return false;
-        }
-      }
-
-      // If status is 2xx but no 'success' flag, treat as success
-      if (status >= 200 && status < 300) {
+      final ok = res["success"] == true;
+      if (ok) {
         notifyListeners();
         return true;
+      } else {
+        _error = _friendlyMessage(
+          res["message"] ?? res["error"] ?? "Signup failed",
+        );
+        notifyListeners();
+        return false;
       }
-
-      // Non-2xx without explicit success flag: extract friendly message if possible
-      final message =
-          (res["message"] ?? res["error"] ?? "Server error (code $status)")
-              as String;
-      _error = _friendlyMessageFromServerMessage(message);
-      notifyListeners();
-      return false;
     } catch (e) {
       _isLoading = false;
       _error = e.toString();
@@ -78,18 +59,89 @@ class ApiController extends ChangeNotifier {
     }
   }
 
-  /// Map server error messages to nicer UI strings when possible
-  String _friendlyMessageFromServerMessage(String message) {
+  // ---------- LOGIN: REQUEST OTP ----------
+  Future<bool> requestLoginOtp({required String email}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final payload = {"email": email};
+      debugPrint("📤 Request Login OTP: $payload");
+
+      final res = await _apiService.postData(ApiEndPoints.login, payload);
+      debugPrint("📥 Request Login OTP response: $res");
+
+      _isLoading = false;
+
+      final ok = res["success"] == true;
+      if (ok) {
+        notifyListeners();
+        return true;
+      } else {
+        _error = _friendlyMessage(
+          res["message"] ?? res["error"] ?? "Failed to send OTP",
+        );
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      debugPrint("❌ Request Login OTP exception: $_error");
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ---------- VERIFY OTP ----------
+  Future<bool> verifyOtp({required String otp}) async {
+    _isLoading = true;
+    _error = null;
+    _isOtpVerified = false;
+    notifyListeners();
+
+    try {
+      final payload = {"otp": otp};
+      debugPrint("📤 Verify OTP request: $payload");
+
+      final res = await _apiService.postData(ApiEndPoints.verifyOtp, payload);
+      debugPrint("📥 Verify OTP response: $res");
+
+      _isLoading = false;
+
+      final ok = res["success"] == true;
+      if (ok) {
+        _authToken = res["token"];
+        _isOtpVerified = true;
+        notifyListeners();
+        return true;
+      } else {
+        _error = _friendlyMessage(
+          res["message"] ?? res["error"] ?? "OTP verification failed",
+        );
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      debugPrint("❌ Verify OTP exception: $_error");
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ---------- helpers ----------
+  String _friendlyMessage(String message) {
     final lower = message.toLowerCase();
-    if (lower.contains("duplicate key") ||
-        lower.contains("dup key") ||
-        lower.contains("duplicate")) {
-      return "This email is already registered. Please log in or use a different email.";
-    }
-    if (lower.contains("invalid") && lower.contains("email")) {
-      return "Please provide a valid email address.";
-    }
-    // fallback to original message
+    if (lower.contains("expired"))
+      return "Your OTP has expired. Please request a new one.";
+    if (lower.contains("invalid")) return "Invalid OTP. Please try again.";
+    if (lower.contains("duplicate"))
+      return "This email or phone is already registered.";
+    if (lower.contains("not found"))
+      return "We couldn’t find an account with that email.";
     return message;
   }
 }

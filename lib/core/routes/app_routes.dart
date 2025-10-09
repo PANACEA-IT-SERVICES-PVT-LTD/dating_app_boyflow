@@ -1,10 +1,12 @@
+// lib/core/routes/app_routes.dart
 import 'package:flutter/material.dart';
+import 'package:girl_flow/views/screens/loginVerification.dart';
 
 // Screens
 import 'package:girl_flow/views/screens/login_screen.dart';
 import 'package:girl_flow/views/screens/home_screen.dart';
 import 'package:girl_flow/views/screens/onboardingscreen.dart';
-import 'package:girl_flow/views/screens/loginVerification.dart';
+// OTP screen
 import 'package:girl_flow/views/screens/verificationfail.dart';
 import 'package:girl_flow/views/screens/signup.dart';
 import 'package:girl_flow/views/screens/home_page.dart';
@@ -33,10 +35,10 @@ import 'package:girl_flow/views/screens/Invite_friends_screen.dart';
 import 'package:girl_flow/views/screens/registration_status.dart';
 
 class AppRoutes {
-  static const String login = '/login';
+  static const String login = '/login'; // request OTP (email input)
   static const String home = '/home';
   static const String onboarding = '/onboarding';
-  static const String loginVerification = '/loginVerification';
+  static const String loginVerification = '/loginVerification'; // OTP verify
   static const String verificationFail = '/verificationFail';
   static const String signup = '/signup';
   static const String aboutScreen = '/aboutScreen';
@@ -63,7 +65,7 @@ class AppRoutes {
   static const String withdrawconfirmation = '/Withdrawconfirmation';
   static const String invitefriends = '/Invitefriends';
   static const String introduceYourself = '/IntroduceYourself';
-  static const String registrationstatus = 'RegistrationStatus';
+  static const String registrationstatus = '/RegistrationStatus';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     final args = settings.arguments;
@@ -71,36 +73,51 @@ class AppRoutes {
     switch (settings.name) {
       case login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
+
       case home:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
+
       case onboarding:
         return MaterialPageRoute(builder: (_) => const OnboardingScreen());
+
       case loginVerification:
+        // OTP screen; pass through any arguments (email/mobile/source)
         return MaterialPageRoute(
           builder: (_) => const LoginVerificationScreen(),
+          settings: settings,
         );
+
       case verificationFail:
         return MaterialPageRoute(
           builder: (_) => const VerificationFailScreen(),
         );
+
       case signup:
         return MaterialPageRoute(builder: (_) => const SignupScreen());
+
       case homepage:
         return MaterialPageRoute(builder: (_) => const HomePage());
+
       case chatScreen:
         return MaterialPageRoute(builder: (_) => const ChatScreen());
+
       case callScreen:
         return MaterialPageRoute(builder: (_) => const CallScreen());
+
       case notificationScreen:
         return MaterialPageRoute(builder: (_) => const NotificationScreen());
+
       case accountScreen:
         return MaterialPageRoute(builder: (_) => const AccountScreen());
+
       case helpVideos:
         return MaterialPageRoute(builder: (_) => const HelpVideosScreen());
+
       case registrationstatus:
         return MaterialPageRoute(
           builder: (_) => const RegistrationStatusScreen(),
         );
+
       case chatDetail:
         if (args is Map<String, String>) {
           return MaterialPageRoute(
@@ -111,38 +128,54 @@ class AppRoutes {
           );
         }
         return _errorRoute("Invalid arguments for ChatDetailScreen");
+
       case calluserdetails:
         return MaterialPageRoute(builder: (_) => const CallUserDetailsScreen());
+
       case profilegallery:
         return MaterialPageRoute(builder: (_) => ProfileGalleryScreen());
+
       case callrate:
         return MaterialPageRoute(builder: (_) => const MyCallRateScreen());
+
       case withdraws:
         return MaterialPageRoute(builder: (_) => const MyWithdrawsScreen());
+
       case followers:
         return MaterialPageRoute(builder: (_) => const MyFollowersScreen());
+
       case earnings:
         return MaterialPageRoute(builder: (_) => const MyEarningsScreen());
+
       case createagency:
         return MaterialPageRoute(builder: (_) => const CreateAgencyScreen());
+
       case supportservice:
         return MaterialPageRoute(builder: (_) => const SupportServiceScreen());
-      case AppRoutes settings:
-        return MaterialPageRoute(builder: (_) => const SettingsScreen());
+
+      // case const settings: // ✅ fixed typo (was: case AppRoutes settings:)
+      //   return MaterialPageRoute(builder: (_) => const SettingsScreen());
+
       case blocklistscreen:
         return MaterialPageRoute(builder: (_) => const BlockListScreen());
+
       case kycDetails:
         return MaterialPageRoute(builder: (_) => const KYCDetailsScreen());
+
       case updatekyc:
         return MaterialPageRoute(builder: (_) => const UpdateKycScreen());
+
       case withdrawrequest:
         return MaterialPageRoute(builder: (_) => const WithdrawRequestScreen());
+
       case withdrawconfirmation:
         return MaterialPageRoute(
           builder: (_) => const WithdrawConfirmationScreen(amount: ''),
-        ); // Update if amount passed
+        );
+
       case invitefriends:
         return MaterialPageRoute(builder: (_) => InviteFriendsScreen());
+
       case introduceYourself:
         return MaterialPageRoute(
           builder: (_) => const IntroduceYourselfScreen(),

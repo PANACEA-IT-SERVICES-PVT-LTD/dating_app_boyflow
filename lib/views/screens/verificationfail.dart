@@ -3,7 +3,7 @@ import '../../core/routes/app_routes.dart';
 import '../../utils/colors.dart';
 
 class VerificationFailScreen extends StatelessWidget {
-  const VerificationFailScreen({super.key});
+  const VerificationFailScreen({super.key, String? message});
 
   @override
   Widget build(BuildContext context) {

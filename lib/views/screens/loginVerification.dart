@@ -1,9 +1,11 @@
+// lib/views/screens/login_verification.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/routes/app_routes.dart';
 import '../../utils/colors.dart';
 import '../../widgets/gradient_button.dart';
-import '../../widgets/otp_input_fields.dart';
-import '../../views/screens/verificationfail.dart';
+import '../../controllers/api_controller.dart';
+import '../../widgets/otp_input_fields.dart'; // <-- your OTP input widget
 
 class LoginVerificationScreen extends StatefulWidget {
   const LoginVerificationScreen({super.key});
@@ -14,75 +16,140 @@ class LoginVerificationScreen extends StatefulWidget {
 }
 
 class _LoginVerificationScreenState extends State<LoginVerificationScreen> {
-  String _enteredOtp = "";
+  String? _email;
+  String? _mobile;
+  String? _source;
+  String _otp = "";
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    _email = args?['email'] as String?;
+    _mobile = args?['mobile'] as String?;
+    _source = args?['source'] as String?;
+  }
+
+  Future<void> _verifyOtp() async {
+    final api = Provider.of<ApiController>(context, listen: false);
+    if (_otp.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter the OTP')));
+      return;
+    }
+
+    final ok = await api.verifyOtp(otp: _otp);
+    if (!mounted) return;
+
+    if (ok) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('✅ OTP verified!')));
+      Navigator.pushNamedAndRemoveUntil(context, AppRoutes.home, (_) => false);
+    } else {
+      final msg = api.error ?? 'OTP verification failed';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
+  }
+
+  Future<void> _resendOtp() async {
+    if (_email == null || _email!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email not available to resend OTP.')),
+      );
+      return;
+    }
+    final api = Provider.of<ApiController>(context, listen: false);
+    final ok = await api.requestLoginOtp(email: _email!);
+    if (!mounted) return;
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('OTP resent to your email.')),
+      );
+    } else {
+      final msg = api.error ?? 'Failed to resend OTP';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // 🌈 Background
-          Container(
-            height: size.height,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.gradientTop, AppColors.gradientBottom],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-
-          // Main Content
-          SafeArea(
+      backgroundColor: AppColors.white,
+      resizeToAvoidBottomInset: true,
+      body: Consumer<ApiController>(
+        builder: (context, api, _) {
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 16),
+                // 🌈 Gradient header area
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.only(bottom: 180),
+                  decoration: const BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                    ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
 
-                // 🔙 Back Icon & Shield
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
+                      colors: [AppColors.gradientTop, AppColors.gradientBottom],
+                    ),
+                  ),
+                  child: Column(
                     children: [
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Icon(
-                          Icons.arrow_back,
-                          color: AppColors.white,
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          top: 20,
+                          left: 15,
+                          right: 15,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Back arrow
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: const Icon(
+                                Icons.arrow_back_ios,
+                                color: AppColors.white,
+                              ),
+                            ),
+                            // Shield icon
+                            Image.asset(
+                              'assets/sheild.png',
+                              height: 24,
+                              width: 24,
+                              color: AppColors.white,
+                            ),
+                          ],
                         ),
                       ),
-                      const Spacer(),
-                      Image.asset(
-                        'assets/sheild.png',
-                        height: 24,
-                        width: 24,
-                        color: Colors.white,
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: 280,
+                        child: Image.asset(
+                          'assets/Otp.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     ],
                   ),
                 ),
 
-                const SizedBox(height: 30),
-
-                // 🖼 OTP Illustration
-                SizedBox(
-                  height: 200,
-                  child: Image.asset('assets/Otp.png', fit: BoxFit.contain),
-                ),
-
-                const Spacer(),
-
-                // 🔲 Bottom Panel
+                // 🧾 White bottom section
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
                     vertical: 30,
+                    horizontal: 24,
                   ),
                   decoration: const BoxDecoration(
                     color: AppColors.white,
@@ -104,79 +171,50 @@ class _LoginVerificationScreenState extends State<LoginVerificationScreen> {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        "Please enter the OTP sent to your number",
-                        style: TextStyle(color: AppColors.black54),
+                        "Please enter the OTP and verify",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.black54,
+                        ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 25),
 
-                      // 🔢 OTP Fields
+                      // ✅ OTP input boxes
                       OtpInputFields(
                         onCompleted: (otp) {
-                          setState(() {
-                            _enteredOtp = otp;
-                          });
+                          setState(() => _otp = otp);
                         },
                       ),
 
                       const SizedBox(height: 30),
 
-                      // ✅ Submit Button
+                      // Verify button
                       GradientButton(
-                        text: "Verify OTP",
+                        text: api.isLoading ? 'Verifying...' : 'Verify OTP',
                         onPressed: () {
-                          if (_enteredOtp == "1234") {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.introduceYourself,
-                            );
-                          } else {
-                            showModalBottomSheet(
-                              context: context,
-                              backgroundColor: Colors.transparent,
-                              isScrollControlled: true,
-                              builder: (_) => const VerificationFailScreen(),
-                            );
-                          }
+                          if (!api.isLoading) _verifyOtp();
                         },
                       ),
+                      const SizedBox(height: 12),
 
-                      const SizedBox(height: 20),
-
-                      // 🔁 Resend
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Didn’t receive a code? ",
-                            style: TextStyle(color: AppColors.black87),
+                      // Resend option
+                      TextButton(
+                        onPressed: api.isLoading ? null : _resendOtp,
+                        child: const Text(
+                          'Resend OTP',
+                          style: TextStyle(
+                            color: AppColors.link,
+                            fontWeight: FontWeight.w500,
                           ),
-                          GestureDetector(
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("OTP has been resent."),
-                                  behavior: SnackBarBehavior.floating,
-                                  backgroundColor: AppColors.buttonStart,
-                                ),
-                              );
-                            },
-                            child: const Text(
-                              "Resend",
-                              style: TextStyle(
-                                color: AppColors.link,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
