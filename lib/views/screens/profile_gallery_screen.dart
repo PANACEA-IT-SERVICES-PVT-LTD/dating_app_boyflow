@@ -1,93 +1,19 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 class ProfileGalleryScreen extends StatefulWidget {
+  const ProfileGalleryScreen({super.key});
+
   @override
   State<ProfileGalleryScreen> createState() => _ProfileGalleryScreenState();
 }
 
 class _ProfileGalleryScreenState extends State<ProfileGalleryScreen> {
   bool isOnline = true;
-  int selectedTab = 0;
-  final List<File> _uploadedImages = [];
-
-  void _handleImageUpload() async {
-    if (_uploadedImages.length >= 3) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("You can upload up to 3 images.")),
-      );
-      return;
-    }
-
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      setState(() {
-        _uploadedImages.add(File(picked.path));
-      });
-    }
-  }
-
-  void _deleteImage(int index) {
-    setState(() {
-      _uploadedImages.removeAt(index);
-    });
-  }
-
-  Widget _buildTabSelector() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _tabButton("Profile", 0),
-          const SizedBox(width: 12),
-          _tabButton("My Gallery", 1),
-        ],
-      ),
-    );
-  }
-
-  Widget _tabButton(String label, int index) {
-    final bool isSelected = selectedTab == index;
-
-    return GestureDetector(
-      onTap: () => setState(() => selectedTab = index),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        height: 36,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            width: 1.5,
-            color: isSelected ? Colors.transparent : Colors.purple,
-          ),
-          gradient: isSelected
-              ? const LinearGradient(
-                  colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.purple,
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9F5FF), // light soft background
       appBar: AppBar(
         title: const Text("My Profile", style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -121,19 +47,9 @@ class _ProfileGalleryScreenState extends State<ProfileGalleryScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildTabSelector(),
-          Expanded(
-            child: selectedTab == 0
-                ? const ProfileTabEditable()
-                : GalleryTab(
-                    images: _uploadedImages,
-                    onUpload: _handleImageUpload,
-                    onDelete: _deleteImage,
-                  ),
-          ),
-        ],
+      body: const SingleChildScrollView(
+        padding: EdgeInsets.all(16),
+        child: ProfileTabEditable(),
       ),
     );
   }
@@ -147,55 +63,18 @@ class ProfileTabEditable extends StatefulWidget {
 }
 
 class _ProfileTabEditableState extends State<ProfileTabEditable> {
-  Map<String, List<String>> profileDetails = {
+  final Map<String, List<String>> profileDetails = {
     "My Languages": ["Telugu"],
     "My Interests": ["Family and parenting", "Society and politics"],
     "Hobbies": ["Cooking", "Writing"],
     "Sports": ["Cricket"],
-    "Film": ["NO FILMS"],
+    "Film": ["No Films"],
     "Music": ["2020s"],
     "Travel": ["Mountains"],
   };
 
-  void _editCategory(String key) async {
-    TextEditingController controller = TextEditingController();
-    List<String>? currentItems = List.from(profileDetails[key]!);
-
-    await showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text("Edit $key"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var i = 0; i < currentItems.length; i++)
-              TextFormField(
-                initialValue: currentItems[i],
-                onChanged: (value) => currentItems[i] = value,
-              ),
-            TextField(
-              controller: controller,
-              decoration: const InputDecoration(hintText: "Add more"),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              if (controller.text.isNotEmpty) {
-                currentItems.add(controller.text);
-              }
-              setState(() => profileDetails[key] = currentItems);
-              Navigator.pop(context);
-            },
-            child: const Text("Save"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  ShaderMask _gradientText(String text) {
+  // small helper to create gradient text used for values
+  Widget _gradientText(String text, {double fontSize = 14, FontWeight fw = FontWeight.bold}) {
     return ShaderMask(
       blendMode: BlendMode.srcIn,
       shaderCallback: (Rect bounds) {
@@ -203,21 +82,106 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
           colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
         ).createShader(bounds);
       },
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold)),
+      child: Text(
+        text,
+        style: TextStyle(fontWeight: fw, fontSize: fontSize),
+      ),
     );
   }
 
-  Widget _buildRow(String label, String value) {
+  // Profile header card widget
+  Widget _profileHeaderCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Colors.white, // card uses white background for clear separation
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Avatar (placeholder initial)
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: const Center(
+              child: Text(
+                "J",
+                style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 14),
+
+          // Name + basic details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Name (gradient)
+                _gradientText("Jennie", fontSize: 18, fw: FontWeight.w700),
+                const SizedBox(height: 6),
+
+                // Gender row
+                Row(
+                  children: [
+                    const Icon(Icons.person_outline, size: 16, color: Colors.black54),
+                    const SizedBox(width: 6),
+                    const Text("Gender: ", style: TextStyle(color: Colors.black54)),
+                    _gradientText("Female", fontSize: 14, fw: FontWeight.w600),
+                  ],
+                ),
+
+                const SizedBox(height: 6),
+
+                // DOB row
+                Row(
+                  children: [
+                    const Icon(Icons.cake_outlined, size: 16, color: Colors.black54),
+                    const SizedBox(width: 6),
+                    const Text("DOB: ", style: TextStyle(color: Colors.black54)),
+                    _gradientText("19th July 2025", fontSize: 14, fw: FontWeight.w600),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Optional edit button (commented out)
+          // IconButton(onPressed: () {}, icon: Icon(Icons.edit, color: Colors.grey[600])),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRowLabelValue(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120, // Consistent width for alignment
+            width: 120, // keeps labels aligned
             child: Row(
               children: [
-                Text(label, style: const TextStyle(color: Colors.black)),
+                Text(label, style: const TextStyle(color: Colors.black87)),
                 const Text(" : "),
               ],
             ),
@@ -230,180 +194,53 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Elevated card with profile basics
-          Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildRow("Nick Name", "Jennie"),
-                  _buildRow("Gender", "Female"),
-                  _buildRow("Date of Birth", "19th July 2025"),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Other categories: no elevation
-          ...profileDetails.entries.map((entry) {
-            return Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header + Edit
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        entry.key,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => _editCategory(entry.key),
-                        child: Row(
-                          children: const [
-                            Icon(Icons.edit, size: 16, color: Colors.grey),
-                            SizedBox(width: 4),
-                            Text(
-                              "Edit",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // Chips
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: entry.value.map((item) {
-                      return Chip(
-                        label: Text(item),
-                        backgroundColor: Colors.pink[50],
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ],
-      ),
-    );
-  }
-}
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Profile header card (replaces inline Nick Name, Gender, DOB)
+        _profileHeaderCard(),
 
-class GalleryTab extends StatelessWidget {
-  final List<File> images;
-  final VoidCallback onUpload;
-  final void Function(int) onDelete;
+        // If you still want the individual label/value rows below the header, uncomment:
+        // _buildRowLabelValue("Nick Name", "Jennie"),
+        // _buildRowLabelValue("Gender", "Female"),
+        // _buildRowLabelValue("Date of Birth", "19th July 2025"),
+        // const SizedBox(height: 12),
 
-  const GalleryTab({
-    required this.images,
-    required this.onUpload,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        children: [
-          ...images.asMap().entries.map((entry) {
-            int index = entry.key;
-            File img = entry.value;
-            return Stack(
+        // Profile detail sections (left-aligned, minimal)
+        ...profileDetails.entries.map((entry) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 120,
-                  height: 140,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    image: DecorationImage(
-                      image: FileImage(img),
-                      fit: BoxFit.cover,
-                    ),
+                Text(
+                  entry.key,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
                   ),
                 ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    color: Colors.black45,
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(
-                            Icons.edit,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                          onPressed: () {},
-                        ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete,
-                            size: 18,
-                            color: Colors.white,
-                          ),
-                          onPressed: () => onDelete(index),
-                        ),
-                      ],
-                    ),
-                  ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: entry.value.map((item) {
+                    return Chip(
+                      label: Text(item),
+                      backgroundColor: Colors.pink[50],
+                      labelStyle: const TextStyle(
+                        color: Colors.black87,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    );
+                  }).toList(),
                 ),
               ],
-            );
-          }),
-          if (images.length < 3)
-            GestureDetector(
-              onTap: onUpload,
-              child: Container(
-                width: 120,
-                height: 140,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade400),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.add_a_photo, color: Colors.grey),
-                      SizedBox(height: 8),
-                      Text(
-                        "Upload photo",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ),
-        ],
-      ),
+          );
+        }).toList(),
+      ],
     );
   }
 }

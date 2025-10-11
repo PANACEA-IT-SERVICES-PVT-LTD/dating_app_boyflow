@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../views/screens/home_page.dart';
+import '../views/screens/mainhome.dart';
 import '../views/screens/chat_screen.dart';
 import '../views/screens/call_screen.dart';
 import '../views/screens/notification_screen.dart';
@@ -16,7 +16,7 @@ class CustomBottomNav extends StatelessWidget {
     Widget destination;
     switch (index) {
       case 0:
-        destination = const HomePage();
+        destination = const mainhome();
         break;
       case 1:
         destination = const ChatScreen();

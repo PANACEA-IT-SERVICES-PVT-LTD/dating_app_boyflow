@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'home_page.dart'; // Adjust path if necessary
+import 'mainhome.dart'; // Adjust path if necessary
 
 class HelpVideosScreen extends StatefulWidget {
   const HelpVideosScreen({super.key});
@@ -66,7 +66,7 @@ class _HelpVideosScreenState extends State<HelpVideosScreen> {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => const HomePage()),
+                        MaterialPageRoute(builder: (_) => const mainhome()),
                       );
                     },
                     child: const Icon(Icons.arrow_back, color: Colors.white),

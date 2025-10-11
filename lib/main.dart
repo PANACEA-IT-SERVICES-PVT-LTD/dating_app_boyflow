@@ -1,4 +1,6 @@
 // lib/main.dart
+import 'package:Boy_flow/views/screens/mainhome.dart';
+import 'package:Boy_flow/views/screens/profile_gallery_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/routes/app_routes.dart';
@@ -18,7 +20,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Girl Flow',
         debugShowCheckedModeBanner: false,
-        initialRoute: AppRoutes.introduceYourself,
+        initialRoute: AppRoutes.notificationScreen,
         onGenerateRoute: AppRoutes.generateRoute,
       ),
     );

@@ -9,7 +9,7 @@ import 'package:Boy_flow/views/screens/onboardingscreen.dart';
 // OTP screen
 import 'package:Boy_flow/views/screens/verificationfail.dart';
 import 'package:Boy_flow/views/screens/signup.dart';
-import 'package:Boy_flow/views/screens/home_page.dart';
+import 'package:Boy_flow/views/screens/mainhome.dart';
 import 'package:Boy_flow/views/screens/call_screen.dart';
 import 'package:Boy_flow/views/screens/chat_screen.dart';
 import 'package:Boy_flow/views/screens/notification_screen.dart';
@@ -96,7 +96,7 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const SignupScreen());
 
       case homepage:
-        return MaterialPageRoute(builder: (_) => const HomePage());
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
 
       case chatScreen:
         return MaterialPageRoute(builder: (_) => const ChatScreen());
