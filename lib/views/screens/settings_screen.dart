@@ -71,20 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         actions: [
-          Row(
-            children: [
-              const Text("Online", style: TextStyle(color: Colors.white)),
-              Transform.scale(
-                scale: 0.75,
-                child: Switch(
-                  value: isOnline,
-                  onChanged: (value) => setState(() => isOnline = value),
-                  activeColor: Colors.green,
-                  inactiveTrackColor: Colors.grey.shade400,
-                ),
-              ),
-            ],
-          ),
+          
         ],
       ),
       body: ListView(
@@ -103,31 +90,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
             },
           ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            value: isOnline,
-            onChanged: (value) => setState(() => isOnline = value),
-            title: const Text("Online", style: TextStyle(fontSize: fontSize)),
-          ),
+         
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             value: beautyFilters,
             onChanged: (value) => setState(() => beautyFilters = value!),
             title: const Text(
-              "Beauty filters",
+              "Do not Disturb",
               style: TextStyle(fontSize: fontSize),
             ),
-          ),
-          // Removed: "No calls during livestream"
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            value: hideMyAge,
-            onChanged: (value) => setState(() => hideMyAge = value!),
-            title: const Text(
-              "Hide my age",
-              style: TextStyle(fontSize: fontSize),
-            ),
-          ),
+          ),        
           const SizedBox(height: 10),
           DropdownButtonFormField<String>(
             decoration: const InputDecoration(border: OutlineInputBorder()),

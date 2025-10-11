@@ -64,51 +64,7 @@ class _ChatScreenState extends State<ChatScreen> {
     },
   ];
 
-  Widget _buildTabButton(String label) {
-    final bool isSelected = selectedTab == label;
-
-    return GestureDetector(
-      onTap: () => setState(() => selectedTab = label),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: isSelected
-              ? const LinearGradient(
-                  colors: [Color(0xFFFF55A5), Color(0xFF9A00F0)],
-                )
-              : null,
-          border: isSelected
-              ? null
-              : Border.all(width: 2, color: const Color(0xFF9A00F0)),
-        ),
-        child: isSelected
-            ? Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              )
-            : ShaderMask(
-                shaderCallback: (bounds) {
-                  return const LinearGradient(
-                    colors: [Color(0xFFFF55A5), Color(0xFF9A00F0)],
-                  ).createShader(bounds);
-                },
-                blendMode: BlendMode.srcIn,
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-      ),
-    );
-  }
-
+   
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -136,14 +92,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       color: Colors.white,
                     ),
                   ),
-                  const Spacer(),
-                  const Text("Online", style: TextStyle(color: Colors.white)),
-                  Switch(
-                    value: isOnline,
-                    onChanged: (val) => setState(() => isOnline = val),
-                    activeColor: Colors.green,
-                    inactiveTrackColor: Colors.white54,
-                  ),
+                  
                 ],
               ),
             ),
@@ -152,42 +101,8 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
-          const SizedBox(height: 12),
-
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildTabButton("Important"),
-                const SizedBox(width: 10),
-                _buildTabButton("Favourite"),
-                const SizedBox(width: 10),
-                _buildTabButton("Top fans"),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          SizedBox(
-            height: 80,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              itemCount: 6,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                return CircleAvatar(
-                  radius: 30,
-                  backgroundImage: NetworkImage(
-                    "https://i.pravatar.cc/150?img=\${index + 6}",
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 6),
+         
+          const SizedBox(height: 20),
 
           Expanded(
             child: ListView.builder(

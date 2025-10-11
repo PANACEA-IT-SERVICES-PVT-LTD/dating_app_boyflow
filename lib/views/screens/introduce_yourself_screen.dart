@@ -76,10 +76,7 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
   /// Languages (chips) with id mapping
   final List<String> _allLanguageLabels = const ['English', 'Hindi'];
 
-  final Map<String, String> _languageLabelToId = const {
-    'English': '68d4fc53dd3c0ef9b8ebbf35',
-    'Hindi': '68d4fc69dd3c0ef9b8ebbf3a',
-  };
+
 
   final Set<String> _selectedInterestLabels = <String>{};
   final Set<String> _selectedLanguageLabels = <String>{};
@@ -95,7 +92,7 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
 
     // Preselect example interests and languages (matching your sample IDs)
     _selectedInterestLabels.addAll(['Listening Music', 'Watching Movies']);
-    _selectedLanguageLabels.addAll(['English', 'Hindi']);
+   
   }
 
   @override
@@ -114,22 +111,7 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
     }
   }
 
-  Future<void> _recordVideo() async {
-    final pickedVideo = await ImagePicker().pickVideo(
-      source: ImageSource.camera,
-      maxDuration: const Duration(seconds: 10),
-    );
-    if (pickedVideo != null) {
-      _videoFile = File(pickedVideo.path);
-      _videoController?.dispose();
-      _videoController = VideoPlayerController.file(_videoFile!)
-        ..initialize().then((_) {
-          if (!mounted) return;
-          setState(() {});
-          _videoController!.play();
-        });
-    }
-  }
+
 
   Future<void> _onApprovePressed() async {
     if (!_formKey.currentState!.validate()) return;
@@ -141,18 +123,8 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
         .map((label) => _interestLabelToId[label])
         .whereType<String>()
         .toList();
-
-    final languageIds = _selectedLanguageLabels
-        .map((label) => _languageLabelToId[label])
-        .whereType<String>()
-        .toList();
-
-    // NOTE: You likely upload files to get a URL first. For now we pass the
-    // local path as a placeholder so the payload matches the contract key.
-    // Swap this with your real upload flow and set the returned URL below.
-    final String? videoUrl =
-        _videoFile?.path; // TODO: replace with uploaded URL
-    final String? photoUrl = _photo?.path; // TODO: replace with uploaded URL
+ // TODO: replace with uploaded URL
+    final String? photoUrl = _photo?.path; 
 
     final int age = int.parse(_ageController.text.trim());
 
@@ -162,8 +134,6 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
       gender: _gender.toLowerCase(),
       bio: _bioController.text.trim(),
       interestIds: interestIds,
-      languageIds: languageIds,
-      videoUrl: videoUrl,
       photoUrl: photoUrl,
     );
 
@@ -237,38 +207,6 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                               ),
                             ),
                     ),
-
-                    const SizedBox(height: 20),
-
-                    // Video
-                    GestureDetector(
-                      onTap: _recordVideo,
-                      child: _DottedBorderBox(
-                        label: 'Upload Video',
-                        child:
-                            _videoController != null &&
-                                _videoController!.value.isInitialized
-                            ? ClipOval(
-                                child: AspectRatio(
-                                  aspectRatio:
-                                      _videoController!.value.aspectRatio,
-                                  child: VideoPlayer(_videoController!),
-                                ),
-                              )
-                            : const Icon(
-                                Icons.videocam,
-                                color: Color(0xFFE91EC7),
-                                size: 40,
-                              ),
-                        isCircle: true,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Record your 10 sec live video',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-
                     const SizedBox(height: 24),
                     Align(
                       alignment: Alignment.centerLeft,
@@ -317,93 +255,11 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                         _genderOption('Female', Icons.female),
                       ],
                     ),
-
-                    const SizedBox(height: 20),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Add Bio', style: _labelStyle()),
-                    ),
-                    const SizedBox(height: 6),
-                    _buildRoundedTextField(
-                      controller: _bioController,
-                      hint: 'Tell us something about you',
-                      maxLines: 4,
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? 'Bio is required'
-                          : null,
-                    ),
-
-                    const SizedBox(height: 20),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Interests', style: _labelStyle()),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      children: _allInterestLabels.map((label) {
-                        final isSelected = _selectedInterestLabels.contains(
-                          label,
-                        );
-                        return FilterChip(
-                          label: Text(label),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                _selectedInterestLabels.add(label);
-                              } else {
-                                _selectedInterestLabels.remove(label);
-                              }
-                            });
-                          },
-                          selectedColor: const Color(0xFFE91EC7),
-                          backgroundColor: const Color(0xFFF5F5F5),
-                          labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-
-                    const SizedBox(height: 20),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Languages', style: _labelStyle()),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      children: _allLanguageLabels.map((label) {
-                        final isSelected = _selectedLanguageLabels.contains(
-                          label,
-                        );
-                        return FilterChip(
-                          label: Text(label),
-                          selected: isSelected,
-                          onSelected: (selected) {
-                            setState(() {
-                              if (selected) {
-                                _selectedLanguageLabels.add(label);
-                              } else {
-                                _selectedLanguageLabels.remove(label);
-                              }
-                            });
-                          },
-                          selectedColor: const Color(0xFFE91EC7),
-                          backgroundColor: const Color(0xFFF5F5F5),
-                          labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : Colors.black,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-
                     const SizedBox(height: 30),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: GradientButton(
-                        text: isLoading ? 'Saving...' : 'Approve',
+                        text: isLoading ? 'Saving...' : 'Submit',
                         onPressed: isLoading ? null : _onApprovePressed,
                         buttonText: '',
                       ),

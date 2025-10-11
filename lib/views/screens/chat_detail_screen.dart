@@ -58,15 +58,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: Icon(
-                    isLiked ? Icons.favorite : Icons.favorite_border,
-                    color: Colors.white,
-                  ),
-                  onPressed: () {
-                    setState(() => isLiked = !isLiked);
-                  },
-                ),
+               
                 PopupMenuButton<int>(
                   icon: const Icon(Icons.more_vert, color: Colors.white),
                   onSelected: (value) {
@@ -145,13 +137,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildIconButton(Icons.camera_alt),
-                    const SizedBox(width: 16),
-                    _buildIconButton(Icons.image),
-                    const SizedBox(width: 16),
-                    _buildIconButton(Icons.mic),
-                    const SizedBox(width: 16),
-                    _buildIconButton(Icons.card_giftcard), // 🎁 Gift icon added
+                    // 🎁 Gift icon added
                   ],
                 ),
               ],

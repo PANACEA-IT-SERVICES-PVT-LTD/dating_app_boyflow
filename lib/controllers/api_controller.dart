@@ -253,7 +253,6 @@ class ApiController extends ChangeNotifier {
   /// Expected payload sample:
   /// {
   ///   "name":"oliva Doe","age":30,"gender":"female","bio":"This is my bio",
-  ///   "videoUrl":"video_url",
   ///   "interests":["68d4f9dfdd3c0ef9b8ebbf19","68d4fac1dd3c0ef9b8ebbf20"],
   ///   "languages":["68d4fc53dd3c0ef9b8ebbf35","68d4fc69dd3c0ef9b8ebbf3a"]
   /// }
@@ -262,9 +261,8 @@ class ApiController extends ChangeNotifier {
     required int age,
     required String gender,
     required String bio,
-    required String videoUrl,
     required List<String> interests,
-    required List<String> languages,
+    
   }) async {
     _isLoading = true;
     _error = null;
@@ -275,10 +273,8 @@ class ApiController extends ChangeNotifier {
         "name": name.trim(),
         "age": age,
         "gender": gender.trim().toLowerCase(),
-        "bio": bio.trim(),
-        "videoUrl": videoUrl.trim().isEmpty ? "video_url" : videoUrl.trim(),
+        "bio": bio.trim(),       
         "interests": interests,
-        "languages": languages,
       };
 
       debugPrint("📤 Submit Profile payload: $payload");
@@ -333,8 +329,8 @@ class ApiController extends ChangeNotifier {
     required String gender,
     required String bio,
     required List<String> interestIds,
-    required List<String> languageIds,
-    String? videoUrl,
+   
+
     String? photoUrl,
   }) async {}
 }
