@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Girl Flow',
         debugShowCheckedModeBanner: false,
-        initialRoute: AppRoutes.chatScreen,
+        initialRoute: AppRoutes.accountScreen,
         onGenerateRoute: AppRoutes.generateRoute,
       ),
     );
