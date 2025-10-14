@@ -1,9 +1,7 @@
+// lib/views/screens/mainhome.dart
 import 'package:Boy_flow/views/screens/profile_gallery_screen.dart';
-import 'package:Boy_flow/views/screens/chat_screen.dart';
-import 'package:Boy_flow/views/screens/call_screen.dart';
-import 'package:Boy_flow/views/screens/account_screen.dart';
+import 'package:Boy_flow/widgets/bottom_nav.dart';
 import 'package:flutter/material.dart';
-import '../../core/routes/app_routes.dart';
 
 class mainhome extends StatefulWidget {
   const mainhome({super.key});
@@ -13,14 +11,8 @@ class mainhome extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<mainhome> {
-  int _selectedIndex = 0;
-
   // current filter: 'All', 'Follow', 'Near By', 'New'
   String _filter = 'All';
-
-  void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
-  }
 
   void _showQuickSheet() {
     showModalBottomSheet(
@@ -99,7 +91,7 @@ class _HomeScreenState extends State<mainhome> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Spacer(),
+              const Spacer(),
               Row(
                 children: [
                   Image.asset("assets/coins.png", width: 22, height: 22),
@@ -127,15 +119,9 @@ class _HomeScreenState extends State<mainhome> {
           ),
         ),
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          _buildHomeTab(),
-          const ChatScreen(),
-          const CallScreen(),
-          const AccountScreen(),
-        ],
-      ),
+
+      // single full-screen home body
+      body: _buildHomeTab(),
 
       floatingActionButton: SizedBox(
         height: 45,
@@ -149,29 +135,12 @@ class _HomeScreenState extends State<mainhome> {
         ),
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFFF942A4),
-        unselectedItemColor: Colors.grey[400],
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline),
-            label: '',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.phone), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: ''),
-        ],
-      ),
+      // <- here: use your CustomBottomNav and mark Home as active (index 0)
+      bottomNavigationBar: const CustomBottomNav(currentIndex: 0),
     );
   }
 
-  /// Home tab content extracted to keep IndexedStack children clean
+  /// Home tab content extracted to keep layout clean
   Widget _buildHomeTab() {
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -235,6 +204,7 @@ class _HomeScreenState extends State<mainhome> {
                 callRate: profile['callRate'] as String,
                 videoRate: profile['videoRate'] as String,
                 onCardTap: () {
+                  // full screen navigation
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -251,6 +221,7 @@ class _HomeScreenState extends State<mainhome> {
   }
 }
 
+/// Quick sheet and promo card
 class _QuickActionsBottomSheet extends StatelessWidget {
   const _QuickActionsBottomSheet({super.key});
 
@@ -402,7 +373,7 @@ class _PromoCoinsCard extends StatelessWidget {
   }
 }
 
-/// ✅ NEW VERSION — Gradient FilterChip Widget
+/// FilterChip widget
 class FilterChipWidget extends StatelessWidget {
   final String label;
   final bool selected;
@@ -458,6 +429,7 @@ class FilterChipWidget extends StatelessWidget {
   }
 }
 
+/// Profile card and helpers
 class ProfileCardWidget extends StatelessWidget {
   final String name;
   final String language;

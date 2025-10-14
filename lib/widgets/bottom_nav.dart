@@ -55,9 +55,7 @@ class CustomBottomNav extends StatelessWidget {
         BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Chat'),
         BottomNavigationBarItem(icon: Icon(Icons.call), label: 'Call'),
         BottomNavigationBarItem(
-          icon: Icon(Icons.notifications),
-          label: 'Notifications',
-        ),
+          icon: Icon(Icons.notifications), label: 'Notifications' ),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
     );
