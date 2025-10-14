@@ -397,7 +397,7 @@ class FilterChipWidget extends StatelessWidget {
     return GestureDetector(
       onTap: () => onSelected(!selected),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
+        duration: const Duration(milliseconds: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
           gradient: selected ? gradient : null,

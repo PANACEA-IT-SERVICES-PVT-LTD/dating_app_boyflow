@@ -8,14 +8,15 @@ class ProfileGalleryScreen extends StatefulWidget {
 }
 
 class _ProfileGalleryScreenState extends State<ProfileGalleryScreen> {
-  bool isOnline = true;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F5FF),
       appBar: AppBar(
-        title: const Text("My Profile", style: TextStyle(color: Colors.white)),
+        title: const Text(
+          "My Profile",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+        ),
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -28,10 +29,27 @@ class _ProfileGalleryScreenState extends State<ProfileGalleryScreen> {
             ),
           ),
         ),
+        actions: [
+          PopupMenuButton<int>(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            onSelected: (value) {
+              // handle menu actions
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(value: 0, child: Text("Edit Profile")),
+              PopupMenuItem(value: 1, child: Text("Settings")),
+              PopupMenuItem(value: 2, child: Text("Logout")),
+            ],
+          ),
+        ],
       ),
-      body: const SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: ProfileTabEditable(),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: const ProfileTabEditable(),
       ),
     );
   }
@@ -55,58 +73,89 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
     "Travel": ["Mountains"],
   };
 
+  // selection states
   bool isFollowing = false;
   bool isSayHiSelected = false;
   bool isCallSelected = false;
 
+  // explicit press states for each button id
+  final Map<String, bool> _isPressed = {
+    'sayhi': false,
+    'call': false,
+  };
+
+  /// id: 'sayhi' or 'call'
   Widget _gradientButton(
+    String id,
     String text,
     IconData icon, {
     required bool isSelected,
-    required VoidCallback onTap,
+    required VoidCallback onPressed,
   }) {
     final gradientColors = [const Color(0xFFFF00CC), const Color(0xFF9A00F0)];
+    final bool pressed = _isPressed[id] ?? false;
+    final bool showGradient = isSelected || pressed;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        height: 42,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          gradient: isSelected ? LinearGradient(colors: gradientColors) : null,
-          color: isSelected ? null : Colors.white,
-          border: Border.all(color: const Color(0xFFFF00CC), width: 1.5),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.purple.withOpacity(0.3),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
-                  ),
-                ]
-              : [],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? Colors.white : const Color(0xFFFF00CC),
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              text,
-              style: TextStyle(
-                color: isSelected ? Colors.white : const Color(0xFFFF00CC),
-                fontWeight: FontWeight.w600,
-                fontSize: 13,
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTapDown: (_) {
+        setState(() {
+          _isPressed[id] = true;
+        });
+      },
+      onTapUp: (_) {
+        // perform the toggle/action first
+        onPressed();
+        // then clear the pressed visual
+        setState(() {
+          _isPressed[id] = false;
+        });
+      },
+      onTapCancel: () {
+        setState(() {
+          _isPressed[id] = false;
+        });
+      },
+      child: AnimatedScale(
+        scale: pressed ? 0.985 : 1.0,
+        duration: const Duration(milliseconds: 10),
+        curve: Curves.easeOut,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 40),
+          curve: Curves.easeInOut,
+          height: 42,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            gradient: showGradient ? LinearGradient(colors: gradientColors) : null,
+            color: showGradient ? null : Colors.white,
+            border: Border.all(color: const Color(0xFFFF00CC), width: 1.5),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: showGradient
+                ? [
+                    BoxShadow(
+                      color: Colors.purple.withOpacity(0.35),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: showGradient ? Colors.white : const Color(0xFFFF00CC), size: 18),
+              const SizedBox(width: 8),
+              Text(
+                text,
+                style: TextStyle(
+                  color: showGradient ? Colors.white : const Color(0xFFFF00CC),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -137,16 +186,13 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                 radius: 40,
                 backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=5'),
               ),
-
-              // Positioned online container (overlapping bottom of avatar)
               Positioned(
                 bottom: -25,
                 left: 0,
                 right: 0,
                 child: Center(
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
                       color: Colors.green.withOpacity(0.18),
                       borderRadius: BorderRadius.circular(20),
@@ -186,9 +232,7 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
               ),
             ],
           ),
-
           const SizedBox(width: 20),
-
           // Right side info: name, age/followers, follow button
           Expanded(
             child: Padding(
@@ -196,7 +240,6 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Name with gradient
                   ShaderMask(
                     shaderCallback: (bounds) => const LinearGradient(
                       colors: [Color(0xFFFF55A5), Color(0xFF9A00F0)],
@@ -213,10 +256,7 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 8),
-
-                  // Age & Followers row (left)
                   const Row(
                     children: [
                       Text(
@@ -242,10 +282,7 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 10),
-
-                  // Follow button (right next to age row area)
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -253,8 +290,7 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                       });
                     },
                     child: Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [Color(0xFFFF55A5), Color(0xFF9A00F0)],
@@ -329,19 +365,24 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
             ),
           );
         }).toList(),
-          Row(
+
+        const SizedBox(height: 24),
+
+        // Buttons row (in content)
+        Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
               width: 140,
               child: _gradientButton(
+                'sayhi',
                 "Say Hi",
                 Icons.chat_bubble_outline,
                 isSelected: isSayHiSelected,
-                onTap: () {
+                onPressed: () {
                   setState(() {
                     isSayHiSelected = !isSayHiSelected;
-                    isCallSelected = false;
+                    if (isSayHiSelected) isCallSelected = false;
                   });
                 },
               ),
@@ -350,19 +391,22 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
             SizedBox(
               width: 140,
               child: _gradientButton(
+                'call',
                 "Call",
                 Icons.phone,
                 isSelected: isCallSelected,
-                onTap: () {
+                onPressed: () {
                   setState(() {
                     isCallSelected = !isCallSelected;
-                    isSayHiSelected = false;
+                    if (isCallSelected) isSayHiSelected = false;
                   });
                 },
               ),
             ),
           ],
         ),
+
+        const SizedBox(height: 80), // spacing so content isn't hidden by bottom nav if any
       ],
     );
   }

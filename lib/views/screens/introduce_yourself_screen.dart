@@ -138,28 +138,40 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
     bool isLoading = false;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        leading: const BackButton(color: Colors.black),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        title: const Column(
-          children: [
-            Text(
-              'Introduce yourself',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+     backgroundColor: Colors.white,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: AppBar(
+          leading: const BackButton(color: Colors.white),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
+          title: Column(
+            children: [
+              const Text(
+                'Introduce yourself',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 2),
+              Text(
+                'Please describe yourself',
+                style: TextStyle(color: Colors.white, fontSize: 15),
+              ),
+            ],
+          ),
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
-            SizedBox(height: 2),
-            Text(
-              'Please describe yourself',
-              style: TextStyle(color: Colors.grey, fontSize: 15),
-            ),
-          ],
+          ),
         ),
       ),
       body: AbsorbPointer(
