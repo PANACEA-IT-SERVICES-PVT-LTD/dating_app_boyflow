@@ -54,24 +54,24 @@ class _SupportServiceScreenState extends State<SupportServiceScreen> {
           ),
         ),
         actions: [
-          Row(
-            children: [
-              Text(
-                isOnline ? "Online" : "Offline",
-                style: const TextStyle(color: Colors.white),
-              ),
-              Switch(
-                value: isOnline,
-                onChanged: (val) {
-                  setState(() {
-                    isOnline = val;
-                  });
-                },
-                activeColor: Colors.green,
-                inactiveTrackColor: Colors.grey.shade400,
-              ),
-            ],
-          ),
+          // Row(
+          //   children: [
+          //     Text(
+          //       isOnline ? "Online" : "Offline",
+          //       style: const TextStyle(color: Colors.white),
+          //     ),
+          //     Switch(
+          //       value: isOnline,
+          //       onChanged: (val) {
+          //         setState(() {
+          //           isOnline = val;
+          //         });
+          //       },
+          //       activeColor: Colors.green,
+          //       inactiveTrackColor: Colors.grey.shade400,
+          //     ),
+          //   ],
+          // ),
         ],
       ),
       body: Column(

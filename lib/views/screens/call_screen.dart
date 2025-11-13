@@ -1,3 +1,4 @@
+import 'package:Boy_flow/views/screens/profile_gallery_screen.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/bottom_nav.dart';
 
@@ -21,7 +22,6 @@ class _CallScreenState extends State<CallScreen> {
       "age": "22",
       "gender": "Male",
       "id": "235363",
-      "earnings": "INR 200",
       "follower": "Yes",
       "referral": "Yes",
       "image": "assets/sample_user.jpg",
@@ -35,7 +35,6 @@ class _CallScreenState extends State<CallScreen> {
       "age": "22",
       "gender": "Male",
       "id": "235363",
-      "earnings": "INR 200",
       "follower": "Yes",
       "referral": "Yes",
       "image": "assets/sample_user.jpg",
@@ -49,7 +48,6 @@ class _CallScreenState extends State<CallScreen> {
       "age": "22",
       "gender": "Male",
       "id": "235363",
-      "earnings": "INR 200",
       "follower": "Yes",
       "referral": "Yes",
       "image": "assets/sample_user.jpg",
@@ -63,7 +61,6 @@ class _CallScreenState extends State<CallScreen> {
       "age": "22",
       "gender": "Male",
       "id": "235363",
-      "earnings": "INR 200",
       "follower": "Yes",
       "referral": "Yes",
       "image": "assets/sample_user.jpg",
@@ -80,18 +77,18 @@ class _CallScreenState extends State<CallScreen> {
           automaticallyImplyLeading: false,
           title: const Text("Calls", style: TextStyle(color: Colors.white)),
           actions: [
-            const Padding(
-              padding: EdgeInsets.only(right: 10),
-              child: Center(
-                child: Text("Online", style: TextStyle(color: Colors.white)),
-              ),
-            ),
-            Switch(
-              value: isOnline,
-              onChanged: (val) => setState(() => isOnline = val),
-              activeColor: Colors.green,
-              inactiveTrackColor: Colors.grey.shade400,
-            ),
+            // const Padding(
+            //   padding: EdgeInsets.only(right: 10),
+            //   child: Center(
+            //     child: Text("Online", style: TextStyle(color: Colors.white)),
+            //   ),
+            // ),
+            // Switch(
+            //   value: isOnline,
+            //   onChanged: (val) => setState(() => isOnline = val),
+            //   activeColor: Colors.green,
+            //   inactiveTrackColor: Colors.grey.shade400,
+            // ),
           ],
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -113,8 +110,14 @@ class _CallScreenState extends State<CallScreen> {
           final call = callData[index];
           return GestureDetector(
             onTap: () {
-              Navigator.pushNamed(context, '/CallUserDetails', arguments: call);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfileGalleryScreen(),
+                ),
+              );
             },
+
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10),
               child: Row(
@@ -147,7 +150,7 @@ class _CallScreenState extends State<CallScreen> {
                             child: Text(
                               call['count'],
                               style: const TextStyle(
-                                color: Colors.white, // ✅ White text
+                                color: Colors.white,
                                 fontSize: 12,
                               ),
                             ),

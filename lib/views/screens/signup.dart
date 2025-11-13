@@ -1,9 +1,12 @@
 // lib/views/screens/signup_screen.dart
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 // import 'package:provider/provider.dart';
 import '../../core/routes/app_routes.dart';
 import '../../utils/colors.dart';
 import '../../widgets/gradient_button.dart';
+import '../../api_service/api_endpoint.dart';
 // import '../../controllers/api_controller.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -15,69 +18,87 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _mobileCtrl = TextEditingController();
+  final TextEditingController _firstNameCtrl = TextEditingController();
+  final TextEditingController _lastNameCtrl = TextEditingController();
   final TextEditingController _emailCtrl = TextEditingController();
+  final TextEditingController _passwordCtrl = TextEditingController();
+  final TextEditingController _referralCtrl = TextEditingController();
+  bool _submitting = false;
 
   @override
   void dispose() {
-    _mobileCtrl.dispose();
+    _firstNameCtrl.dispose();
+    _lastNameCtrl.dispose();
     _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    _referralCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Mock implementation for screen-only development
-    final mobile = _mobileCtrl.text.trim();
+    final firstName = _firstNameCtrl.text.trim();
+    final lastName = _lastNameCtrl.text.trim();
     final email = _emailCtrl.text.trim();
+    final password = _passwordCtrl.text;
+    final referral = _referralCtrl.text.trim();
 
-    // Simulate API call delay
-    await Future.delayed(const Duration(seconds: 1));
+    setState(() => _submitting = true);
+    try {
+      final url = Uri.parse(
+          "${ApiEndPoints.baseUrls}${ApiEndPoints.signupMale}");
+      final resp = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "firstName": firstName,
+          "lastName": lastName,
+          "email": email,
+          "password": password,
+          "referralCode": referral,
+        }),
+      );
 
-    if (!mounted) return;
+      dynamic body;
+      try {
+        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
+      } catch (_) {
+        body = {"raw": resp.body};
+      }
 
-    // Mock success response
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("✅ Success: Signup successful!")),
-    );
+      final success = (body is Map && body["success"] == true);
+      final message = (body is Map ? body["message"] : null) ??
+          (resp.statusCode >= 200 && resp.statusCode < 300
+              ? "Registration successful"
+              : "Registration failed");
 
-    print('📝 Signup Screen: Navigating to OTP verification');
-    Navigator.pushNamed(
-      context,
-      AppRoutes.loginVerification,
-      arguments: {'email': email, 'mobile': mobile, 'source': 'signup'},
-    );
+      if (!mounted) return;
 
-    // Original API implementation (commented out)
-    // final controller = Provider.of<ApiController>(context, listen: false);
-    // final mobile = _mobileCtrl.text.trim();
-    // final email = _emailCtrl.text.trim();
-
-    // final success = await controller.signup(mobile: mobile, email: email);
-    // if (!mounted) return;
-
-    // if (success) {
-    //   final res = controller.signupResponse ?? {};
-    //   final msg = res["message"] ?? "Signup successful!";
-    //   ScaffoldMessenger.of(
-    //     context,
-    //   ).showSnackBar(SnackBar(content: Text("✅ Success: $msg")));
-
-    //   Navigator.pushNamed(
-    //     context,
-    //     AppRoutes.loginVerification,
-    //     arguments: {'email': email, 'mobile': mobile, 'source': 'signup'},
-    //   );
-    // } else {
-    //   final err =
-    //       controller.error ??
-    //       controller.signupResponse?["message"] ??
-    //       "Something went wrong";
-    //   ScaffoldMessenger.of(
-    //     context,
-    //   ).showSnackBar(SnackBar(content: Text("❌ Error: $err")));
-    // }
+      if (success) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("✅ $message")));
+        Navigator.pushNamed(
+          context,
+          AppRoutes.loginVerification,
+          arguments: {
+            'email': email,
+            'source': 'signup',
+            if (body is Map && body['otp'] != null) 'otp': body['otp'],
+          },
+        );
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("❌ $message")));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Error: ${e.toString()}")),
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
@@ -176,7 +197,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     const SizedBox(height: 30),
                     const Text(
-                      "Mobile Number",
+                      "First Name",
                       style: TextStyle(color: AppColors.black87),
                     ),
                     const SizedBox(height: 8),
@@ -187,19 +208,43 @@ class _SignupScreenState extends State<SignupScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: TextFormField(
-                        controller: _mobileCtrl,
-                        keyboardType: TextInputType.phone,
+                        controller: _firstNameCtrl,
+                        keyboardType: TextInputType.name,
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) {
-                            return 'Enter mobile number';
-                          }
-                          if (v.trim().length < 7) {
-                            return 'Enter valid number';
+                            return 'Enter first name';
                           }
                           return null;
                         },
                         decoration: const InputDecoration(
-                          hintText: "Enter mobile number",
+                          hintText: "Enter first name",
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      "Last Name",
+                      style: TextStyle(color: AppColors.black87),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.inputField,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: TextFormField(
+                        controller: _lastNameCtrl,
+                        keyboardType: TextInputType.name,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Enter last name';
+                          }
+                          return null;
+                        },
+                        decoration: const InputDecoration(
+                          hintText: "Enter last name",
                           border: InputBorder.none,
                         ),
                       ),
@@ -236,10 +281,57 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      "Referral Code (optional)",
+                      style: TextStyle(color: AppColors.black87),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.inputField,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: TextFormField(
+                        controller: _referralCtrl,
+                        keyboardType: TextInputType.text,
+                        decoration: const InputDecoration(
+                          hintText: "Enter referral code (if any)",
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    const Text(
+                      "Password",
+                      style: TextStyle(color: AppColors.black87),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.inputField,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: TextFormField(
+                        controller: _passwordCtrl,
+                        obscureText: true,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Enter password';
+                          if (v.length < 6) return 'Min 6 characters';
+                          return null;
+                        },
+                        decoration: const InputDecoration(
+                          hintText: "Enter password",
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 30),
                     GradientButton(
-                      text: "Verify OTP",
-                      onPressed: _submit,
+                      text: _submitting ? "Registering..." : "Register",
+                      onPressed: _submitting ? null : _submit,
                       buttonText: '',
                     ),
                     const SizedBox(height: 12),

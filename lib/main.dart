@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Boy Flow',
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.homepage,
+      initialRoute: AppRoutes.login,
       onGenerateRoute: AppRoutes.generateRoute,
     );
     // return MultiProvider(

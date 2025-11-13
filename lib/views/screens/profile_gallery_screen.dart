@@ -67,24 +67,18 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
     "My Languages": ["Telugu"],
     "My Interests": ["Family and parenting", "Society and politics"],
     "Hobbies": ["Cooking", "Writing"],
-    "Sports": ["Cricket"],
-    "Film": ["No Films"],
-    "Music": ["2020s"],
+    // "Sports": ["Cricket"],
+    // "Film": ["No Films"],
+    // "Music": ["2020s"],
     "Travel": ["Mountains"],
   };
 
-  // selection states
   bool isFollowing = false;
   bool isSayHiSelected = false;
   bool isCallSelected = false;
 
-  // explicit press states for each button id
-  final Map<String, bool> _isPressed = {
-    'sayhi': false,
-    'call': false,
-  };
+  final Map<String, bool> _isPressed = {'sayhi': false, 'call': false};
 
-  /// id: 'sayhi' or 'call'
   Widget _gradientButton(
     String id,
     String text,
@@ -99,29 +93,19 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTapDown: (_) {
-        setState(() {
-          _isPressed[id] = true;
-        });
+        setState(() => _isPressed[id] = true);
       },
       onTapUp: (_) {
-        // perform the toggle/action first
         onPressed();
-        // then clear the pressed visual
-        setState(() {
-          _isPressed[id] = false;
-        });
+        setState(() => _isPressed[id] = false);
       },
-      onTapCancel: () {
-        setState(() {
-          _isPressed[id] = false;
-        });
-      },
+      onTapCancel: () => setState(() => _isPressed[id] = false),
       child: AnimatedScale(
         scale: pressed ? 0.985 : 1.0,
-        duration: const Duration(milliseconds: 10),
+        duration: const Duration(milliseconds: 80),
         curve: Curves.easeOut,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 40),
+          duration: const Duration(milliseconds: 120),
           curve: Curves.easeInOut,
           height: 42,
           alignment: Alignment.center,
@@ -178,7 +162,6 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar + overlapping online badge
           Stack(
             clipBehavior: Clip.none,
             children: [
@@ -197,13 +180,6 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                       color: Colors.green.withOpacity(0.18),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: Colors.white, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -233,7 +209,6 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
             ],
           ),
           const SizedBox(width: 20),
-          // Right side info: name, age/followers, follow button
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(top: 6),
@@ -243,8 +218,6 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                   ShaderMask(
                     shaderCallback: (bounds) => const LinearGradient(
                       colors: [Color(0xFFFF55A5), Color(0xFF9A00F0)],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
                     ).createShader(bounds),
                     blendMode: BlendMode.srcIn,
                     child: const Text(
@@ -259,36 +232,17 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                   const SizedBox(height: 8),
                   const Row(
                     children: [
-                      Text(
-                        "Age: ",
-                        style: TextStyle(color: Colors.black87, fontSize: 12),
-                      ),
-                      Text(
-                        "22 years",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                          fontSize: 12,
-                        ),
-                      ),
+                      Text("Age: ", style: TextStyle(color: Colors.black87, fontSize: 12)),
+                      Text("22 years",
+                          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 12)),
                       SizedBox(width: 10),
-                      Text(
-                        "257 Followers",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                          fontSize: 12,
-                        ),
-                      ),
+                      Text("257 Followers",
+                          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 12)),
                     ],
                   ),
                   const SizedBox(height: 10),
                   GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isFollowing = !isFollowing;
-                      });
-                    },
+                    onTap: () => setState(() => isFollowing = !isFollowing),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                       decoration: BoxDecoration(
@@ -296,21 +250,10 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                           colors: [Color(0xFFFF55A5), Color(0xFF9A00F0)],
                         ),
                         borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.purple.withOpacity(0.3),
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
                       ),
                       child: Text(
                         isFollowing ? "Following" : "Follow",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
                       ),
                     ),
                   ),
@@ -323,6 +266,118 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
     );
   }
 
+  // ⬇️ Updated Upside Popup (bottom sheet)
+  void _showNotePopup({
+    required VoidCallback onCall,
+    required VoidCallback onVideo,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF0FB),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 10,
+                offset: const Offset(0, -3),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const Text(
+                  'Note:',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF9A00F0),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Please do not trust fraudulent information such as money transfer, lottery etc. from strangers.\n'
+                  'Do not share any personal information such as passwords, mobile numbers, or OTPs.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: Colors.black87, height: 1.4),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: TextButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            onCall();
+                          },
+                          icon: const Icon(Icons.phone, color: Colors.white),
+                          label: const Text('Call', style: TextStyle(color: Colors.white)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: TextButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            onVideo();
+                          },
+                          icon: const Icon(Icons.videocam, color: Colors.white),
+                          label: const Text('Video', style: TextStyle(color: Colors.white)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -330,45 +385,32 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
       children: [
         _profileHeaderCard(),
         const SizedBox(height: 24),
-
-        // Profile detail sections
         ...profileDetails.entries.map((entry) {
           return Padding(
             padding: const EdgeInsets.only(bottom: 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  entry.key,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
+                Text(entry.key,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87)),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
-                  children: entry.value.map((item) {
-                    return Chip(
-                      label: Text(item),
-                      backgroundColor: Colors.pink[50],
-                      labelStyle: const TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    );
-                  }).toList(),
+                  children: entry.value
+                      .map((item) => Chip(
+                            label: Text(item),
+                            backgroundColor: Colors.pink[50],
+                            labelStyle:
+                                const TextStyle(color: Colors.black87, fontWeight: FontWeight.w400),
+                          ))
+                      .toList(),
                 ),
               ],
             ),
           );
         }).toList(),
-
         const SizedBox(height: 24),
-
-        // Buttons row (in content)
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -384,6 +426,10 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                     isSayHiSelected = !isSayHiSelected;
                     if (isSayHiSelected) isCallSelected = false;
                   });
+                  _showNotePopup(
+                    onCall: () => debugPrint('Call pressed from Say Hi'),
+                    onVideo: () => debugPrint('Video pressed from Say Hi'),
+                  );
                 },
               ),
             ),
@@ -400,13 +446,15 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                     isCallSelected = !isCallSelected;
                     if (isCallSelected) isSayHiSelected = false;
                   });
+                  _showNotePopup(
+                    onCall: () => debugPrint('Call pressed'),
+                    onVideo: () => debugPrint('Video pressed'),
+                  );
                 },
               ),
             ),
           ],
         ),
-
-        const SizedBox(height: 80), // spacing so content isn't hidden by bottom nav if any
       ],
     );
   }

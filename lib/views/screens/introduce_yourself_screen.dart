@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:Boy_flow/views/screens/account_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 // import 'package:provider/provider.dart';
@@ -138,28 +139,23 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
     bool isLoading = false;
 
     return Scaffold(
-     backgroundColor: Colors.white,
+      backgroundColor: Colors.white,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: AppBar(
           leading: const BackButton(color: Colors.white),
           backgroundColor: Colors.white,
           elevation: 0,
-          centerTitle: true,
+          centerTitle: false,
           title: Column(
             children: [
               const Text(
-                'Introduce yourself',
+                'Profile Update',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
-              ),
-              SizedBox(height: 2),
-              Text(
-                'Please describe yourself',
-                style: TextStyle(color: Colors.white, fontSize: 15),
               ),
             ],
           ),
@@ -254,7 +250,14 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                       borderRadius: BorderRadius.circular(10),
                       child: GradientButton(
                         text: isLoading ? 'Saving...' : 'Submit',
-                        onPressed: isLoading ? null : _onApprovePressed,
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const AccountScreen(),
+                            ),
+                          );
+                        },
                         buttonText: '',
                       ),
                     ),
@@ -264,13 +267,13 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
               ),
             ),
 
-            if (isLoading)
-              const Positioned.fill(
-                child: ColoredBox(
-                  color: Color.fromARGB(100, 255, 255, 255),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              ),
+            // if (isLoading)
+            //   const Positioned.fill(
+            //     child: ColoredBox(
+            //       color: Color.fromARGB(100, 255, 255, 255),
+            //       child: Center(child: CircularProgressIndicator()),
+            //     ),
+            //   ),
           ],
         ),
       ),

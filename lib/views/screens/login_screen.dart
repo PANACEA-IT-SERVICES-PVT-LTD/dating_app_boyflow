@@ -4,6 +4,9 @@ import '../../core/routes/app_routes.dart';
 import '../../utils/colors.dart';
 import '../../widgets/gradient_button.dart';
 // import '../../controllers/api_controller.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../../api_service/api_endpoint.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +17,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _emailCtrl = TextEditingController();
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -43,58 +47,58 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    // Mock implementation for screen-only development
-    await Future.delayed(const Duration(seconds: 1));
+    setState(() => _submitting = true);
+    try {
+      final url = Uri.parse(
+          "${ApiEndPoints.baseUrls}${ApiEndPoints.loginMale}");
+      final resp = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": email,
+        }),
+      );
 
-    if (!mounted) return;
+      dynamic body;
+      try {
+        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
+      } catch (_) {
+        body = {"raw": resp.body};
+      }
 
-    // Mock success response
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("✅ OTP sent successfully!")));
+      final success = (body is Map && body["success"] == true);
+      final message = (body is Map ? body["message"] : null) ??
+          (resp.statusCode >= 200 && resp.statusCode < 300
+              ? "OTP sent"
+              : "Failed to send OTP");
 
-    print('🔐 Login Screen: Navigating to OTP verification');
-    Navigator.pushNamed(
-      context,
-      AppRoutes.loginVerification, // → OTP screen
-      arguments: {'email': email, 'source': 'login'},
-    );
+      if (!mounted) return;
 
-    // Original API implementation (commented out)
-    // final api = Provider.of<ApiController>(context, listen: false);
-    // FocusScope.of(context).unfocus();
-    // final email = _emailCtrl.text.trim();
+      if (success) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("✅ $message")));
 
-    // if (email.isEmpty) {
-    //   ScaffoldMessenger.of(
-    //     context,
-    //   ).showSnackBar(const SnackBar(content: Text("Please enter your email.")));
-    //   return;
-    // }
-    // if (!_isLikelyEmail(email)) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     const SnackBar(content: Text("Please enter a valid email address.")),
-    //   );
-    //   return;
-    // }
-
-    // final ok = await api.requestLoginOtp(email: email);
-    // if (!mounted) return;
-
-    // debugPrint(
-    //   "➡️ Navigating to OTP screen with requestId captured internally.",
-    // );
-
-    // if (ok) {
-    //   Navigator.pushNamed(
-    //     context,
-    //     AppRoutes.loginVerification, // → OTP screen
-    //     arguments: {'email': email, 'source': 'login'},
-    //   );
-    // } else {
-    //   final msg = api.error ?? "Failed to send OTP. Please try again.";
-    //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-    // }
+        Navigator.pushNamed(
+          context,
+          AppRoutes.loginVerification, // → OTP screen
+          arguments: {
+            'email': email,
+            'source': 'login',
+            if (body is Map && body['otp'] != null) 'otp': body['otp'],
+          },
+        );
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text("❌ $message")));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("❌ Error: ${e.toString()}")));
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
@@ -102,154 +106,157 @@ class _LoginScreenState extends State<LoginScreen> {
     // Mock loading state for screen-only development
     bool isLoading = false;
 
+    final mq = MediaQuery.of(context);
+    final keyboardInset = mq.viewInsets.bottom;
+
     return Scaffold(
-      body: Stack(
-        children: [
-          Container(
-            height: MediaQuery.of(context).size.height,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.gradientTop, AppColors.gradientBottom],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+      // keep this true (default) so scaffold adjusts for keyboard
+      resizeToAvoidBottomInset: true,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SingleChildScrollView(
+          // ensure padding for keyboard so the content can scroll above it
+          padding: EdgeInsets.only(bottom: keyboardInset),
+          child: ConstrainedBox(
+            // allow the SingleChildScrollView to take at least the full height
+            constraints: BoxConstraints(minHeight: mq.size.height - mq.padding.top - mq.padding.bottom),
+            child: IntrinsicHeight(
+              child: Stack(
+                children: [
+                  Container(
+                    height: mq.size.height,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppColors.gradientTop, AppColors.gradientBottom],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 45),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            const Text(
+                              "100% Trusted and secure",
+                              style: TextStyle(
+                                color: AppColors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Spacer(),
+                            Image.asset(
+                              'assets/sheild.png',
+                              height: 24,
+                              width: 24,
+                              color: Colors.white,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: 240,
+                        child: Image.asset('assets/LoginImage.png'),
+                      ),
+                      const Spacer(), // pushes the white container to bottom
+                      // bottom white sheet
+                      Container(
+                        width: double.infinity,
+                        // make sure the container doesn't exceed available height
+                        // and remains scrollable on small screens
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 20,
+                          horizontal: 24,
+                        ),
+                        decoration: const BoxDecoration(
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(30),
+                            topRight: Radius.circular(30),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min, // shrink to fit
+                          children: [
+                            const Text(
+                              "Email Id",
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: AppColors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.inputField,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: TextField(
+                                controller: _emailCtrl,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.done,
+                                decoration: const InputDecoration(
+                                  hintText: 'Enter your email',
+                                  border: InputBorder.none,
+                                ),
+                                onSubmitted: (_) {
+                                  if (!isLoading) _sendOtp();
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              "We don't share your email",
+                              style: TextStyle(
+                                color: AppColors.otpBorder,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            GradientButton(
+                              text: _submitting ? 'Sending OTP...' : 'Log In',
+                              onPressed: _submitting ? null : () {
+                                if (!isLoading) _sendOtp();
+                              },
+                              buttonText: '',
+                            ),
+                            const SizedBox(height: 12),
+                            Center(
+                              child: GestureDetector(
+                                onTap: () {
+                                  print('🔐 Login Screen: Navigating to signup');
+                                  Navigator.pushNamed(context, AppRoutes.signup);
+                                },
+                                child: const Text(
+                                  "Sign Up",
+                                  style: TextStyle(
+                                    decoration: TextDecoration.underline,
+                                    color: AppColors.black87,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 50),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    const Text(
-                      "100% Trusted and secure",
-                      style: TextStyle(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Spacer(),
-                    Image.asset(
-                      'assets/sheild.png',
-                      height: 24,
-                      width: 24,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 30),
-              SizedBox(
-                height: 270,
-                child: Image.asset('assets/LoginImage.png'),
-              ),
-              const Spacer(),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 25,
-                  horizontal: 24,
-                ),
-                decoration: const BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Email Id",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: AppColors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.inputField,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TextField(
-                        controller: _emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.done,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter your email',
-                          border: InputBorder.none,
-                        ),
-                        onSubmitted: (_) {
-                          if (!isLoading) _sendOtp();
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      "We don't share your email",
-                      style: TextStyle(
-                        color: AppColors.otpBorder,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    GradientButton(
-                      text: isLoading ? 'Sending OTP...' : 'Log In',
-                      onPressed: () {
-                        if (!isLoading) _sendOtp();
-                      },
-                      buttonText: '',
-                    ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          print('🔐 Login Screen: Navigating to signup');
-                          Navigator.pushNamed(context, AppRoutes.signup);
-                        },
-                        child: const Text(
-                          "Sign Up",
-                          style: TextStyle(
-                            decoration: TextDecoration.underline,
-                            color: AppColors.black87,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          // Original Consumer implementation (commented out)
-          // Consumer<ApiController>(
-          //   builder: (context, api, _) {
-          //     return Column(
-          //       crossAxisAlignment: CrossAxisAlignment.center,
-          //       children: [
-          //         // ... rest of the UI code ...
-          //         GradientButton(
-          //           text: api.isLoading ? 'Sending OTP...' : 'Log In',
-          //           onPressed: () {
-          //             if (!api.isLoading) _sendOtp();
-          //           },
-          //           buttonText: '',
-          //         ),
-          //         // ... rest of the UI code ...
-          //       ],
-          //     );
-          //   },
-          // ),
-        ],
+        ),
       ),
     );
   }

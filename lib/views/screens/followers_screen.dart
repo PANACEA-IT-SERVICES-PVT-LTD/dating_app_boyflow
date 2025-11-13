@@ -18,7 +18,6 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
       'gender': '♂',
       'level': '01',
       'online': true,
-      'earnings': 2500,
       'avatarUrl': 'https://via.placeholder.com/150',
     };
   });
@@ -40,18 +39,18 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
         centerTitle: false,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          const Padding(
-            padding: EdgeInsets.only(right: 10),
-            child: Center(
-              child: Text("Online", style: TextStyle(color: Colors.white)),
-            ),
-          ),
-          Switch(
-            value: isOnline,
-            onChanged: (val) => setState(() => isOnline = val),
-            activeColor: Colors.green,
-            inactiveTrackColor: Colors.grey.shade400,
-          ),
+          // const Padding(
+          //   padding: EdgeInsets.only(right: 10),
+          //   child: Center(
+          //     child: Text("Online", style: TextStyle(color: Colors.white)),
+          //   ),
+          // ),
+          // Switch(
+          //   value: isOnline,
+          //   onChanged: (val) => setState(() => isOnline = val),
+          //   activeColor: Colors.green,
+          //   inactiveTrackColor: Colors.grey.shade400,
+          // ),
         ],
         flexibleSpace: Container(
           decoration: BoxDecoration(gradient: appGradient),
@@ -124,33 +123,6 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
                             ),
                           ],
                         ),
-                      ),
-                      // Earnings
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          const Text(
-                            "Earnings:",
-                            style: TextStyle(fontSize: 12),
-                          ),
-                          Row(
-                            children: [
-                              Image.asset(
-                                'assets/coins.png',
-                                width: 16,
-                                height: 16,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                "${user['earnings']}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepOrange,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
                       ),
                     ],
                   ),

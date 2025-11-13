@@ -23,7 +23,6 @@ import 'package:Boy_flow/views/screens/call_rate_screen.dart';
 import 'package:Boy_flow/views/screens/withdraws_screen.dart';
 import 'package:Boy_flow/views/screens/followers_screen.dart';
 import 'package:Boy_flow/views/screens/earnings_screen.dart';
-import 'package:Boy_flow/views/screens/create_agency_screen.dart';
 import 'package:Boy_flow/views/screens/settings_screen.dart';
 import 'package:Boy_flow/views/screens/BlocklistScreen.dart';
 import 'package:Boy_flow/views/screens/kyc_details_screen.dart';
@@ -142,10 +141,10 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => ProfileGalleryScreen());
 
       case callrate:
-        return MaterialPageRoute(builder: (_) => const MyCallRateScreen());
+        return MaterialPageRoute(builder: (_) => const MyCallRate());
 
       case withdraws:
-        return MaterialPageRoute(builder: (_) => const MyWithdrawsScreen());
+        return MaterialPageRoute(builder: (_) => const RewardLevelsScreen());
 
       case followers:
         return MaterialPageRoute(builder: (_) => const MyFollowersScreen());
@@ -153,8 +152,8 @@ class AppRoutes {
       case earnings:
         return MaterialPageRoute(builder: (_) => const MyEarningsScreen());
 
-      case createagency:
-        return MaterialPageRoute(builder: (_) => const CreateAgencyScreen());
+      // case createagency:
+      //   return MaterialPageRoute(builder: (_) => const CreateAgencyScreen());
 
       case supportservice:
         return MaterialPageRoute(builder: (_) => const SupportServiceScreen());

@@ -23,27 +23,27 @@ class _CallUserDetailsScreenState extends State<CallUserDetailsScreen> {
           ),
           title: const Text("Calls", style: TextStyle(color: Colors.white)),
           actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: Center(
-                child: Text(
-                  isOnline ? "Online" : "Offline",
-                  style: TextStyle(
-                    color: isOnline ? Colors.white : Colors.grey[300],
-                  ),
-                ),
-              ),
-            ),
-            Switch(
-              value: isOnline,
-              onChanged: (value) {
-                setState(() {
-                  isOnline = value;
-                });
-              },
-              activeColor: Colors.green,
-              inactiveTrackColor: Colors.grey.shade400,
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.only(right: 10),
+            //   child: Center(
+            //     child: Text(
+            //       isOnline ? "Online" : "Offline",
+            //       style: TextStyle(
+            //         color: isOnline ? Colors.white : Colors.grey[300],
+            //       ),
+            //     ),
+            //   ),
+            // ),
+            // Switch(
+            //   value: isOnline,
+            //   onChanged: (value) {
+            //     setState(() {
+            //       isOnline = value;
+            //     });
+            //   },
+            //   activeColor: Colors.green,
+            //   inactiveTrackColor: Colors.grey.shade400,
+            // ),
           ],
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -170,7 +170,7 @@ class _CallUserDetailsScreenState extends State<CallUserDetailsScreen> {
             child: Column(
               children: [
                 _statRow("My Id", "235363"),
-                _statRow("My Earnings", "INR 200"),
+                // _statRow("My Earnings", "INR 200"),
                 _statRow("My Follower", "Yes"),
                 _statRow("My Referral", "Yes"),
               ],

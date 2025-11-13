@@ -19,18 +19,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
       'unread': false,
     },
     {
-      'title': 'Streamer Broadcast',
+      'title': 'Male Broadcast',
       'message': "Don't miss to attend the meeting.",
       'time': '2 min ago',
       'unread': true,
       'count': 3,
     },
-    {
-      'title': 'Important',
-      'message': 'How are you today?',
-      'time': '2 min ago',
-      'unread': false,
-    },
+    // {
+    //   'title': 'Important',
+    //   'message': 'How are you today?',
+    //   'time': '2 min ago',
+    //   'unread': false,
+    // },
   ];
 
   @override
@@ -46,23 +46,23 @@ class _NotificationScreenState extends State<NotificationScreen> {
             style: TextStyle(color: Colors.white),
           ),
           actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: Center(
-                child: Text(
-                  isOnline ? "Online" : "Offline",
-                  style: TextStyle(
-                    color: isOnline ? Colors.white : Colors.grey[300],
-                  ),
-                ),
-              ),
-            ),
-            Switch(
-              value: isOnline,
-              onChanged: (val) => setState(() => isOnline = val),
-              activeColor: Colors.green,
-              inactiveTrackColor: Colors.grey.shade400,
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.only(right: 10),
+            //   child: Center(
+            //     child: Text(
+            //       isOnline ? "Online" : "Offline",
+            //       style: TextStyle(
+            //         color: isOnline ? Colors.white : Colors.grey[300],
+            //       ),
+            //     ),
+            //   ),
+            // ),
+            // Switch(
+            //   value: isOnline,
+            //   onChanged: (val) => setState(() => isOnline = val),
+            //   activeColor: Colors.green,
+            //   inactiveTrackColor: Colors.grey.shade400,
+            // ),
           ],
           backgroundColor: Colors.transparent,
           elevation: 0,

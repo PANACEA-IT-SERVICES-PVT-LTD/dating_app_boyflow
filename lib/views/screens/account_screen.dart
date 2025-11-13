@@ -1,3 +1,6 @@
+import 'package:Boy_flow/views/screens/BlockListScreen1.dart';
+import 'package:Boy_flow/views/screens/ReportAProblemPage.dart';
+import 'package:Boy_flow/views/screens/TransactionsScreen.dart';
 import 'package:Boy_flow/views/screens/introduce_yourself_screen.dart';
 import 'package:Boy_flow/views/screens/profile_gallery_screen.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +11,6 @@ import '../screens/call_rate_screen.dart';
 import '../screens/withdraws_screen.dart';
 import '../screens/followers_screen.dart';
 import '../screens/earnings_screen.dart';
-import 'create_agency_screen.dart';
 import '../screens/support_service_screen.dart';
 import '../screens/settings_screen.dart';
 
@@ -27,32 +29,32 @@ class _AccountScreenState extends State<AccountScreen> {
     {
       'iconPath': 'assets/profile&gallery.png',
       'label': 'Talktime Transactions',
-      'screen': ProfileGalleryScreen(),
+      'screen': TransactionsScreen(),
     },
     {
       'iconPath': 'assets/callrate.png',
       'label': 'Talktime',
-      'screen': MyCallRateScreen(),
+      'screen': MyCallRate(),
     },
     {
       'iconPath': 'assets/wallet.png',
       'label': 'Levels',
-      'screen': MyWithdrawsScreen(),
+      'screen': RewardLevelsScreen(),
     },
     {
       'iconPath': 'assets/followers.png',
       'label': 'Blocked & Hidden List',
-      'screen': MyFollowersScreen(),
+      'screen': BlockListScreen1(),
     },
     {
       'iconPath': 'assets/earnings.png',
       'label': 'Report A Problem ',
-      'screen': MyEarningsScreen(),
+      'screen': ReportAProblemPage(),
     },
     {
       'iconPath': 'assets/profile.png',
-      'label': 'Create Agency',
-      'screen': CreateAgencyScreen(),
+      'label': 'Followers',
+      'screen': MyFollowersScreen(),
     },
     {
       'iconPath': 'assets/supportservice.png',

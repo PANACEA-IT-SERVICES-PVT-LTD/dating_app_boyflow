@@ -490,10 +490,10 @@ class ProfileCardWidget extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(top: 83),
+                padding: const EdgeInsets.only(top: 87),
                 child: Container(
                   height: 130,
-                  color: Colors.black38,
+                  color: Colors.black12,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
