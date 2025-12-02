@@ -7,6 +7,7 @@ import '../../models/user.dart' as call_user;
 import '../../models/call_state.dart';
 import '../../services/call_manager.dart';
 import 'call_page.dart';
+import '../../api_service/api_service.dart';
 
 class mainhome extends StatefulWidget {
   const mainhome({super.key});
@@ -20,6 +21,11 @@ class _HomeScreenState extends State<mainhome> {
   String _filter = 'All';
   final CallManager _callManager = CallManager();
 
+  final ApiService _apiService = ApiService();
+  List<Map<String, dynamic>> profiles = [];
+  bool _isLoading = false;
+  String? _error;
+
   void _showQuickSheet() {
     showModalBottomSheet(
       context: context,
@@ -29,53 +35,37 @@ class _HomeScreenState extends State<mainhome> {
     );
   }
 
-  final List<Map<String, dynamic>> profiles = [
-    {
-      'name': 'Sophie92',
-      'language': 'Telugu',
-      'age': '22',
-      'callRate': '10/min',
-      'videoRate': '10/min',
-      'image': 'assets/img_1.png',
-      'follow': true,
-      'nearby': true,
-      'New': true,
-    },
-    {
-      'name': 'Nisha',
-      'language': 'Hindi',
-      'age': '23',
-      'callRate': '15/min',
-      'videoRate': '20/min',
-      'image': 'assets/img_1.png',
-      'follow': false,
-      'nearby': true,
-      'New': false,
-    },
-    {
-      'name': 'Meera',
-      'language': 'Tamil',
-      'age': '21',
-      'callRate': '8/min',
-      'videoRate': '12/min',
-      'image': 'assets/img_1.png',
-      'follow': true,
-      'nearby': false,
-      'New': true,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadProfiles();
+  }
+
+  Future<void> _loadProfiles() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final result = await _apiService.fetchBrowseFemales(page: 1, limit: 10);
+      setState(() {
+        profiles = result;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   List<Map<String, dynamic>> get _filteredProfiles {
-    if (_filter == 'All') return profiles;
-    if (_filter == 'Follow') {
-      return profiles.where((p) => p['follow'] == true).toList();
-    }
-    if (_filter == 'Near By') {
-      return profiles.where((p) => p['nearby'] == true).toList();
-    }
-    if (_filter == 'New') {
-      return profiles.where((p) => p['New'] == true).toList();
-    }
     return profiles;
   }
 
@@ -94,7 +84,7 @@ class _HomeScreenState extends State<mainhome> {
     }
 
     final user = call_user.User(
-      id: profile['name'] as String,
+      id: (profile['_id'] ?? profile['name']).toString(),
       name: profile['name'] as String,
       isOnline: true,
     );
@@ -157,7 +147,6 @@ class _HomeScreenState extends State<mainhome> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F5FF),
-
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: AppBar(
@@ -199,10 +188,7 @@ class _HomeScreenState extends State<mainhome> {
           ),
         ),
       ),
-
-      // single full-screen home body
       body: _buildHomeTab(),
-
       floatingActionButton: SizedBox(
         height: 45,
         width: 135,
@@ -214,14 +200,21 @@ class _HomeScreenState extends State<mainhome> {
           foregroundColor: Colors.white,
         ),
       ),
-
-      // <- here: use your CustomBottomNav and mark Home as active (index 0)
       bottomNavigationBar: const CustomBottomNav(currentIndex: 0),
     );
   }
 
-  /// Home tab content extracted to keep layout clean
   Widget _buildHomeTab() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_error != null) {
+      return Center(child: Text('Error: $_error'));
+    }
+    if (_filteredProfiles.isEmpty) {
+      return const Center(child: Text('No profiles found'));
+    }
+
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
@@ -273,16 +266,21 @@ class _HomeScreenState extends State<mainhome> {
         SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             final profile = _filteredProfiles[index];
+
+            final String name = profile['name']?.toString() ?? '';
+            final String bio = profile['bio']?.toString() ?? '';
+            final String ageStr = profile['age']?.toString() ?? '';
+
             return Padding(
               padding: const EdgeInsets.only(left: 10, right: 10, bottom: 16),
               child: ProfileCardWidget(
-                name: profile['name'] as String,
-                badgeImagePath: profile['image'] as String,
-                imagePath: profile['image'] as String,
-                language: profile['language'] as String,
-                age: profile['age'] as String,
-                callRate: profile['callRate'] as String,
-                videoRate: profile['videoRate'] as String,
+                name: name,
+                badgeImagePath: 'assets/vector.png',
+                imagePath: 'assets/img_1.png',
+                language: bio.isNotEmpty ? bio : 'Bio not available',
+                age: ageStr,
+                callRate: '10/min',
+                videoRate: '20/min',
                 onCardTap: () {
                   _showCallTypePopup(profile);
                 },

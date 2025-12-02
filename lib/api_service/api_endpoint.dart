@@ -28,4 +28,7 @@ class ApiEndPoints {
   static const String login = "/female-user/login";
   static const String loginotp = "/female-user/verify-login-otp";
   static const String profiledetails = "/female-user/add-info";
+
+  // Browse females list for male user
+  static const String maleBrowseFemales = "/male-user/browse-females";
 }
