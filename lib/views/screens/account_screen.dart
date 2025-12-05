@@ -37,6 +37,10 @@ class _AccountScreenState extends State<AccountScreen> {
   String? _profileImageUrl;
   bool _loadingProfile = false;
 
+  // Interests (IDs from /male-user/me) + titles from /male-user/interests
+  List<String> _interestIds = [];
+  Map<String, String> _interestIdToTitle = {};
+
   final List<Map<String, dynamic>> menuItems = [
     {
       'iconPath': 'assets/profile&gallery.png',
@@ -84,6 +88,7 @@ class _AccountScreenState extends State<AccountScreen> {
   void initState() {
     super.initState();
     _fetchMaleUserMe();
+    _fetchMaleInterests();
   }
 
   Future<void> _fetchMaleUserMe() async {
@@ -131,9 +136,16 @@ class _AccountScreenState extends State<AccountScreen> {
           _gender = data["gender"]?.toString();
           _height = data["height"]?.toString();
           _age = age;
+
           final images = data["images"];
           if (images is List && images.isNotEmpty) {
             _profileImageUrl = images.first.toString();
+          }
+
+          final interests = data["interests"];
+          _interestIds = [];
+          if (interests is List) {
+            _interestIds = interests.map((e) => e.toString()).toList();
           }
         });
       }
@@ -145,6 +157,42 @@ class _AccountScreenState extends State<AccountScreen> {
           _loadingProfile = false;
         });
       }
+    }
+  }
+
+  Future<void> _fetchMaleInterests() async {
+    try {
+      final url = Uri.parse(
+        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleInterests}",
+      );
+
+      final resp = await http.get(url);
+
+      dynamic body;
+      try {
+        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
+      } catch (_) {
+        body = {"raw": resp.body};
+      }
+
+      if (!mounted) return;
+
+      if (body is Map && body["success"] == true && body["data"] is List) {
+        final list = body["data"] as List;
+        setState(() {
+          _interestIdToTitle.clear();
+
+          for (final e in list) {
+            if (e is Map && e["_id"] != null) {
+              final id = e["_id"].toString();
+              final title = (e["title"] ?? e["name"] ?? id).toString();
+              _interestIdToTitle[id] = title;
+            }
+          }
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
     }
   }
 
@@ -267,13 +315,17 @@ class _AccountScreenState extends State<AccountScreen> {
 
                                 // Edit button (keeps intrinsic size, won't force row overflow)
                                 GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
+                                  onTap: () async {
+                                    await Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => IntroduceYourselfScreen(),
                                       ),
                                     );
+                                    // Refresh profile details after editing profile
+                                    if (mounted) {
+                                      await _fetchMaleUserMe();
+                                    }
                                   },
                                   child: Container(
                                     constraints: const BoxConstraints(
@@ -318,11 +370,39 @@ class _AccountScreenState extends State<AccountScreen> {
                             Text(
                               _age != null ? "Age: $_age years" : "Age: 22 years",
                             ),
+                            const SizedBox(height: 4),
+                            if (_gender != null && _gender!.isNotEmpty)
+                              Text(
+                                "Gender: ${_gender!.substring(0, 1).toUpperCase()}${_gender!.substring(1).toLowerCase()}",
+                                style: const TextStyle(color: Colors.black54),
+                              ),
+                            const SizedBox(height: 8),
+                            if (_interestIds.isNotEmpty)
+                              Wrap(
+                                spacing: 4,
+                                runSpacing: 4,
+                                children: _interestIds.map((id) {
+                                  final title = _interestIdToTitle[id] ?? id;
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.pink.shade50,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      title,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.pink,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
                             const SizedBox(height: 10),
-                            const Text(
-                              "India",
-                              style: TextStyle(color: Colors.black54),
-                            ),
                           ],
                         ),
                       ),

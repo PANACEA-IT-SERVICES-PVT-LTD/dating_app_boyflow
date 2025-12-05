@@ -1,39 +1,25 @@
 // lib/views/screens/mainhome.dart
-import 'package:Boy_flow/views/screens/profile_gallery_screen.dart';
+import 'package:Boy_flow/controllers/api_controller.dart';
+import 'package:Boy_flow/views/screens/call_page.dart';
 import 'package:Boy_flow/widgets/bottom_nav.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 import '../../models/user.dart' as call_user;
 import '../../models/call_state.dart';
 import '../../services/call_manager.dart';
-import 'call_page.dart';
-import '../../api_service/api_service.dart';
 
-class mainhome extends StatefulWidget {
-  const mainhome({super.key});
+class MainHome extends StatefulWidget {
+  const MainHome({super.key});
 
   @override
-  State<mainhome> createState() => _HomeScreenState();
+  State<MainHome> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<mainhome> {
-  // current filter: 'All', 'Follow', 'Near By', 'New'
+class _HomeScreenState extends State<MainHome> {
   String _filter = 'All';
   final CallManager _callManager = CallManager();
-
-  final ApiService _apiService = ApiService();
-  List<Map<String, dynamic>> profiles = [];
-  bool _isLoading = false;
-  String? _error;
-
-  void _showQuickSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const _QuickActionsBottomSheet(),
-    );
-  }
 
   @override
   void initState() {
@@ -42,30 +28,26 @@ class _HomeScreenState extends State<mainhome> {
   }
 
   Future<void> _loadProfiles() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
     try {
-      final result = await _apiService.fetchBrowseFemales(page: 1, limit: 10);
-      setState(() {
-        profiles = result;
-      });
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      await apiController.fetchBrowseFemales(page: 1, limit: 10);
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
-    } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load profiles: $e'),
+            action: SnackBarAction(
+              label: 'Retry',
+              onPressed: _loadProfiles,
+            ),
+          ),
+        );
       }
     }
   }
 
-  List<Map<String, dynamic>> get _filteredProfiles {
+  List<Map<String, dynamic>> _applyFilter(List<Map<String, dynamic>> profiles) {
+    // Add real filter logic if needed
     return profiles;
   }
 
@@ -85,7 +67,7 @@ class _HomeScreenState extends State<mainhome> {
 
     final user = call_user.User(
       id: (profile['_id'] ?? profile['name']).toString(),
-      name: profile['name'] as String,
+      name: profile['name']?.toString() ?? 'Unknown',
       isOnline: true,
     );
 
@@ -137,14 +119,24 @@ class _HomeScreenState extends State<mainhome> {
         );
       },
     );
-
     if (type != null) {
       await _startCall(isVideo: type, profile: profile);
     }
   }
 
+  void _showQuickSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _QuickActionsBottomSheet(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final apiController = Provider.of<ApiController>(context);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9F5FF),
       appBar: PreferredSize(
@@ -188,7 +180,7 @@ class _HomeScreenState extends State<mainhome> {
           ),
         ),
       ),
-      body: _buildHomeTab(),
+      body: _buildHomeTab(apiController),
       floatingActionButton: SizedBox(
         height: 45,
         width: 135,
@@ -204,15 +196,42 @@ class _HomeScreenState extends State<mainhome> {
     );
   }
 
-  Widget _buildHomeTab() {
-    if (_isLoading) {
+  Widget _buildHomeTab(ApiController apiController) {
+    if (apiController.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_error != null) {
-      return Center(child: Text('Error: $_error'));
+    if (apiController.error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Error: ${apiController.error}'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadProfiles,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
     }
-    if (_filteredProfiles.isEmpty) {
-      return const Center(child: Text('No profiles found'));
+
+    final profiles = _applyFilter(apiController.femaleProfiles);
+
+    if (profiles.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('No profiles found'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadProfiles,
+              child: const Text('Refresh'),
+            ),
+          ],
+        ),
+      );
     }
 
     return CustomScrollView(
@@ -265,7 +284,7 @@ class _HomeScreenState extends State<mainhome> {
         const SliverToBoxAdapter(child: SizedBox(height: 10)),
         SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
-            final profile = _filteredProfiles[index];
+            final profile = profiles[index];
 
             final String name = profile['name']?.toString() ?? '';
             final String bio = profile['bio']?.toString() ?? '';
@@ -281,23 +300,18 @@ class _HomeScreenState extends State<mainhome> {
                 age: ageStr,
                 callRate: '10/min',
                 videoRate: '20/min',
-                onCardTap: () {
-                  _showCallTypePopup(profile);
-                },
-                onAudioCallTap: () {
-                  _startCall(isVideo: false, profile: profile);
-                },
-                onVideoCallTap: () {
-                  _startCall(isVideo: true, profile: profile);
-                },
+                onCardTap: () => _showCallTypePopup(profile),
+                onAudioCallTap: () => _startCall(isVideo: false, profile: profile),
+                onVideoCallTap: () => _startCall(isVideo: true, profile: profile),
               ),
             );
-          }, childCount: _filteredProfiles.length),
+          }, childCount: profiles.length),
         ),
       ],
     );
   }
 }
+
 
 /// Quick sheet and promo card
 class _QuickActionsBottomSheet extends StatelessWidget {
@@ -665,7 +679,7 @@ class _BadgeImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipOval(
-      child: Container(
+      child: SizedBox(
         width: 15,
         height: 15,
         child: Image.asset(

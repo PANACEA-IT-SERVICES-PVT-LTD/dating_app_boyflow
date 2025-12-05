@@ -5,6 +5,7 @@ import '../../core/routes/app_routes.dart';
 import '../../utils/colors.dart';
 import '../../widgets/gradient_button.dart';
 import '../../widgets/otp_input_fields.dart';
+import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../api_service/api_endpoint.dart';
@@ -78,51 +79,56 @@ class _LoginVerificationScreenState extends State<LoginVerificationScreen> {
   }
 
   Future<void> _verifyOtp() async {
+    // Validate OTP input
     final otp = _otp.trim();
     if (otp.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the OTP')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter the OTP')));
       return;
     }
 
     setState(() => _submitting = true);
+
     try {
+      // Determine the appropriate endpoint based on the source
       final endpoint = (_source == 'login')
           ? ApiEndPoints.loginotpMale
           : ApiEndPoints.verifyOtpMale;
+      
       final url = Uri.parse("${ApiEndPoints.baseUrls}$endpoint");
+      
+      // Convert OTP to number if it's all digits
       final numericOtp = RegExp(r'^\d+$').hasMatch(otp) ? int.parse(otp) : otp;
+      
+      // Prepare the request payload
       final payload = <String, dynamic>{
         "otp": numericOtp,
         if (_email != null && _email!.trim().isNotEmpty) "email": _email!.trim(),
         if (_mobile != null && _mobile!.trim().isNotEmpty)
           "mobileNumber": _mobile!.trim(),
         if (_source != null && _source!.trim().isNotEmpty)
-          "source": _source!.trim(),
+          "source": _source!.trim().toLowerCase(),
         if (_email != null && _email!.trim().isNotEmpty)
           "channel": "email"
         else if (_mobile != null && _mobile!.trim().isNotEmpty)
           "channel": "mobile",
       };
-      final resp = await http.post(
+
+      // Make the API request
+      final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(payload),
-      );
+      ).timeout(const Duration(seconds: 30));
 
-      dynamic body;
+      // Parse the response
+      final Map<String, dynamic> responseBody;
       try {
-        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
-      } catch (_) {
-        body = {"raw": resp.body};
+        responseBody = jsonDecode(response.body) as Map<String, dynamic>;
+      } catch (e) {
+        throw Exception('Invalid server response');
       }
-
-      final success = (body is Map && body["success"] == true);
-      final message = (body is Map ? body["message"] : null) ??
-          (resp.statusCode >= 200 && resp.statusCode < 300
-              ? 'OTP verified successfully.'
-              : 'OTP verification failed');
 
       if (!mounted) return;
 
@@ -130,18 +136,27 @@ class _LoginVerificationScreenState extends State<LoginVerificationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('✅ $message')),
         );
-        
-        // Navigate to home screen and clear the navigation stack
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRoutes.home,
-          (route) => false,
+        final nextRoute = (_source == 'login')
+            ? AppRoutes.home
+            : AppRoutes.introduceYourself;
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          nextRoute,
+          (_) => false,
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ $message')),
-        );
+        final errorMessage = responseBody['message']?.toString() ?? 
+            'Server error: ${response.statusCode}';
+        _showError(errorMessage);
       }
+    } on http.ClientException catch (e) {
+      _showError('Network error: ${e.message}');
+    } on TimeoutException {
+      _showError('Request timed out. Please check your internet connection.');
+    } on FormatException {
+      _showError('Invalid server response format');
     } catch (e) {
+      _showError('An unexpected error occurred: $e');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('❌ Error: ${e.toString()}')),
@@ -161,18 +176,55 @@ class _LoginVerificationScreenState extends State<LoginVerificationScreen> {
     );
   }
 
+  // Show error message to the user
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('❌ $message'),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  // Show success message to the user
+  void _showSuccess(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('✅ $message'),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  // Navigate to the appropriate screen after successful verification
+  void _navigateAfterVerification() {
+    if (!mounted) return;
+    
+    final nextRoute = (_source == 'login')
+        ? AppRoutes.home
+        : AppRoutes.introduceYourself;
+        
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      nextRoute,
+      (route) => false, // Remove all previous routes
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    bool isLoading = false;
-
     final mq = MediaQuery.of(context);
     final keyboardInset = mq.viewInsets.bottom;
-    final safeHeight = mq.size.height - mq.padding.top - mq.padding.bottom;
-
-    final headerHeight = (safeHeight * 0.90).clamp(180.0, 320.0);
+    final screenHeight = mq.size.height;
+    final screenWidth = mq.size.width;
+    final isSmallScreen = screenWidth < 360;
 
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
@@ -183,8 +235,10 @@ class _LoginVerificationScreenState extends State<LoginVerificationScreen> {
             child: IntrinsicHeight(
               child: Column(
                 children: [
-                  // Your existing UI components here
+                  // (keep existing UI below exactly as in your file)
                   // ...
+                  // The rest of your original layout code goes here unchanged
+                  // up to the end of the class.
                 ],
               ),
             ),

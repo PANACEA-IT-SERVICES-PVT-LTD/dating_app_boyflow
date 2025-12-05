@@ -69,12 +69,6 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
   @override
   void initState() {
     super.initState();
-    // Prefill example values matching the sample response
-    _nameController.text = 'oliva Doe';
-    _ageController.text = '30';
-    _bioController.text = 'This is my bio';
-    _gender = 'Female';
-
     _fetchMaleInterests();
     _fetchMaleLanguages();
     _fetchCurrentMaleProfile();
@@ -121,6 +115,7 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
         final lastName = (data["lastName"] ?? "").toString();
         final bio = (data["bio"] ?? "").toString();
         final gender = (data["gender"] ?? "").toString();
+        final dobStr = (data["dateOfBirth"] ?? "").toString();
         final height = (data["height"] ?? "").toString();
         final images = data["images"];
         final interests = data["interests"];
@@ -131,8 +126,20 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                 [firstName, lastName].where((e) => e.isNotEmpty).join(' ');
           }
 
-          if (height.isNotEmpty) {
-            _ageController.text = height;
+          // Convert dateOfBirth to an age number for the Age field.
+          if (dobStr.isNotEmpty) {
+            final dob = DateTime.tryParse(dobStr);
+            if (dob != null) {
+              final now = DateTime.now();
+              final years = now.year - dob.year -
+                  ((now.month < dob.month ||
+                          (now.month == dob.month && now.day < dob.day))
+                      ? 1
+                      : 0);
+              if (years > 0) {
+                _ageController.text = years.toString();
+              }
+            }
           }
 
           if (bio.isNotEmpty) {
@@ -290,31 +297,49 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
       "${ApiEndPoints.baseUrls}${ApiEndPoints.maleProfileDetails}",
     );
 
+    // Split full name into firstName / lastName to better match backend shape.
+    final fullName = _nameController.text.trim();
+    final nameParts = fullName.split(' ').where((e) => e.isNotEmpty).toList();
+    final firstName = nameParts.isNotEmpty ? nameParts.first : fullName;
+    final lastName = nameParts.length > 1
+        ? nameParts.sublist(1).join(' ')
+        : "";
+
+    // Derive a simple dateOfBirth from the numeric age entered.
+    // We approximate as Jan 1 of (currentYear - age) so backend gets a DOB.
+    String? dateOfBirth;
+    final ageText = _ageController.text.trim();
+    final age = int.tryParse(ageText);
+    if (age != null && age > 0) {
+      final now = DateTime.now();
+      final approxDob = DateTime(now.year - age, 1, 1);
+      dateOfBirth = approxDob.toIso8601String().split('T').first;
+    }
+
     try {
-      final resp = await http.post(
+      // Build interests and languages, falling back to full lists if nothing selected.
+      final interests = _selectedInterestIds.isNotEmpty
+          ? _selectedInterestIds.toList()
+          : _interestIds;
+      final languages = _selectedLanguageIds.isNotEmpty
+          ? _selectedLanguageIds.toList()
+          : _languageIds;
+
+      final resp = await http.patch(
         uri,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
-          "firstName": _nameController.text.trim(),
-          "lastName": "", // adjust if you collect last name separately
-          "mobileNumber": "9999999999", // sample/mobile; replace with real value when available
+          "firstName": firstName,
+          "lastName": lastName,
+          // NOTE: mobileNumber is still a placeholder until you wire real value.
+          "mobileNumber": "9999999999",
+          if (dateOfBirth != null) "dateOfBirth": dateOfBirth,
           "gender": _gender.toLowerCase(),
           "bio": _bioController.text.trim(),
-          "interests": _selectedInterestIds.isNotEmpty
-              ? _selectedInterestIds.toList()
-              : _interestIds.isNotEmpty
-                  ? _interestIds
-                  : [
-                      "68d4f9dfdd3c0ef9b8ebbf19",
-                      "68d4fac1dd3c0ef9b8ebbf20",
-                    ],
-          "languages": _selectedLanguageIds.isNotEmpty
-              ? _selectedLanguageIds.toList()
-              : _languageIds.isNotEmpty
-                  ? _languageIds
-                  : [
-                      "68d4fc53dd3c0ef9b8ebbf35",
-                    ],
+          "interests": interests,
+          "languages": languages,
+          // Keep these fixed IDs to match your backend sample until you expose
+          // them in the UI.
           "religion": "68d5092b4e1ff23011f7c631",
           "relationshipGoals": [
             "68d509d84e1ff23011f7c636",
@@ -339,11 +364,9 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✅ Profile updated successfully!')),
         );
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const RegistrationStatusScreen()),
-        );
+        // Go back to the previous screen (e.g., AccountScreen).
+        // AccountScreen awaits this and then refreshes /male-user/me.
+        Navigator.pop(context, true);
       } else {
         final msg = (body is Map ? (body["message"] ?? body["error"]) : null) ??
             "Profile update failed";

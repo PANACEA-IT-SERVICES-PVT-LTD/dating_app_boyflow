@@ -1,3 +1,4 @@
+import 'package:Boy_flow/api_service/api_service.dart';
 import 'package:flutter/material.dart';
 import '../views/screens/mainhome.dart';
 import '../views/screens/chat_screen.dart';
@@ -24,7 +25,7 @@ class CustomBottomNav extends StatelessWidget {
       case 2:
         destination = const CallScreen();
         break;
-      case 3:
+      case 3: 
         destination = const NotificationScreen();
         break;
       case 4:
@@ -59,7 +60,9 @@ class CustomBottomNav extends StatelessWidget {
         BottomNavigationBarItem(icon: Icon(Icons.message), label: 'Chat'),
         BottomNavigationBarItem(icon: Icon(Icons.call), label: 'Call'),
         BottomNavigationBarItem(
-          icon: Icon(Icons.notifications), label: 'Notifications' ),
+          icon: Icon(Icons.notifications),
+          label: 'Notifications',
+        ),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
     );

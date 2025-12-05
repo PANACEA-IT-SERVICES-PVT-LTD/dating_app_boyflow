@@ -287,39 +287,43 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
       body: Column(
         children: [
           const SizedBox(height: 10),
-          // Toggle Buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _gradientToggleButton("My Followers", _tabIndex == 0, () {
-                if (_tabIndex != 0) {
-                  setState(() => _tabIndex = 0);
-                  if (_followers.isEmpty) {
-                    _fetchFollowers();
+          // Toggle Buttons with SingleChildScrollView
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _gradientToggleButton("Followers", _tabIndex == 0, () {
+                  if (_tabIndex != 0) {
+                    setState(() => _tabIndex = 0);
+                    if (_followers.isEmpty) {
+                      _fetchFollowers();
+                    }
                   }
-                }
-              }),
-              const SizedBox(width: 10),
-              _gradientToggleButton("My Following", _tabIndex == 1, () {
-                if (_tabIndex != 1) {
-                  setState(() => _tabIndex = 1);
-                  if (_following.isEmpty) {
-                    _fetchFollowing();
+                }),
+                const SizedBox(width: 8),
+                _gradientToggleButton("Following", _tabIndex == 1, () {
+                  if (_tabIndex != 1) {
+                    setState(() => _tabIndex = 1);
+                    if (_following.isEmpty) {
+                      _fetchFollowing();
+                    }
                   }
-                }
-              }),
-              const SizedBox(width: 10),
-              _gradientToggleButton("My Favourites", _tabIndex == 2, () {
-                if (_tabIndex != 2) {
-                  setState(() => _tabIndex = 2);
-                  if (_favourites.isEmpty) {
-                    _fetchFavourites();
+                }),
+                const SizedBox(width: 8),
+                _gradientToggleButton("Favourites", _tabIndex == 2, () {
+                  if (_tabIndex != 2) {
+                    setState(() => _tabIndex = 2);
+                    if (_favourites.isEmpty) {
+                      _fetchFavourites();
+                    }
                   }
-                }
-              }),
-            ],
+                }),
+              ],
+            ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           // List
           Expanded(
             child: _loading
@@ -479,29 +483,37 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
   ) {
     final Gradient gradient = appGradient;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: isSelected ? gradient : null,
-        borderRadius: BorderRadius.circular(20),
-        border: !isSelected ? Border.all(color: Colors.pink.shade200) : null,
-      ),
-      child: ElevatedButton(
-        onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          foregroundColor: isSelected ? Colors.white : Colors.pink,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 100),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: isSelected ? gradient : null,
+          borderRadius: BorderRadius.circular(20),
+          border: !isSelected ? Border.all(color: Colors.pink.shade200) : null,
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.white : Colors.pink,
+        child: ElevatedButton(
+          onPressed: onTap,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            shadowColor: Colors.transparent,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            foregroundColor: isSelected ? Colors.white : Colors.pink,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: isSelected ? Colors.white : Colors.pink,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ),

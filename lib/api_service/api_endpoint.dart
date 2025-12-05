@@ -12,17 +12,15 @@ class ApiEndPoints {
   static const String maleMe = "/male-user/me";
   static const String maleInterests = "/male-user/interests";
   static const String maleLanguages = "/male-user/languages";
+  static const String fetchfemaleusers = "male-user/browse-females";
 
   // Male follow/unfollow
   static const String maleUnfollow = "/male-user/unfollow";
   static const String maleFollowing = "/male-user/following";
   static const String maleFollowers = "/male-user/followers";
-  static const String maleListFavourites = "/male-user/favourites";
-  static const String maleAddFavourite = "/male-user/favourites/add";
-  static const String maleRemoveFavourite = "/male-user/favourites/remove";
-
-  // Male block list
-  static const String maleBlockList = "/male-user/blocklist";
+  static const String maleAddFavourite = "/male-user/add-favourite";
+  static const String maleRemoveFavourite = "/male-user/remove-favourite";
+  static const String maleBlockList = "/male-user/block-list";
   static const String maleUnblock = "/male-user/unblock";
 
   // Female auth & profile
@@ -31,7 +29,4 @@ class ApiEndPoints {
   static const String login = "/female-user/login";
   static const String loginotp = "/female-user/verify-login-otp";
   static const String profiledetails = "/female-user/add-info";
-
-  // Browse females list for male user
-  static const String maleBrowseFemales = "/male-user/browse-females";
 }

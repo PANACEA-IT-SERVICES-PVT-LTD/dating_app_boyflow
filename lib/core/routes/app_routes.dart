@@ -1,4 +1,5 @@
 // lib/core/routes/app_routes.dart
+import 'package:Boy_flow/api_service/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:Boy_flow/views/screens/loginVerification.dart';
 
@@ -9,7 +10,7 @@ import 'package:Boy_flow/views/screens/onboardingscreen.dart';
 // OTP screen
 import 'package:Boy_flow/views/screens/verificationfail.dart';
 import 'package:Boy_flow/views/screens/signup.dart';
-import 'package:Boy_flow/views/screens/mainhome.dart';
+import 'package:Boy_flow/views/screens/mainhome.dart' hide ProfileGalleryScreen;
 import 'package:Boy_flow/views/screens/call_screen.dart';
 import 'package:Boy_flow/views/screens/chat_screen.dart';
 import 'package:Boy_flow/views/screens/notification_screen.dart';

@@ -49,14 +49,25 @@ class _OtpInputFieldsState extends State<OtpInputFields> {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: List.generate(4, (index) {
         return Container(
-          width: 55,
-          height: 55,
+          width: 60,
+          height: 60,
+          margin: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
-            color: AppColors.inputField,
-            border: Border.all(color: AppColors.otpBorder),
+            color: const Color(0xFFFDE8F4), // Light pink background
+            border: Border.all(
+              color: const Color(0xFF4CAF50), // Green border
+              width: 1.5,
+            ),
             borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 3,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          alignment: Alignment.center,
           child: TextField(
             controller: _controllers[index],
             focusNode: _focusNodes[index],
@@ -64,13 +75,14 @@ class _OtpInputFieldsState extends State<OtpInputFields> {
             textAlign: TextAlign.center,
             maxLength: 1,
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: AppColors.black87,
+              color: Colors.black87,
             ),
             decoration: const InputDecoration(
               border: InputBorder.none,
               counterText: '',
+              contentPadding: EdgeInsets.zero,
             ),
             onChanged: (val) => _onChanged(val, index),
           ),
