@@ -12,6 +12,7 @@ class ApiEndPoints {
   static const String maleMe = "/male-user/me";
   static const String maleInterests = "/male-user/interests";
   static const String maleLanguages = "/male-user/languages";
+  static const String fetchfemaleusers = "male-user/browse-females";
 
   // Male follow/unfollow
   static const String maleUnfollow = "/male-user/unfollow";
@@ -28,7 +29,4 @@ class ApiEndPoints {
   static const String login = "/female-user/login";
   static const String loginotp = "/female-user/verify-login-otp";
   static const String profiledetails = "/female-user/add-info";
-
-  // Browse females list for male user
-  static const String maleBrowseFemales = "/male-user/browse-females";
 }
