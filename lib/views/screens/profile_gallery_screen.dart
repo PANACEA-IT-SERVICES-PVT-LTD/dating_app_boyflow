@@ -50,9 +50,16 @@ class _ProfileGalleryScreenState extends State<ProfileGalleryScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: const ProfileTabEditable(),
+      body: NotificationListener<OverscrollIndicatorNotification>(
+        onNotification: (OverscrollIndicatorNotification overscroll) {
+          overscroll.disallowIndicator();
+          return true;
+        },
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          physics: const ClampingScrollPhysics(),
+          child: const ProfileTabEditable(),
+        ),
       ),
     );
   }
