@@ -30,7 +30,9 @@ class _MyCallRateState extends State<MyCallRate> {
   @override
   void initState() {
     super.initState();
-    _talktimeController = TextEditingController(text: availableTalktime.toString());
+    _talktimeController = TextEditingController(
+      text: availableTalktime.toString(),
+    );
 
     // Keep the numeric field -> availableTalktime in sync
     _talktimeController.addListener(() {
@@ -76,9 +78,7 @@ class _MyCallRateState extends State<MyCallRate> {
   Widget build(BuildContext context) {
     const Color pink1 = Color(0xFFFF4081);
     const Color pink2 = Color(0xFF9C27B0);
-    const Color orange = Color(0xFFFF6F00);
     const Color yellow = Color(0xFFF4C200); // pay section
-    const Color blue = Color(0xFF0B64D6);
     const double cardRadius = 12.0;
 
     return Scaffold(
@@ -87,9 +87,7 @@ class _MyCallRateState extends State<MyCallRate> {
       appBar: AppBar(
         elevation: 0,
         automaticallyImplyLeading: true,
-        iconTheme: const IconThemeData(
-          color: Colors.white,
-        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
           'Talktime',
           style: TextStyle(
@@ -163,10 +161,11 @@ class _MyCallRateState extends State<MyCallRate> {
                               ),
                               child: TextField(
                                 controller: _talktimeController,
-                                keyboardType: const TextInputType.numberWithOptions(
-                                  decimal: false,
-                                  signed: false,
-                                ),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: false,
+                                      signed: false,
+                                    ),
                                 textAlign: TextAlign.left,
                                 decoration: const InputDecoration(
                                   prefixText: '₹',
@@ -184,10 +183,13 @@ class _MyCallRateState extends State<MyCallRate> {
                                 ),
                                 // Optional: onSubmitted if you want to act when user finishes editing
                                 onSubmitted: (value) {
-                                  final parsed = int.tryParse(value.replaceAll(',', '')) ?? 0;
+                                  final parsed =
+                                      int.tryParse(value.replaceAll(',', '')) ??
+                                      0;
                                   setState(() => availableTalktime = parsed);
                                   // If parsed doesn't match any offer, deselect
-                                  if (selectedIndex != null && offers[selectedIndex!][0] != parsed) {
+                                  if (selectedIndex != null &&
+                                      offers[selectedIndex!][0] != parsed) {
                                     selectedIndex = null;
                                   }
                                 },
@@ -202,7 +204,7 @@ class _MyCallRateState extends State<MyCallRate> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(left: 10,right: 10),
+              padding: const EdgeInsets.only(left: 10, right: 10),
               child: Divider(thickness: 1),
             ),
 

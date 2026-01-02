@@ -1,7 +1,58 @@
+import 'dart:convert';
+
+import 'package:Boy_flow/api_service/api_endpoint.dart';
 import 'package:Boy_flow/services/api_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+
+import '../utils/token_helper.dart';
+import 'package:http/http.dart' as http;
 
 class ApiController extends ChangeNotifier {
+  // Sent follow requests cache
+  List<Map<String, dynamic>> _sentFollowRequests = [];
+  List<Map<String, dynamic>> get sentFollowRequests =>
+      List<Map<String, dynamic>>.unmodifiable(_sentFollowRequests);
+
+  // Fetch sent follow requests and store in controller
+  Future<List<Map<String, dynamic>>> fetchSentFollowRequests() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final res = await _apiService.fetchSentFollowRequests();
+      _sentFollowRequests = res;
+      _isLoading = false;
+      notifyListeners();
+      return res;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Send follow request for a female user
+  Future<Map<String, dynamic>> sendFollowRequest(String femaleUserId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final result = await _apiService.sendFollowRequest(
+        femaleUserId: femaleUserId,
+      );
+      _isLoading = false;
+      notifyListeners();
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   final ApiService _apiService = ApiService();
 
   bool _isLoading = false;
@@ -29,6 +80,32 @@ class ApiController extends ChangeNotifier {
   /// Getter for female profiles cached in controller
   List<Map<String, dynamic>> get femaleProfiles =>
       List<Map<String, dynamic>>.unmodifiable(_femaleProfiles);
+
+  /// Verifies OTP and saves token if present.
+  Future<bool> verifyOtp(String otp, {String source = 'signup'}) async {
+    final endpoint = source == 'login'
+        ? ApiEndPoints.loginotpMale
+        : ApiEndPoints.verifyOtpMale;
+    final url = Uri.parse("${ApiEndPoints.baseUrls}$endpoint");
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"otp": otp}),
+    );
+    final body = jsonDecode(response.body);
+    final success = body['success'] == true;
+    if (success) {
+      final token = body['token'] ?? body['access_token'];
+      if (token != null && token is String && token.isNotEmpty) {
+        _authToken = token;
+        // Save to SharedPreferences for later use
+        try {
+          await saveLoginToken(token);
+        } catch (_) {}
+      }
+    }
+    return success;
+  }
 
   void setPendingIdentity({String? email, String? mobile, String? source}) {
     if (email != null && email.isNotEmpty) _pendingEmail = email.trim();
@@ -225,7 +302,13 @@ class ApiController extends ChangeNotifier {
         _femaleProfiles = parsed;
         _isLoading = false;
         _error = null;
-        notifyListeners();
+        if (WidgetsBinding.instance != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            notifyListeners();
+          });
+        } else {
+          notifyListeners();
+        }
         return parsed;
       }
 

@@ -16,7 +16,7 @@ class RewardLevelsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color blue = Color(0xFF0B64D6);
+    // Removed unused variable
 
     return Scaffold(
       backgroundColor: Colors.white,

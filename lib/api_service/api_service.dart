@@ -11,7 +11,6 @@ import '../../models/user.dart' as call_user;
 import '../../models/call_state.dart';
 import '../../services/call_manager.dart';
 
-
 class mainhome extends StatefulWidget {
   const mainhome({super.key});
 
@@ -183,7 +182,7 @@ class _HomeScreenState extends State<mainhome> {
           foregroundColor: Colors.white,
         ),
       ),
-      bottomNavigationBar: const CustomBottomNav(currentIndex: 0),
+      bottomNavigationBar: Container(height: 0),
     );
   }
 

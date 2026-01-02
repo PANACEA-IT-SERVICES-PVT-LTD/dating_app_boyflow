@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utils/colors.dart'; // Adjust path as needed
+// Removed unused import
 
 class OtpInputFields extends StatefulWidget {
   final void Function(String) onCompleted;

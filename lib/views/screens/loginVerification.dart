@@ -1,17 +1,16 @@
-import 'package:Boy_flow/views/screens/earnings_screen.dart';
-import 'package:Boy_flow/views/screens/mainhome.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/api_controller.dart';
 import '../../core/routes/app_routes.dart';
-import '../../utils/colors.dart';
+// Removed unused imports
 import '../../widgets/gradient_button.dart';
 import '../../widgets/otp_input_fields.dart';
-import 'dart:async';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import '../../api_service/api_endpoint.dart';
 
 class LoginVerificationScreen extends StatefulWidget {
-  const LoginVerificationScreen({super.key});
+  final String? email;
+  final String? otp;
+
+  const LoginVerificationScreen({super.key, this.email, this.otp});
 
   @override
   State<LoginVerificationScreen> createState() =>
@@ -19,228 +18,133 @@ class LoginVerificationScreen extends StatefulWidget {
 }
 
 class _LoginVerificationScreenState extends State<LoginVerificationScreen> {
-  String? _email;
-  String? _mobile;
-  String? _source; // "login" or "signup"
-  String _otp = "";
-  bool _submitting = false;
-  bool _isInitialized = false;
+  final List<TextEditingController> _otpControllers = List.generate(
+    4,
+    (index) => TextEditingController(),
+  );
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeFromArguments();
-    });
+    if (widget.otp != null && widget.otp!.length == 4) {
+      for (int i = 0; i < 4; i++) {
+        _otpControllers[i].text = widget.otp![i];
+      }
+    }
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_isInitialized) {
-      _initializeFromArguments();
+  void dispose() {
+    for (var controller in _otpControllers) {
+      controller.dispose();
     }
-  }
-
-  void _initializeFromArguments() {
-    if (_isInitialized) return;
-    
-    try {
-      final args = ModalRoute.of(context)?.settings.arguments;
-      
-      if (args == null) {
-        debugPrint('⚠️ No arguments provided to LoginVerificationScreen');
-        Navigator.of(context).pop();
-        return;
-      }
-      
-      if (args is Map<String, dynamic>) {
-        setState(() {
-          _email = (args['email'] as String?)?.trim();
-          _mobile = (args['mobile'] as String?)?.trim();
-          _source = (args['source'] as String?)?.trim().toLowerCase() ?? 'login';
-          _isInitialized = true;
-        });
-        
-        if (_email == null && _mobile == null) {
-          debugPrint('⚠️ Neither email nor mobile provided to LoginVerificationScreen');
-          Navigator.of(context).pop();
-        }
-      } else {
-        debugPrint('⚠️ Invalid arguments type: ${args.runtimeType}');
-        Navigator.of(context).pop();
-      }
-    } catch (e) {
-      debugPrint('❌ Error initializing LoginVerificationScreen: $e');
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
-    }
+    super.dispose();
   }
 
   Future<void> _verifyOtp() async {
-    // Validate OTP input
-    final otp = _otp.trim();
-    if (otp.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please enter the OTP')));
+    final otp = _otpControllers.map((c) => c.text).join();
+    if (otp.length != 4) {
+      setState(() => _errorMessage = 'Please enter the complete OTP');
       return;
     }
 
-    setState(() => _submitting = true);
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
     try {
-      // Determine the appropriate endpoint based on the source
-      final endpoint = (_source == 'login')
-          ? ApiEndPoints.loginotpMale
-          : ApiEndPoints.verifyOtpMale;
-      
-      final url = Uri.parse("${ApiEndPoints.baseUrls}$endpoint");
-      
-      // Convert OTP to number if it's all digits
-      final numericOtp = RegExp(r'^\d+$').hasMatch(otp) ? int.parse(otp) : otp;
-      
-      // Prepare the request payload
-      final payload = <String, dynamic>{
-        "otp": numericOtp,
-        if (_email != null && _email!.trim().isNotEmpty) "email": _email!.trim(),
-        if (_mobile != null && _mobile!.trim().isNotEmpty)
-          "mobileNumber": _mobile!.trim(),
-        if (_source != null && _source!.trim().isNotEmpty)
-          "source": _source!.trim().toLowerCase(),
-        if (_email != null && _email!.trim().isNotEmpty)
-          "channel": "email"
-        else if (_mobile != null && _mobile!.trim().isNotEmpty)
-          "channel": "mobile",
-      };
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      final success = await apiController.verifyOtp(otp, source: 'login');
 
-      // Make the API request
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(payload),
-      ).timeout(const Duration(seconds: 30));
-
-      // Parse the response
-      final Map<String, dynamic> responseBody;
-      try {
-        responseBody = jsonDecode(response.body) as Map<String, dynamic>;
-      } catch (e) {
-        throw Exception('Invalid server response');
+      if (mounted) {
+        if (success) {
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
+        } else {
+          setState(() => _errorMessage = 'Invalid OTP. Please try again.');
+        }
       }
-
-      if (!mounted) return;
-
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ $message')),
-        );
-        final nextRoute = (_source == 'login')
-            ? AppRoutes.home
-            : AppRoutes.introduceYourself;
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          nextRoute,
-          (_) => false,
-        );
-      } else {
-        final errorMessage = responseBody['message']?.toString() ?? 
-            'Server error: ${response.statusCode}';
-        _showError(errorMessage);
-      }
-    } on http.ClientException catch (e) {
-      _showError('Network error: ${e.message}');
-    } on TimeoutException {
-      _showError('Request timed out. Please check your internet connection.');
-    } on FormatException {
-      _showError('Invalid server response format');
     } catch (e) {
-      _showError('An unexpected error occurred: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Error: ${e.toString()}')),
-      );
+      setState(() => _errorMessage = 'Error verifying OTP: $e');
     } finally {
-      if (mounted) setState(() => _submitting = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
-  Future<void> _resendOtp() async {
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (!mounted) return;
-
+  void _resendOtp() {
+    // Implement resend OTP logic here
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('OTP resent. Please check your inbox.')),
-    );
-  }
-
-  // Show error message to the user
-  void _showError(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('❌ $message'),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  // Show success message to the user
-  void _showSuccess(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('✅ $message'),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  // Navigate to the appropriate screen after successful verification
-  void _navigateAfterVerification() {
-    if (!mounted) return;
-    
-    final nextRoute = (_source == 'login')
-        ? AppRoutes.home
-        : AppRoutes.introduceYourself;
-        
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      nextRoute,
-      (route) => false, // Remove all previous routes
+      const SnackBar(content: Text('OTP has been resent to your email')),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final mq = MediaQuery.of(context);
-    final keyboardInset = mq.viewInsets.bottom;
-    final screenHeight = mq.size.height;
-    final screenWidth = mq.size.width;
-    final isSmallScreen = screenWidth < 360;
-
     return Scaffold(
-      backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: true,
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: SingleChildScrollView(
-          padding: EdgeInsets.only(bottom: keyboardInset),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: safeHeight),
-            child: IntrinsicHeight(
-              child: Column(
-                children: [
-                  // (keep existing UI below exactly as in your file)
-                  // ...
-                  // The rest of your original layout code goes here unchanged
-                  // up to the end of the class.
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Verify your email",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "Enter the 4-digit OTP sent to ${widget.email ?? ''}",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 15, color: Colors.black54),
+                ),
+                const SizedBox(height: 32),
+                OtpInputFields(
+                  onCompleted: (otp) {
+                    for (
+                      int i = 0;
+                      i < otp.length && i < _otpControllers.length;
+                      i++
+                    ) {
+                      _otpControllers[i].text = otp[i].toString();
+                    }
+                    _verifyOtp();
+                  },
+                ),
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ],
-              ),
+                const SizedBox(height: 32),
+                GradientButton(
+                  text: _isLoading ? "Verifying..." : "Verify OTP",
+                  onPressed: _isLoading ? null : _verifyOtp,
+                  buttonText: '',
+                ),
+                const SizedBox(height: 24),
+                GestureDetector(
+                  onTap: _resendOtp,
+                  child: const Text(
+                    "Resend OTP",
+                    style: TextStyle(
+                      color: Colors.purple,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

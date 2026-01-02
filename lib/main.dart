@@ -1,14 +1,19 @@
-// In lib/main.dart
+// lib/main.dart
+import 'package:Boy_flow/core/routes/app_routes.dart';
+import 'package:Boy_flow/views/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
-import 'core/routes/app_routes.dart';
-// import 'controllers/api_controller.dart';
+import 'package:provider/provider.dart';
+
+import 'controllers/api_controller.dart';
+// Removed unused import
+import 'views/screens/main_navigation.dart';
 
 void main() {
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ApiController()),
+        // Add other providers here if needed
       ],
       child: const MyApp(),
     ),
@@ -21,18 +26,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Boy Flow',
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.login,
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      initialRoute: '/login',
       onGenerateRoute: AppRoutes.generateRoute,
     );
-    // return MultiProvider(
-    //   providers: [ChangeNotifierProvider(create: (_) => ApiController())],
-    //   child: MaterialApp(
-    //     title: 'Boy Flow',
-    //     debugShowCheckedModeBanner: false,
-    //     initialRoute: AppRoutes.home,
-    //     onGenerateRoute: AppRoutes.generateRoute,
-    //   ),
-    // );
   }
 }

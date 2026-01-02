@@ -50,13 +50,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _submitting = true);
     try {
       final url = Uri.parse(
-          "${ApiEndPoints.baseUrls}${ApiEndPoints.loginMale}");
+        "${ApiEndPoints.baseUrls}${ApiEndPoints.loginMale}",
+      );
       final resp = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "email": email,
-        }),
+        body: jsonEncode({"email": email}),
       );
 
       dynamic body;
@@ -67,7 +66,8 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       final success = (body is Map && body["success"] == true);
-      final message = (body is Map ? body["message"] : null) ??
+      final message =
+          (body is Map ? body["message"] : null) ??
           (resp.statusCode >= 200 && resp.statusCode < 300
               ? "OTP sent"
               : "Failed to send OTP");
@@ -86,18 +86,20 @@ class _LoginScreenState extends State<LoginScreen> {
             arguments: <String, dynamic>{
               'email': email,
               'source': 'login',
-              if (body is Map && body['otp'] != null) 'otp': body['otp'].toString(),
+              if (body['otp'] != null) 'otp': body['otp'].toString(),
             },
           );
         }
       } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("❌ $message")));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("❌ $message")));
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("❌ Error: ${e.toString()}")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("❌ Error: ${e.toString()}")));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -121,7 +123,9 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: EdgeInsets.only(bottom: keyboardInset),
           child: ConstrainedBox(
             // allow the SingleChildScrollView to take at least the full height
-            constraints: BoxConstraints(minHeight: mq.size.height - mq.padding.top - mq.padding.bottom),
+            constraints: BoxConstraints(
+              minHeight: mq.size.height - mq.padding.top - mq.padding.bottom,
+            ),
             child: IntrinsicHeight(
               child: Stack(
                 children: [
@@ -129,7 +133,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: mq.size.height,
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [AppColors.gradientTop, AppColors.gradientBottom],
+                        colors: [
+                          AppColors.gradientTop,
+                          AppColors.gradientBottom,
+                        ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
@@ -200,7 +207,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: AppColors.inputField,
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               child: TextField(
                                 controller: _emailCtrl,
                                 keyboardType: TextInputType.emailAddress,
@@ -226,17 +235,24 @@ class _LoginScreenState extends State<LoginScreen> {
                             const SizedBox(height: 16),
                             GradientButton(
                               text: _submitting ? 'Sending OTP...' : 'Log In',
-                              onPressed: _submitting ? null : () {
-                                if (!isLoading) _sendOtp();
-                              },
+                              onPressed: _submitting
+                                  ? null
+                                  : () {
+                                      if (!isLoading) _sendOtp();
+                                    },
                               buttonText: '',
                             ),
                             const SizedBox(height: 12),
                             Center(
                               child: GestureDetector(
                                 onTap: () {
-                                  print('🔐 Login Screen: Navigating to signup');
-                                  Navigator.pushNamed(context, AppRoutes.signup);
+                                  print(
+                                    '🔐 Login Screen: Navigating to signup',
+                                  );
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.signup,
+                                  );
                                 },
                                 child: const Text(
                                   "Sign Up",

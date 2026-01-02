@@ -1,5 +1,6 @@
 // lib/core/routes/app_routes.dart
 import 'package:Boy_flow/api_service/api_service.dart';
+import 'package:Boy_flow/views/screens/signup_verification.dart';
 import 'package:flutter/material.dart';
 import 'package:Boy_flow/views/screens/loginVerification.dart';
 
@@ -7,10 +8,9 @@ import 'package:Boy_flow/views/screens/loginVerification.dart';
 import 'package:Boy_flow/views/screens/login_screen.dart';
 import 'package:Boy_flow/views/screens/started.dart';
 import 'package:Boy_flow/views/screens/onboardingscreen.dart';
-// OTP screen
 import 'package:Boy_flow/views/screens/verificationfail.dart';
 import 'package:Boy_flow/views/screens/signup.dart';
-import 'package:Boy_flow/views/screens/mainhome.dart' hide ProfileGalleryScreen;
+import 'package:Boy_flow/views/screens/mainhome.dart';
 import 'package:Boy_flow/views/screens/call_screen.dart';
 import 'package:Boy_flow/views/screens/chat_screen.dart';
 import 'package:Boy_flow/views/screens/notification_screen.dart';
@@ -66,6 +66,7 @@ class AppRoutes {
   static const String invitefriends = '/Invitefriends';
   static const String introduceYourself = '/IntroduceYourself';
   static const String registrationstatus = '/RegistrationStatus';
+  static const String signupVerification = '/signupVerification';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     final args = settings.arguments;
@@ -81,16 +82,21 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const LoginScreen());
 
       case home:
-        return MaterialPageRoute(builder: (_) => const mainhome());
+        return MaterialPageRoute(builder: (_) => const MainHome());
 
       case onboarding:
         return MaterialPageRoute(builder: (_) => const OnboardingScreen());
 
       case loginVerification:
-        // OTP screen; pass through any arguments (email/mobile/source)
+        // Handle OTP verification screen with arguments
+        final Map<String, dynamic> routeArgs = args is Map<String, dynamic>
+            ? args
+            : {};
         return MaterialPageRoute(
-          builder: (_) => const LoginVerificationScreen(),
-          settings: settings,
+          builder: (_) => LoginVerificationScreen(
+            email: routeArgs['email'],
+            otp: routeArgs['otp'],
+          ),
         );
 
       case verificationFail:
@@ -100,9 +106,15 @@ class AppRoutes {
 
       case signup:
         return MaterialPageRoute(builder: (_) => const SignupScreen());
+      case signupVerification:
+        final args = settings.arguments as Map<String, dynamic>? ?? {};
+        return MaterialPageRoute(
+          builder: (_) =>
+              SignupVerificationScreen(email: args['email'], otp: args['otp']),
+        );
 
       case homepage:
-        return MaterialPageRoute(builder: (_) => const mainhome());
+        return MaterialPageRoute(builder: (_) => const MainHome());
 
       case chatScreen:
         return MaterialPageRoute(builder: (_) => const ChatScreen());
@@ -139,7 +151,7 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const CallUserDetailsScreen());
 
       case profilegallery:
-        return MaterialPageRoute(builder: (_) => ProfileGalleryScreen());
+        return MaterialPageRoute(builder: (_) => const ProfileGalleryScreen());
 
       case callrate:
         return MaterialPageRoute(builder: (_) => const MyCallRate());
@@ -153,14 +165,11 @@ class AppRoutes {
       case earnings:
         return MaterialPageRoute(builder: (_) => const MyEarningsScreen());
 
-      // case createagency:
-      //   return MaterialPageRoute(builder: (_) => const CreateAgencyScreen());
-
       case supportservice:
         return MaterialPageRoute(builder: (_) => const SupportServiceScreen());
 
-      // case const settings: // ✅ fixed typo (was: case AppRoutes settings:)
-      //   return MaterialPageRoute(builder: (_) => const SettingsScreen());
+      case AppRoutes.settings:
+        return MaterialPageRoute(builder: (_) => const SettingsScreen());
 
       case blocklistscreen:
         return MaterialPageRoute(builder: (_) => const BlockListScreen());
@@ -180,7 +189,7 @@ class AppRoutes {
         );
 
       case invitefriends:
-        return MaterialPageRoute(builder: (_) => InviteFriendsScreen());
+        return MaterialPageRoute(builder: (_) => const InviteFriendsScreen());
 
       case introduceYourself:
         return MaterialPageRoute(

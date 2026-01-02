@@ -1,6 +1,6 @@
 import 'package:Boy_flow/views/screens/profile_gallery_screen.dart';
 import 'package:flutter/material.dart';
-import '../../widgets/bottom_nav.dart';
+// Removed unused import
 
 class CallScreen extends StatefulWidget {
   const CallScreen({super.key});
@@ -112,9 +112,7 @@ class _CallScreenState extends State<CallScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => ProfileGalleryScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => ProfileGalleryScreen()),
               );
             },
 
@@ -194,7 +192,7 @@ class _CallScreenState extends State<CallScreen> {
           );
         },
       ),
-      bottomNavigationBar: const CustomBottomNav(currentIndex: 2),
+      bottomNavigationBar: Container(height: 0),
     );
   }
 }

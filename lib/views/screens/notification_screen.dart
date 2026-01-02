@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../widgets/bottom_nav.dart';
+// Removed unused import
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -157,7 +157,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
           );
         },
       ),
-      bottomNavigationBar: const CustomBottomNav(currentIndex: 3),
+      bottomNavigationBar: Container(height: 0),
     );
   }
 }

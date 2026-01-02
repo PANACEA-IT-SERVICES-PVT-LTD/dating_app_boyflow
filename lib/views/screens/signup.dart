@@ -47,7 +47,8 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _submitting = true);
     try {
       final url = Uri.parse(
-          "${ApiEndPoints.baseUrls}${ApiEndPoints.signupMale}");
+        "${ApiEndPoints.baseUrls}${ApiEndPoints.signupMale}",
+      );
       final resp = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
@@ -68,34 +69,38 @@ class _SignupScreenState extends State<SignupScreen> {
       }
 
       final success = (body is Map && body["success"] == true);
-      final message = (body is Map ? body["message"] : null) ??
+      final message =
+          (body is Map ? body["message"] : null) ??
           (resp.statusCode >= 200 && resp.statusCode < 300
               ? "Registration successful"
               : "Registration failed");
 
       if (!mounted) return;
 
+      // ...existing code...
       if (success) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("✅ $message")));
-        Navigator.pushNamed(
+        ScaffoldMessenger.of(
           context,
-          AppRoutes.loginVerification,
+        ).showSnackBar(SnackBar(content: Text("✅ $message")));
+        Navigator.pushReplacementNamed(
+          context,
+          AppRoutes.signupVerification,
           arguments: {
             'email': email,
-            'source': 'signup',
-            if (body is Map && body['otp'] != null) 'otp': body['otp'],
+            if (body['otp'] != null) 'otp': body['otp'].toString(),
           },
         );
       } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("❌ $message")));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("❌ $message")));
       }
+      // ...existing code...
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Error: ${e.toString()}")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("❌ Error: ${e.toString()}")));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -104,282 +109,260 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // ✅ Make the overall screen white
       backgroundColor: AppColors.white,
       resizeToAvoidBottomInset: true,
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          children: [
-            // ✅ Gradient only in this header block
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.only(bottom: 24),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [AppColors.gradientTop, AppColors.gradientBottom],
-                ),
-              ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 80),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        const Text(
-                          "100% Trusted and secure",
-                          style: TextStyle(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const Spacer(),
-                        Image.asset(
-                          'assets/sheild.png',
-                          height: 24,
-                          width: 24,
-                          color: AppColors.icon,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    height: 260,
-                    child: Image.asset(
-                      'assets/Signup.png',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ],
+      body: Column(
+        children: [
+          // Header (fixed, not scrollable)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.only(bottom: 24),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [AppColors.gradientTop, AppColors.gradientBottom],
               ),
             ),
-
-            // ✅ White sheet with rounded top
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-              decoration: const BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
+            child: Column(
+              children: [
+                const SizedBox(height: 80),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      const Text(
+                        "100% Trusted and secure",
+                        style: TextStyle(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      Image.asset(
+                        'assets/sheild.png',
+                        height: 24,
+                        width: 24,
+                        color: AppColors.icon,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Center(
-                      child: Text(
-                        "Register yourself",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: AppColors.black87,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Center(
-                      child: Text(
-                        "Please register or sign up",
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.black54,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    const Text(
-                      "First Name",
-                      style: TextStyle(color: AppColors.black87),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.inputField,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: TextFormField(
-                        controller: _firstNameCtrl,
-                        keyboardType: TextInputType.name,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'Enter first name';
-                          }
-                          return null;
-                        },
-                        decoration: const InputDecoration(
-                          hintText: "Enter first name",
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      "Last Name",
-                      style: TextStyle(color: AppColors.black87),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.inputField,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: TextFormField(
-                        controller: _lastNameCtrl,
-                        keyboardType: TextInputType.name,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'Enter last name';
-                          }
-                          return null;
-                        },
-                        decoration: const InputDecoration(
-                          hintText: "Enter last name",
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      "Email ID",
-                      style: TextStyle(color: AppColors.black87),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.inputField,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: TextFormField(
-                        controller: _emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'Enter email';
-                          }
-                          if (!RegExp(
-                            r'^[^@]+@[^@]+\.[^@]+',
-                          ).hasMatch(v.trim())) {
-                            return 'Enter valid email';
-                          }
-                          return null;
-                        },
-                        decoration: const InputDecoration(
-                          hintText: "Enter email",
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      "Referral Code (optional)",
-                      style: TextStyle(color: AppColors.black87),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.inputField,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: TextFormField(
-                        controller: _referralCtrl,
-                        keyboardType: TextInputType.text,
-                        decoration: const InputDecoration(
-                          hintText: "Enter referral code (if any)",
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    const Text(
-                      "Password",
-                      style: TextStyle(color: AppColors.black87),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.inputField,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: TextFormField(
-                        controller: _passwordCtrl,
-                        obscureText: true,
-                        validator: (v) {
-                          if (v == null || v.isEmpty) return 'Enter password';
-                          if (v.length < 6) return 'Min 6 characters';
-                          return null;
-                        },
-                        decoration: const InputDecoration(
-                          hintText: "Enter password",
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    GradientButton(
-                      text: _submitting ? "Registering..." : "Register",
-                      onPressed: _submitting ? null : _submit,
-                      buttonText: '',
-                    ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          print('📝 Signup Screen: Navigating to login');
-                          Navigator.pushNamed(context, AppRoutes.login);
-                        },
-                        child: const Text(
-                          "Log In",
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 260,
+                  child: Image.asset('assets/Signup.png', fit: BoxFit.contain),
+                ),
+              ],
+            ),
+          ),
+          // Scrollable form fields only
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 30,
+                ),
+                decoration: const BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Center(
+                        child: Text(
+                          "Register yourself",
                           style: TextStyle(
-                            decoration: TextDecoration.underline,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
                             color: AppColors.black87,
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      const Center(
+                        child: Text(
+                          "Please register or sign up",
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.black54,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      const Text(
+                        "First Name",
+                        style: TextStyle(color: AppColors.black87),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.inputField,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: TextFormField(
+                          controller: _firstNameCtrl,
+                          keyboardType: TextInputType.name,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Enter first name';
+                            }
+                            return null;
+                          },
+                          decoration: const InputDecoration(
+                            hintText: "Enter first name",
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Last Name",
+                        style: TextStyle(color: AppColors.black87),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.inputField,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: TextFormField(
+                          controller: _lastNameCtrl,
+                          keyboardType: TextInputType.name,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Enter last name';
+                            }
+                            return null;
+                          },
+                          decoration: const InputDecoration(
+                            hintText: "Enter last name",
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Email",
+                        style: TextStyle(color: AppColors.black87),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.inputField,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: TextFormField(
+                          controller: _emailCtrl,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Enter email';
+                            }
+                            if (!RegExp(
+                              r'^[^@]+@[^@]+\.[^@]+',
+                            ).hasMatch(v.trim())) {
+                              return 'Enter valid email';
+                            }
+                            return null;
+                          },
+                          decoration: const InputDecoration(
+                            hintText: "Enter email",
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Referral Code (optional)",
+                        style: TextStyle(color: AppColors.black87),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.inputField,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: TextFormField(
+                          controller: _referralCtrl,
+                          keyboardType: TextInputType.text,
+                          decoration: const InputDecoration(
+                            hintText: "Enter referral code (if any)",
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      const Text(
+                        "Password",
+                        style: TextStyle(color: AppColors.black87),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.inputField,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: TextFormField(
+                          controller: _passwordCtrl,
+                          obscureText: true,
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return 'Enter password';
+                            if (v.length < 6) return 'Min 6 characters';
+                            return null;
+                          },
+                          decoration: const InputDecoration(
+                            hintText: "Enter password",
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      GradientButton(
+                        text: _submitting ? "Registering..." : "Register",
+                        onPressed: _submitting ? null : _submit,
+                        buttonText: '',
+                      ),
+                      const SizedBox(height: 12),
+                      Center(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, AppRoutes.login);
+                          },
+                          child: const Text(
+                            "Log In",
+                            style: TextStyle(
+                              decoration: TextDecoration.underline,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.black87,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-      // Original Consumer implementation (commented out)
-      // body: Consumer<ApiController>(
-      //   builder: (context, controller, _) {
-      //     return SingleChildScrollView(
-      //       physics: const BouncingScrollPhysics(),
-      //       child: Column(
-      //         children: [
-      //           // ... rest of the UI code ...
-      //           controller.isLoading
-      //               ? const Center(child: CircularProgressIndicator())
-      //               : GradientButton(
-      //                   text: "Verify OTP",
-      //                   onPressed: _submit,
-      //                   buttonText: '',
-      //                 ),
-      //           // ... rest of the UI code ...
-      //         ],
-      //       ),
-      //     );
-      //   },
-      // ),
     );
   }
 }

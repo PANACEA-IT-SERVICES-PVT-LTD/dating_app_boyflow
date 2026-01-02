@@ -5,6 +5,49 @@ import '../models/female_user.dart';
 import '../api_service/api_endpoint.dart';
 
 class ApiService {
+  // Fetch sent follow requests
+  Future<List<Map<String, dynamic>>> fetchSentFollowRequests() async {
+    final url = Uri.parse(
+      '${ApiEndPoints.baseUrls}/male-user/follow-requests/sent',
+    );
+    final headers = await _getHeaders();
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      final decoded = json.decode(response.body);
+      final data = decoded['data'];
+      if (data is List) {
+        return data
+            .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+            .toList();
+      } else {
+        return <Map<String, dynamic>>[];
+      }
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to fetch sent follow requests');
+    }
+  }
+
+  // Send follow request to a female user
+  Future<Map<String, dynamic>> sendFollowRequest({
+    required String femaleUserId,
+  }) async {
+    final url = Uri.parse(
+      '${ApiEndPoints.baseUrls}/male-user/follow-request/send',
+    );
+    final headers = await _getHeaders();
+    final body = jsonEncode({"femaleUserId": femaleUserId});
+
+    final response = await http.post(url, headers: headers, body: body);
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to send follow request');
+    }
+  }
+
   final String baseUrl = ApiEndPoints.baseUrls;
   String? _authToken;
 
@@ -12,7 +55,7 @@ class ApiService {
   Future<void> _getAuthToken() async {
     if (_authToken == null) {
       final prefs = await SharedPreferences.getInstance();
-      _authToken = prefs.getString('auth_token');
+      _authToken = prefs.getString('token');
     }
   }
 
@@ -41,15 +84,27 @@ class ApiService {
   }
 
   // Fetch female users with pagination
-  Future<FemaleUserResponse> fetchFemaleUsers({ int page = 1,int limit = 10, }) async {
+  Future<List<Map<String, dynamic>>> fetchFemaleUsers({
+    int page = 1,
+    int limit = 10,
+  }) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/app/male-user/browse-females?page=$page&limit=$limit'),
+        Uri.parse('$baseUrl/male-user/browse-females?page=$page&limit=$limit'),
         headers: await _getHeaders(),
       );
 
       if (response.statusCode == 200) {
-        return FemaleUserResponse.fromJson(json.decode(response.body));
+        final decoded = json.decode(response.body);
+        // Expecting { data: [ ... ] }
+        final data = decoded['data'];
+        if (data is List) {
+          return data
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList();
+        } else {
+          return <Map<String, dynamic>>[];
+        }
       } else {
         _handleError(response.statusCode, response.body);
         throw Exception('Failed to load female users');

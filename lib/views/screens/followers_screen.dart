@@ -72,27 +72,28 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
       final mapped = dataList
           .whereType<Map<String, dynamic>>()
           .map<Map<String, dynamic>>((item) {
-        final username = (item["username"] ?? item["name"] ?? "User")
-            .toString();
-        final age = int.tryParse((item["age"] ?? "0").toString()) ?? 0;
-        final gender = (item["gender"] ?? "").toString();
-        final level = (item["level"] ?? "01").toString();
-        final online = item["online"] == true || item["isOnline"] == true;
-        final avatarUrl =
-            (item["avatar"] ?? item["avatarUrl"] ?? item["photo"] ?? "")
+            final username = (item["username"] ?? item["name"] ?? "User")
                 .toString();
-        final id = (item["id"] ?? item["_id"] ?? "").toString();
+            final age = int.tryParse((item["age"] ?? "0").toString()) ?? 0;
+            final gender = (item["gender"] ?? "").toString();
+            final level = (item["level"] ?? "01").toString();
+            final online = item["online"] == true || item["isOnline"] == true;
+            final avatarUrl =
+                (item["avatar"] ?? item["avatarUrl"] ?? item["photo"] ?? "")
+                    .toString();
+            final id = (item["id"] ?? item["_id"] ?? "").toString();
 
-        return {
-          "id": id,
-          "username": username,
-          "age": age,
-          "gender": gender,
-          "level": level,
-          "online": online,
-          "avatarUrl": avatarUrl,
-        };
-      }).toList();
+            return {
+              "id": id,
+              "username": username,
+              "age": age,
+              "gender": gender,
+              "level": level,
+              "online": online,
+              "avatarUrl": avatarUrl,
+            };
+          })
+          .toList();
 
       if (!mounted) return;
 
@@ -111,9 +112,7 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
 
   Future<void> _fetchFavourites() async {
     try {
-      final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleMe}",
-      );
+      final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.maleMe}");
       final resp = await http.get(url);
 
       dynamic body;
@@ -219,27 +218,28 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
       final mapped = dataList
           .whereType<Map<String, dynamic>>()
           .map<Map<String, dynamic>>((item) {
-        final username = (item["username"] ?? item["name"] ?? "User")
-            .toString();
-        final age = int.tryParse((item["age"] ?? "0").toString()) ?? 0;
-        final gender = (item["gender"] ?? "").toString();
-        final level = (item["level"] ?? "01").toString();
-        final online = item["online"] == true || item["isOnline"] == true;
-        final avatarUrl =
-            (item["avatar"] ?? item["avatarUrl"] ?? item["photo"] ?? "")
+            final username = (item["username"] ?? item["name"] ?? "User")
                 .toString();
-        final id = (item["id"] ?? item["_id"] ?? "").toString();
+            final age = int.tryParse((item["age"] ?? "0").toString()) ?? 0;
+            final gender = (item["gender"] ?? "").toString();
+            final level = (item["level"] ?? "01").toString();
+            final online = item["online"] == true || item["isOnline"] == true;
+            final avatarUrl =
+                (item["avatar"] ?? item["avatarUrl"] ?? item["photo"] ?? "")
+                    .toString();
+            final id = (item["id"] ?? item["_id"] ?? "").toString();
 
-        return {
-          "id": id,
-          "username": username,
-          "age": age,
-          "gender": gender,
-          "level": level,
-          "online": online,
-          "avatarUrl": avatarUrl,
-        };
-      }).toList();
+            return {
+              "id": id,
+              "username": username,
+              "age": age,
+              "gender": gender,
+              "level": level,
+              "online": online,
+              "avatarUrl": avatarUrl,
+            };
+          })
+          .toList();
 
       if (!mounted) return;
 
@@ -329,147 +329,147 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? Center(child: Text(_error!))
-                    : Builder(
-                        builder: (context) {
-                          List<Map<String, dynamic>> list;
-                          String emptyMessage;
+                ? Center(child: Text(_error!))
+                : Builder(
+                    builder: (context) {
+                      List<Map<String, dynamic>> list;
+                      String emptyMessage;
 
-                          if (_tabIndex == 0) {
-                            list = _followers;
-                            emptyMessage = "No followers found.";
-                          } else if (_tabIndex == 1) {
-                            list = _following;
-                            emptyMessage = "No following users found.";
+                      if (_tabIndex == 0) {
+                        list = _followers;
+                        emptyMessage = "No followers found.";
+                      } else if (_tabIndex == 1) {
+                        list = _following;
+                        emptyMessage = "No following users found.";
+                      } else {
+                        // Favourites tab: merge followers + following filtered by favourite IDs
+                        final merged = <Map<String, dynamic>>[];
+                        final seen = <String>{};
+
+                        for (final u in _followers) {
+                          final id = (u['id'] ?? '').toString();
+                          // Only add if favourite and femaleUserId is not null
+                          if (_favourites.contains(id) &&
+                              !seen.contains(id) &&
+                              u['femaleUserId'] != null) {
+                            merged.add(u);
+                            seen.add(id);
+                          }
+                        }
+
+                        for (final u in _following) {
+                          final id = (u['id'] ?? '').toString();
+                          if (_favourites.contains(id) &&
+                              !seen.contains(id) &&
+                              u['femaleUserId'] != null) {
+                            merged.add(u);
+                            seen.add(id);
+                          }
+                        }
+
+                        list = merged;
+                        emptyMessage = "No favourites found.";
+                      }
+
+                      if (list.isEmpty) {
+                        return Center(child: Text(emptyMessage));
+                      }
+
+                      return ListView.builder(
+                        itemCount: list.length,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemBuilder: (_, index) {
+                          final user = list[index];
+                          final avatar = (user['avatarUrl'] ?? '')
+                              .toString()
+                              .trim();
+
+                          ImageProvider avatarProvider;
+                          if (avatar.isNotEmpty) {
+                            avatarProvider = NetworkImage(avatar);
                           } else {
-                            // Favourites tab: merge followers + following filtered by favourite IDs
-                            final merged = <Map<String, dynamic>>[];
-                            final seen = <String>{};
-
-                            for (final u in _followers) {
-                              final id = (u['id'] ?? '').toString();
-                              if (_favourites.contains(id) && !seen.contains(id)) {
-                                merged.add(u);
-                                seen.add(id);
-                              }
-                            }
-
-                            for (final u in _following) {
-                              final id = (u['id'] ?? '').toString();
-                              if (_favourites.contains(id) && !seen.contains(id)) {
-                                merged.add(u);
-                                seen.add(id);
-                              }
-                            }
-
-                            list = merged;
-                            emptyMessage = "No favourites found.";
+                            avatarProvider = const AssetImage(
+                              'assets/male_avatar.png',
+                            );
                           }
 
-                          if (list.isEmpty) {
-                            return Center(child: Text(emptyMessage));
-                          }
+                          final id = (user['id'] ?? '').toString();
+                          final isFav = _favourites.contains(id);
 
-                          return ListView.builder(
-                            itemCount: list.length,
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16),
-                            itemBuilder: (_, index) {
-                              final user = list[index];
-                              final avatar = (user['avatarUrl'] ?? '')
-                                  .toString()
-                                  .trim();
-
-                              ImageProvider avatarProvider;
-                              if (avatar.isNotEmpty) {
-                                avatarProvider = NetworkImage(avatar);
-                              } else {
-                                avatarProvider = const AssetImage(
-                                  'assets/male_avatar.png',
-                                );
-                              }
-
-                              final id = (user['id'] ?? '').toString();
-                              final isFav = _favourites.contains(id);
-
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 8),
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      backgroundImage: avatarProvider,
-                                      radius: 30,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    // Details
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  backgroundImage: avatarProvider,
+                                  radius: 30,
+                                ),
+                                const SizedBox(width: 10),
+                                // Details
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
                                         children: [
-                                          Row(
-                                            children: [
-                                              Text(
-                                                (user['username'] ?? 'User')
-                                                    .toString(),
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              _gradientLevelBadge(
-                                                (user['level'] ?? '01')
-                                                    .toString(),
-                                              ),
-                                            ],
+                                          Text(
+                                            (user['username'] ?? 'User')
+                                                .toString(),
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
-                                          const SizedBox(height: 4),
-                                          Row(
-                                            children: [
-                                              Text(
-                                                "${(user['gender'] ?? '').toString()} ${(user['age'] ?? '').toString()}",
-                                              ),
-                                              const SizedBox(width: 8),
-                                              if (user['online'] == true)
-                                                const Text(
-                                                  "• Online",
-                                                  style: TextStyle(
-                                                    color: Colors.green,
-                                                    fontWeight:
-                                                        FontWeight.w500,
-                                                  ),
-                                                ),
-                                            ],
+                                          const SizedBox(width: 8),
+                                          _gradientLevelBadge(
+                                            (user['level'] ?? '01').toString(),
                                           ),
                                         ],
                                       ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        isFav
-                                            ? Icons.favorite
-                                            : Icons.favorite_border,
-                                        color:
-                                            isFav ? Colors.red : Colors.grey,
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            "${(user['gender'] ?? '').toString()} ${(user['age'] ?? '').toString()}",
+                                          ),
+                                          const SizedBox(width: 8),
+                                          if (user['online'] == true)
+                                            const Text(
+                                              "• Online",
+                                              style: TextStyle(
+                                                color: Colors.green,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                        ],
                                       ),
-                                      onPressed: id.isEmpty
-                                          ? null
-                                          : () {
-                                              if (isFav) {
-                                                _removeFavourite(id);
-                                              } else {
-                                                _addFavourite(id);
-                                              }
-                                            },
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              );
-                            },
+                                IconButton(
+                                  icon: Icon(
+                                    isFav
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: isFav ? Colors.red : Colors.grey,
+                                  ),
+                                  onPressed: id.isEmpty
+                                      ? null
+                                      : () {
+                                          if (isFav) {
+                                            _removeFavourite(id);
+                                          } else {
+                                            _addFavourite(id);
+                                          }
+                                        },
+                                ),
+                              ],
+                            ),
                           );
                         },
-                      ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),

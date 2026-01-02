@@ -100,9 +100,7 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
     });
 
     try {
-      final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleMe}",
-      );
+      final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.maleMe}");
 
       final resp = await http.get(url);
 
@@ -118,17 +116,21 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
       if (body is Map && body["success"] == true && body["data"] is Map) {
         final data = body["data"] as Map<String, dynamic>;
 
-        final dobStr = data["dateOfBirth"]?.toString();
         int? age;
-        if (dobStr != null) {
-          final dob = DateTime.tryParse(dobStr);
-          if (dob != null) {
+        final dobStr = data["dateOfBirth"]?.toString();
+        if (dobStr != null && dobStr.isNotEmpty) {
+          try {
+            final dob = DateTime.parse(dobStr);
             final now = DateTime.now();
-            age = now.year - dob.year -
+            age =
+                now.year -
+                dob.year -
                 ((now.month < dob.month ||
                         (now.month == dob.month && now.day < dob.day))
                     ? 1
                     : 0);
+          } catch (_) {
+            age = null;
           }
         }
 
@@ -148,10 +150,12 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
             _profileImageUrl = images.first.toString();
           }
 
-          profileDetails["My Languages"] =
-              (langs is List) ? langs.map((e) => e.toString()).toList() : [];
-          profileDetails["My Interests"] =
-              (ints is List) ? ints.map((e) => e.toString()).toList() : [];
+          profileDetails["My Languages"] = (langs is List)
+              ? langs.map((e) => e.toString()).toList()
+              : [];
+          profileDetails["My Interests"] = (ints is List)
+              ? ints.map((e) => e.toString()).toList()
+              : [];
         });
       }
     } catch (_) {
@@ -196,7 +200,9 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
           height: 42,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            gradient: showGradient ? LinearGradient(colors: gradientColors) : null,
+            gradient: showGradient
+                ? LinearGradient(colors: gradientColors)
+                : null,
             color: showGradient ? null : Colors.white,
             border: Border.all(color: const Color(0xFFFF00CC), width: 1.5),
             borderRadius: BorderRadius.circular(20),
@@ -214,7 +220,11 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: showGradient ? Colors.white : const Color(0xFFFF00CC), size: 18),
+              Icon(
+                icon,
+                color: showGradient ? Colors.white : const Color(0xFFFF00CC),
+                size: 18,
+              ),
               const SizedBox(width: 8),
               Text(
                 text,
@@ -263,7 +273,10 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                 right: 0,
                 child: Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green.withOpacity(0.18),
                       borderRadius: BorderRadius.circular(20),
@@ -321,19 +334,37 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Text("Age: ", style: TextStyle(color: Colors.black87, fontSize: 12)),
-                      Text("22 years",
-                          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 12)),
+                      Text(
+                        "Age: ",
+                        style: TextStyle(color: Colors.black87, fontSize: 12),
+                      ),
+                      Text(
+                        "22 years",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                          fontSize: 12,
+                        ),
+                      ),
                       SizedBox(width: 10),
-                      Text("257 Followers",
-                          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black, fontSize: 12)),
+                      Text(
+                        "257 Followers",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
                   GestureDetector(
                     onTap: () => setState(() => isFollowing = !isFollowing),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [Color(0xFFFF55A5), Color(0xFF9A00F0)],
@@ -342,7 +373,11 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                       ),
                       child: Text(
                         isFollowing ? "Following" : "Follow",
-                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
@@ -408,7 +443,11 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                   'Please do not trust fraudulent information such as money transfer, lottery etc. from strangers.\n'
                   'Do not share any personal information such as passwords, mobile numbers, or OTPs.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: Colors.black87, height: 1.4),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.black87,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Row(
@@ -430,7 +469,10 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                             onCall();
                           },
                           icon: const Icon(Icons.phone, color: Colors.white),
-                          label: const Text('Call', style: TextStyle(color: Colors.white)),
+                          label: const Text(
+                            'Call',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ),
                     ),
@@ -452,7 +494,10 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
                             onVideo();
                           },
                           icon: const Icon(Icons.videocam, color: Colors.white),
-                          label: const Text('Video', style: TextStyle(color: Colors.white)),
+                          label: const Text(
+                            'Video',
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
                       ),
                     ),
@@ -480,19 +525,29 @@ class _ProfileTabEditableState extends State<ProfileTabEditable> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(entry.key,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87)),
+                Text(
+                  entry.key,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 6,
                   children: entry.value
-                      .map((item) => Chip(
-                            label: Text(item),
-                            backgroundColor: Colors.pink[50],
-                            labelStyle:
-                                const TextStyle(color: Colors.black87, fontWeight: FontWeight.w400),
-                          ))
+                      .map(
+                        (item) => Chip(
+                          label: Text(item),
+                          backgroundColor: Colors.pink[50],
+                          labelStyle: const TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      )
                       .toList(),
                 ),
               ],

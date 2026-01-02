@@ -1,7 +1,7 @@
 // lib/views/screens/mainhome.dart
 import 'package:Boy_flow/controllers/api_controller.dart';
 import 'package:Boy_flow/views/screens/call_page.dart';
-import 'package:Boy_flow/widgets/bottom_nav.dart';
+// Removed unused import
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +25,20 @@ class _HomeScreenState extends State<MainHome> {
   void initState() {
     super.initState();
     _loadProfiles();
+    _loadSentFollowRequests();
+  }
+
+  Future<void> _loadSentFollowRequests() async {
+    try {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      await apiController.fetchSentFollowRequests();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load sent follow requests: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _loadProfiles() async {
@@ -36,10 +50,7 @@ class _HomeScreenState extends State<MainHome> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to load profiles: $e'),
-            action: SnackBarAction(
-              label: 'Retry',
-              onPressed: _loadProfiles,
-            ),
+            action: SnackBarAction(label: 'Retry', onPressed: _loadProfiles),
           ),
         );
       }
@@ -90,9 +101,9 @@ class _HomeScreenState extends State<MainHome> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to start call: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to start call: $e')));
     }
   }
 
@@ -139,6 +150,7 @@ class _HomeScreenState extends State<MainHome> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F5FF),
+      resizeToAvoidBottomInset: true,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: AppBar(
@@ -192,7 +204,8 @@ class _HomeScreenState extends State<MainHome> {
           foregroundColor: Colors.white,
         ),
       ),
-      bottomNavigationBar: const CustomBottomNav(currentIndex: 0),
+      // Navigation handled by MainNavigationScreen
+      bottomNavigationBar: Container(height: 0),
     );
   }
 
@@ -234,88 +247,151 @@ class _HomeScreenState extends State<MainHome> {
       );
     }
 
-    return CustomScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      slivers: [
-        const SliverToBoxAdapter(child: SizedBox(height: 14)),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
+    return SafeArea(
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          const SliverToBoxAdapter(child: SizedBox(height: 14)),
+          // Sent Follow Requests Column
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  FilterChipWidget(
-                    label: 'All',
-                    selected: _filter == 'All',
-                    onSelected: (v) {
-                      setState(() => _filter = 'All');
-                    },
-                  ),
-                  const SizedBox(width: 10),
-                  FilterChipWidget(
-                    label: 'Follow',
-                    selected: _filter == 'Follow',
-                    onSelected: (v) {
-                      setState(() => _filter = 'Follow');
-                    },
-                  ),
-                  const SizedBox(width: 10),
-                  FilterChipWidget(
-                    label: 'Near By',
-                    selected: _filter == 'Near By',
-                    onSelected: (v) {
-                      setState(() => _filter = 'Near By');
-                    },
-                  ),
-                  const SizedBox(width: 10),
-                  FilterChipWidget(
-                    label: 'New',
-                    selected: _filter == 'New',
-                    onSelected: (v) {
-                      setState(() => _filter = 'New');
-                    },
-                  ),
+                  if (apiController.sentFollowRequests.isNotEmpty) ...[
+                    const Text(
+                      'Sent Follow Requests:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.purple,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...apiController.sentFollowRequests.map((req) {
+                      final female = req['femaleUserId'] ?? {};
+                      final name = female['email'] ?? 'Unknown';
+                      final status = req['status'] ?? 'pending';
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 6,
+                          horizontal: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.shade50,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              status,
+                              style: const TextStyle(color: Colors.purple),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    const SizedBox(height: 12),
+                  ],
                 ],
               ),
             ),
           ),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: 10)),
-        SliverList(
-          delegate: SliverChildBuilderDelegate((context, index) {
-            final profile = profiles[index];
-
-            final String name = profile['name']?.toString() ?? '';
-            final String bio = profile['bio']?.toString() ?? '';
-            final String ageStr = profile['age']?.toString() ?? '';
-
-            return Padding(
-              padding: const EdgeInsets.only(left: 10, right: 10, bottom: 16),
-              child: ProfileCardWidget(
-                name: name,
-                badgeImagePath: 'assets/vector.png',
-                imagePath: 'assets/img_1.png',
-                language: bio.isNotEmpty ? bio : 'Bio not available',
-                age: ageStr,
-                callRate: '10/min',
-                videoRate: '20/min',
-                onCardTap: () => _showCallTypePopup(profile),
-                onAudioCallTap: () => _startCall(isVideo: false, profile: profile),
-                onVideoCallTap: () => _startCall(isVideo: true, profile: profile),
+          // Filter chips row
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    FilterChipWidget(
+                      label: 'All',
+                      selected: _filter == 'All',
+                      onSelected: (v) {
+                        setState(() => _filter = 'All');
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    FilterChipWidget(
+                      label: 'Follow',
+                      selected: _filter == 'Follow',
+                      onSelected: (v) {
+                        setState(() => _filter = 'Follow');
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    FilterChipWidget(
+                      label: 'Near By',
+                      selected: _filter == 'Near By',
+                      onSelected: (v) {
+                        setState(() => _filter = 'Near By');
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    FilterChipWidget(
+                      label: 'New',
+                      selected: _filter == 'New',
+                      onSelected: (v) {
+                        setState(() => _filter = 'New');
+                      },
+                    ),
+                  ],
+                ),
               ),
-            );
-          }, childCount: profiles.length),
-        ),
-      ],
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 10)),
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final profile = profiles[index];
+
+              final String name = profile['name']?.toString() ?? '';
+              final String bio = profile['bio']?.toString() ?? '';
+              final String ageStr = profile['age']?.toString() ?? '';
+
+              return Padding(
+                padding: const EdgeInsets.only(left: 10, right: 10, bottom: 16),
+                child: _FollowableProfileCard(
+                  name: name,
+                  badgeImagePath: 'assets/vector.png',
+                  imagePath: 'assets/img_1.png',
+                  language: bio.isNotEmpty ? bio : 'Bio not available',
+                  age: ageStr,
+                  callRate: '10/min',
+                  videoRate: '20/min',
+                  onCardTap: () => _showCallTypePopup(profile),
+                  onAudioCallTap: () =>
+                      _startCall(isVideo: false, profile: profile),
+                  onVideoCallTap: () =>
+                      _startCall(isVideo: true, profile: profile),
+                  femaleUserId: profile['_id']?.toString() ?? '',
+                  femaleName: name,
+                ),
+              );
+            }, childCount: profiles.length),
+          ),
+          // Add extra bottom padding to prevent overflow
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
+      ),
     );
   }
 }
 
-
 /// Quick sheet and promo card
 class _QuickActionsBottomSheet extends StatelessWidget {
-  const _QuickActionsBottomSheet({super.key});
+  const _QuickActionsBottomSheet();
 
   @override
   Widget build(BuildContext context) {
@@ -533,6 +609,8 @@ class ProfileCardWidget extends StatelessWidget {
   final VoidCallback? onCardTap;
   final VoidCallback? onAudioCallTap;
   final VoidCallback? onVideoCallTap;
+  final VoidCallback? onFollowTap;
+  final bool isFollowLoading;
 
   const ProfileCardWidget({
     required this.name,
@@ -545,6 +623,8 @@ class ProfileCardWidget extends StatelessWidget {
     this.onCardTap,
     this.onAudioCallTap,
     this.onVideoCallTap,
+    this.onFollowTap,
+    this.isFollowLoading = false,
     super.key,
   });
 
@@ -553,7 +633,7 @@ class ProfileCardWidget extends StatelessWidget {
     return GestureDetector(
       onTap: onCardTap,
       child: Container(
-        height: 200,
+        // Removed fixed height
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
@@ -588,7 +668,7 @@ class ProfileCardWidget extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 87),
                 child: Container(
-                  height: 130,
+                  // Removed fixed height
                   color: Colors.black12,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -615,7 +695,7 @@ class ProfileCardWidget extends StatelessWidget {
                             _BadgeImage(imagePath: badgeImagePath),
                           ],
                         ),
-                        const Spacer(),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             Expanded(
@@ -638,6 +718,39 @@ class ProfileCardWidget extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
+                            const SizedBox(width: 8),
+                            if (onFollowTap != null)
+                              ElevatedButton(
+                                onPressed: onFollowTap,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.pinkAccent,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  textStyle: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: isFollowLoading
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                        ),
+                                      )
+                                    : const Text('Follow'),
+                              ),
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -741,6 +854,92 @@ class _RatePill extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// Wrapper widget to manage follow button loading state per card
+class _FollowableProfileCard extends StatefulWidget {
+  final String name;
+  final String language;
+  final String age;
+  final String callRate;
+  final String videoRate;
+  final String imagePath;
+  final String badgeImagePath;
+  final VoidCallback? onCardTap;
+  final VoidCallback? onAudioCallTap;
+  final VoidCallback? onVideoCallTap;
+  final String femaleUserId;
+  final String femaleName;
+
+  const _FollowableProfileCard({
+    required this.name,
+    required this.language,
+    required this.age,
+    required this.callRate,
+    required this.videoRate,
+    required this.imagePath,
+    required this.badgeImagePath,
+    this.onCardTap,
+    this.onAudioCallTap,
+    this.onVideoCallTap,
+    required this.femaleUserId,
+    required this.femaleName,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<_FollowableProfileCard> createState() => _FollowableProfileCardState();
+}
+
+class _FollowableProfileCardState extends State<_FollowableProfileCard> {
+  bool _isLoading = false;
+
+  Future<void> _handleFollow() async {
+    if (widget.femaleUserId.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Invalid user ID')));
+      return;
+    }
+    setState(() => _isLoading = true);
+    final apiController = Provider.of<ApiController>(context, listen: false);
+    try {
+      await apiController.sendFollowRequest(widget.femaleUserId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Follow request sent to  24{widget.femaleName}'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send follow request:  24e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ProfileCardWidget(
+      name: widget.name,
+      badgeImagePath: widget.badgeImagePath,
+      imagePath: widget.imagePath,
+      language: widget.language,
+      age: widget.age,
+      callRate: widget.callRate,
+      videoRate: widget.videoRate,
+      onCardTap: widget.onCardTap,
+      onAudioCallTap: widget.onAudioCallTap,
+      onVideoCallTap: widget.onVideoCallTap,
+      onFollowTap: _isLoading ? null : _handleFollow,
+      isFollowLoading: _isLoading,
     );
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/colors.dart'; // for AppColors.white etc.
-import '../../widgets/gradient_button.dart';
+// Removed unused import
 import 'withdraw_request_screen.dart'; // to navigate back
 
 class WithdrawConfirmationScreen extends StatelessWidget {

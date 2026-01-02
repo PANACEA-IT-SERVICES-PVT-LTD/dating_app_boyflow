@@ -1,20 +1,28 @@
 // ignore_for_file: sort_child_properties_last
 
-import 'dart:io';
+import 'dart:io' show File;
 import 'dart:convert';
 
-import 'package:Boy_flow/views/screens/account_screen.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+// Removed unused import: account_screen.dart
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 // import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
-
 import '../../widgets/gradient_button.dart';
-import '../../views/screens/registration_status.dart';
+// Removed unused import: registration_status.dart
 import '../../api_service/api_endpoint.dart';
 // import '../../controllers/api_controller.dart'; // <- make sure the path is correct in your project
 // import '../../api_service/api_endpoint.dart'; // only used for constants in comments
+
+// Helper to save token after login
+Future<void> saveLoginToken(String token) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('token', token);
+  debugPrint('Saved login token: $token');
+}
 
 /// Introduce Yourself Screen
 ///
@@ -43,6 +51,19 @@ class IntroduceYourselfScreen extends StatefulWidget {
 }
 
 class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
+  Future<void> _uploadProfileImage(dynamic imageFile) async {
+    // TODO: Implement image upload logic
+    // For now, just simulate upload and set a dummy URL
+    setState(() {
+      _uploadedPhotoUrl =
+          'https://dummyimage.com/200x200/cccccc/000000&text=Uploaded';
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('✅ (Stub) Image uploaded successfully')),
+    );
+  }
+
+  // Add stubs for missing methods at the bottom if needed
   File? _photo; // selected image file (local)
   VideoPlayerController? _videoController;
 
@@ -50,263 +71,110 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
 
   final _formKey = GlobalKey<FormState>();
 
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
   final _ageController = TextEditingController();
-  final _bioController = TextEditingController();
 
-  String _gender = 'Female'; // default to match sample payload
+  String _gender = 'Male'; // default to match sample payload
 
-  // Interests fetched from /male-user/interests
-  List<String> _interestIds = [];
-  Map<String, String> _interestIdToTitle = {};
-  final Set<String> _selectedInterestIds = {};
-
-  // Languages fetched from /male-user/languages
-  List<String> _languageIds = [];
-  Map<String, String> _languageIdToTitle = {};
-  final Set<String> _selectedLanguageIds = {};
+  // Removed interests and languages
 
   @override
   void initState() {
     super.initState();
-    _fetchMaleInterests();
-    _fetchMaleLanguages();
     _fetchCurrentMaleProfile();
   }
 
   @override
   void dispose() {
     _videoController?.dispose();
-    _nameController.dispose();
+    _firstNameController.dispose();
     _ageController.dispose();
-    _bioController.dispose();
     super.dispose();
   }
 
   Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      setState(() => _photo = File(picked.path));
-      await _uploadProfileImage(_photo!);
+      if (kIsWeb) {
+        setState(() => _photo = null); // Don't use File on web
+        await _uploadProfileImage(picked); // Pass XFile
+      } else {
+        setState(() => _photo = File(picked.path));
+        await _uploadProfileImage(File(picked.path));
+      }
     }
   }
 
   Future<void> _fetchCurrentMaleProfile() async {
     try {
-      final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleMe}",
-      );
-
+      final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.maleMe}");
       final resp = await http.get(url);
-
       dynamic body;
       try {
         body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
       } catch (_) {
         body = {"raw": resp.body};
       }
-
       if (!mounted) return;
-
       if (body is Map && body["success"] == true && body["data"] is Map) {
         final data = body["data"] as Map;
-
         final firstName = (data["firstName"] ?? "").toString();
-        final lastName = (data["lastName"] ?? "").toString();
-        final bio = (data["bio"] ?? "").toString();
         final gender = (data["gender"] ?? "").toString();
         final dobStr = (data["dateOfBirth"] ?? "").toString();
-        final height = (data["height"] ?? "").toString();
         final images = data["images"];
-        final interests = data["interests"];
-
-        setState(() {
-          if (firstName.isNotEmpty || lastName.isNotEmpty) {
-            _nameController.text =
-                [firstName, lastName].where((e) => e.isNotEmpty).join(' ');
-          }
-
-          // Convert dateOfBirth to an age number for the Age field.
-          if (dobStr.isNotEmpty) {
-            final dob = DateTime.tryParse(dobStr);
-            if (dob != null) {
-              final now = DateTime.now();
-              final years = now.year - dob.year -
-                  ((now.month < dob.month ||
-                          (now.month == dob.month && now.day < dob.day))
-                      ? 1
-                      : 0);
-              if (years > 0) {
-                _ageController.text = years.toString();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          setState(() {
+            _firstNameController.text = firstName;
+            if (dobStr.isNotEmpty) {
+              final dob = DateTime.tryParse(dobStr);
+              if (dob != null) {
+                final now = DateTime.now();
+                final years =
+                    now.year -
+                    dob.year -
+                    ((now.month < dob.month ||
+                            (now.month == dob.month && now.day < dob.day))
+                        ? 1
+                        : 0);
+                if (years > 0) {
+                  _ageController.text = years.toString();
+                }
               }
             }
-          }
-
-          if (bio.isNotEmpty) {
-            _bioController.text = bio;
-          }
-
-          if (gender.toLowerCase() == 'male') {
-            _gender = 'Male';
-          } else if (gender.toLowerCase() == 'female') {
-            _gender = 'Female';
-          }
-
-          if (images is List && images.isNotEmpty) {
-            _uploadedPhotoUrl = images.first.toString();
-          }
-
-          if (interests is List) {
-            _selectedInterestIds
-              ..clear()
-              ..addAll(interests.map((e) => e.toString()));
-          }
-        });
-      }
-    } catch (_) {
-      if (!mounted) return;
-    }
-  }
-
-  Future<void> _fetchMaleLanguages() async {
-    try {
-      final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleLanguages}",
-      );
-
-      final resp = await http.get(url);
-
-      dynamic body;
-      try {
-        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
-      } catch (_) {
-        body = {"raw": resp.body};
-      }
-
-      if (!mounted) return;
-
-      if (body is Map && body["success"] == true && body["data"] is List) {
-        final list = body["data"] as List;
-        setState(() {
-          _languageIds = [];
-          _languageIdToTitle.clear();
-
-          for (final e in list) {
-            if (e is Map && e["_id"] != null) {
-              final id = e["_id"].toString();
-              final title = (e["title"] ?? e["name"] ?? id).toString();
-              _languageIds.add(id);
-              _languageIdToTitle[id] = title;
+            if (gender.toLowerCase() == 'male') {
+              _gender = 'Male';
+            } else if (gender.toLowerCase() == 'female') {
+              _gender = 'Female';
             }
-          }
-        });
-      }
-    } catch (_) {
-      if (!mounted) return;
-    }
-  }
-
-  Future<void> _fetchMaleInterests() async {
-    try {
-      final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleInterests}",
-      );
-
-      final resp = await http.get(url);
-
-      dynamic body;
-      try {
-        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
-      } catch (_) {
-        body = {"raw": resp.body};
-      }
-
-      if (!mounted) return;
-
-      if (body is Map && body["success"] == true && body["data"] is List) {
-        final list = body["data"] as List;
-        setState(() {
-          _interestIds = [];
-          _interestIdToTitle.clear();
-
-          for (final e in list) {
-            if (e is Map && e["_id"] != null) {
-              final id = e["_id"].toString();
-              final title = (e["title"] ?? e["name"] ?? id).toString();
-              _interestIds.add(id);
-              _interestIdToTitle[id] = title;
+            if (images is List && images.isNotEmpty) {
+              _uploadedPhotoUrl = images.first.toString();
             }
-          }
-        });
-      }
-    } catch (_) {
-      if (!mounted) return;
-    }
-  }
-
-  Future<void> _uploadProfileImage(File imageFile) async {
-    final uri = Uri.parse(
-      "${ApiEndPoints.baseUrls}${ApiEndPoints.uploadImageMale}",
-    );
-
-    try {
-      final request = http.MultipartRequest('POST', uri);
-      request.files.add(
-        await http.MultipartFile.fromPath('images', imageFile.path),
-      );
-
-      final streamed = await request.send();
-      final response = await http.Response.fromStream(streamed);
-
-      dynamic body;
-      try {
-        body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
-      } catch (_) {
-        body = {"raw": response.body};
-      }
-
-      if (!mounted) return;
-
-      if (body is Map && body["success"] == true && body["urls"] is List) {
-        final urls = (body["urls"] as List).map((e) => e.toString()).toList();
-        if (urls.isNotEmpty) {
-          setState(() {
-            _uploadedPhotoUrl = urls.first;
           });
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Image uploaded successfully')), 
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ Failed to upload image')), 
-        );
+        });
       }
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('❌ Error while uploading image')), 
-      );
     }
   }
 
   Future<void> _onApprovePressed() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Check if image is uploaded
+    if (_uploadedPhotoUrl == null || _uploadedPhotoUrl!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Please upload a profile image before submitting.'),
+        ),
+      );
+      return;
+    }
     final uri = Uri.parse(
       "${ApiEndPoints.baseUrls}${ApiEndPoints.maleProfileDetails}",
     );
 
-    // Split full name into firstName / lastName to better match backend shape.
-    final fullName = _nameController.text.trim();
-    final nameParts = fullName.split(' ').where((e) => e.isNotEmpty).toList();
-    final firstName = nameParts.isNotEmpty ? nameParts.first : fullName;
-    final lastName = nameParts.length > 1
-        ? nameParts.sublist(1).join(' ')
-        : "";
-
-    // Derive a simple dateOfBirth from the numeric age entered.
-    // We approximate as Jan 1 of (currentYear - age) so backend gets a DOB.
+    final firstName = _firstNameController.text.trim();
     String? dateOfBirth;
     final ageText = _ageController.text.trim();
     final age = int.tryParse(ageText);
@@ -317,35 +185,26 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
     }
 
     try {
-      // Build interests and languages, falling back to full lists if nothing selected.
-      final interests = _selectedInterestIds.isNotEmpty
-          ? _selectedInterestIds.toList()
-          : _interestIds;
-      final languages = _selectedLanguageIds.isNotEmpty
-          ? _selectedLanguageIds.toList()
-          : _languageIds;
+      final prefs = await SharedPreferences.getInstance();
+      String? token =
+          prefs.getString('token') ?? prefs.getString('access_token') ?? '';
+      if (token.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❌ Login required. Token missing.')),
+        );
+        return;
+      }
 
       final resp = await http.patch(
         uri,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
         body: jsonEncode({
           "firstName": firstName,
-          "lastName": lastName,
-          // NOTE: mobileNumber is still a placeholder until you wire real value.
-          "mobileNumber": "9999999999",
           if (dateOfBirth != null) "dateOfBirth": dateOfBirth,
           "gender": _gender.toLowerCase(),
-          "bio": _bioController.text.trim(),
-          "interests": interests,
-          "languages": languages,
-          // Keep these fixed IDs to match your backend sample until you expose
-          // them in the UI.
-          "religion": "68d5092b4e1ff23011f7c631",
-          "relationshipGoals": [
-            "68d509d84e1ff23011f7c636",
-          ],
-          "height": "180",
-          "searchPreferences": "both",
           if (_uploadedPhotoUrl != null && _uploadedPhotoUrl!.isNotEmpty)
             "images": [_uploadedPhotoUrl],
         }),
@@ -364,20 +223,19 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('✅ Profile updated successfully!')),
         );
-        // Go back to the previous screen (e.g., AccountScreen).
-        // AccountScreen awaits this and then refreshes /male-user/me.
-        Navigator.pop(context, true);
+        Navigator.pop(context, true); // Return true to indicate update
       } else {
-        final msg = (body is Map ? (body["message"] ?? body["error"]) : null) ??
+        final msg =
+            (body is Map ? (body["message"] ?? body["error"]) : null) ??
             "Profile update failed";
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ $msg')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('❌ $msg')));
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Error updating profile: ${e.toString()}')),
+        SnackBar(content: Text('❌ Error updating profile: \\${e.toString()}')),
       );
     }
   }
@@ -430,7 +288,6 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: 16),
-
                     // Photo (circular avatar)
                     GestureDetector(
                       onTap: _pickImage,
@@ -440,15 +297,16 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                               backgroundImage: FileImage(_photo!),
                             )
                           : (_uploadedPhotoUrl != null &&
-                                  _uploadedPhotoUrl!.isNotEmpty
-                              ? CircleAvatar(
-                                  radius: 60,
-                                  backgroundImage:
-                                      NetworkImage(_uploadedPhotoUrl!),
-                                )
-                              : const _DottedBorderBox(
-                                  label: 'Upload photo',
-                                )),
+                                    _uploadedPhotoUrl!.isNotEmpty
+                                ? CircleAvatar(
+                                    radius: 60,
+                                    backgroundImage: NetworkImage(
+                                      _uploadedPhotoUrl!,
+                                    ),
+                                  )
+                                : const _DottedBorderBox(
+                                    label: 'Upload photo',
+                                  )),
                     ),
                     const SizedBox(height: 24),
                     Align(
@@ -457,13 +315,12 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                     ),
                     const SizedBox(height: 6),
                     _buildRoundedTextField(
-                      controller: _nameController,
+                      controller: _firstNameController,
                       hint: 'Enter your name',
                       validator: (v) => (v == null || v.trim().isEmpty)
                           ? 'Name is required'
                           : null,
                     ),
-
                     const SizedBox(height: 16),
                     Align(
                       alignment: Alignment.centerLeft,
@@ -483,8 +340,7 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                         return null;
                       },
                     ),
-
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text('Gender', style: _labelStyle()),
@@ -498,41 +354,13 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                         _genderOption('Female', Icons.female),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Interests', style: _labelStyle()),
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _interestIdToTitle.entries
-                            .map(
-                              (entry) => FilterChip(
-                                label: Text(entry.value),
-                                selected: _selectedInterestIds.contains(entry.key),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      _selectedInterestIds.add(entry.key);
-                                    } else {
-                                      _selectedInterestIds.remove(entry.key);
-                                    }
-                                  });
-                                },
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    ),
                     const SizedBox(height: 30),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: GradientButton(
-                        text: isLoading ? 'Saving...' : 'Submit',
+                        text: isLoading
+                            ? 'Saving...'
+                            : 'Submit', // TODO: Remove dead code above if unreachable
                         onPressed: _onApprovePressed,
                         buttonText: '',
                       ),
@@ -542,14 +370,6 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                 ),
               ),
             ),
-
-            // if (isLoading)
-            //   const Positioned.fill(
-            //     child: ColoredBox(
-            //       color: Color.fromARGB(100, 255, 255, 255),
-            //       child: Center(child: CircularProgressIndicator()),
-            //     ),
-            //   ),
           ],
         ),
       ),

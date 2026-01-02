@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../widgets/bottom_nav.dart';
+// Removed unused import
 import 'chat_detail_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -64,7 +64,6 @@ class _ChatScreenState extends State<ChatScreen> {
     },
   ];
 
-   
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,9 +76,11 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               const Text(
                 "Chats",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-             
             ],
           ),
           flexibleSpace: Container(
@@ -93,106 +94,74 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-         
-          const SizedBox(height: 20),
-
-          Expanded(
-            child: ListView.builder(
-              itemCount: _chatList.length,
-              itemBuilder: (context, index) {
-                final chat = _chatList[index];
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                  leading: Stack(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: chat['online']
-                                ? Colors.transparent
-                                : Colors.grey.shade300,
-                            width: 2,
-                          ),
-                        ),
-                        child: CircleAvatar(
-                          backgroundImage: NetworkImage(chat['img']),
-                          radius: 26,
-                        ),
+      body: ListView.builder(
+        itemCount: _chatList.length,
+        itemBuilder: (context, index) {
+          final chat = _chatList[index];
+          return ListTile(
+            leading: Stack(
+              children: [
+                CircleAvatar(
+                  backgroundImage: NetworkImage(chat['img']),
+                  radius: 28,
+                ),
+                if (chat['online'])
+                  Positioned(
+                    right: 2,
+                    bottom: 2,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        border: Border.all(color: Colors.white, width: 2),
+                        shape: BoxShape.circle,
                       ),
-                      if (chat['online'])
-                        Positioned(
-                          bottom: 2,
-                          right: 2,
-                          child: Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              color: Colors.green,
-                              border: Border.all(color: Colors.white, width: 2),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  title: Text(
-                    chat['name'],
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
                     ),
                   ),
-                  subtitle: Text(chat['message']),
-                  trailing: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        chat['time'],
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      if (chat['unread'] > 0)
-                        Container(
-                          margin: const EdgeInsets.only(top: 6),
-                          padding: const EdgeInsets.all(5),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Text(
-                            chat['unread'].toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ChatDetailScreen(
-                          name: chat['name'],
-                          img: chat['img'],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
+              ],
             ),
-          ),
-        ],
+            title: Text(
+              chat['name'],
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            subtitle: Text(chat['message']),
+            trailing: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  chat['time'],
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                if (chat['unread'] > 0)
+                  Container(
+                    margin: const EdgeInsets.only(top: 6),
+                    padding: const EdgeInsets.all(5),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      chat['unread'].toString(),
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                    ),
+                  ),
+              ],
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      ChatDetailScreen(name: chat['name'], img: chat['img']),
+                ),
+              );
+            },
+          );
+        },
       ),
-      bottomNavigationBar: const CustomBottomNav(currentIndex: 1),
+      bottomNavigationBar: Container(height: 0),
     );
   }
 }
