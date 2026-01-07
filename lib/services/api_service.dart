@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/female_user.dart';
@@ -109,6 +110,10 @@ class ApiService {
         _handleError(response.statusCode, response.body);
         throw Exception('Failed to load female users');
       }
+    } on SocketException {
+      throw Exception('Network error: Please check your internet connection');
+    } on http.ClientException {
+      throw Exception('Connection error: Unable to connect to server');
     } catch (e) {
       throw Exception('Network error: $e');
     }

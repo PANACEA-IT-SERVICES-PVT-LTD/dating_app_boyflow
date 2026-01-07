@@ -1,10 +1,16 @@
 // lib/views/screens/mainhome.dart
+import 'package:Boy_flow/api_service/api_endpoint.dart';
 import 'package:Boy_flow/controllers/api_controller.dart';
 import 'package:Boy_flow/views/screens/call_page.dart';
-// Removed unused import
+import 'package:Boy_flow/models/female_user.dart';
+import 'package:Boy_flow/views/screens/female_profile_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/user.dart' as call_user;
 import '../../models/call_state.dart';
@@ -20,6 +26,64 @@ class MainHome extends StatefulWidget {
 class _HomeScreenState extends State<MainHome> {
   String _filter = 'All';
   final CallManager _callManager = CallManager();
+
+  Future<void> rechargeWallet(int amount) async {
+    try {
+      final url = Uri.parse(
+        ApiEndPoints.baseUrls + ApiEndPoints.maleWalletRecharge,
+      );
+
+      // Get auth token from shared preferences
+      String? authToken;
+      final prefs = await SharedPreferences.getInstance();
+      authToken = prefs.getString('token');
+
+      // Prepare headers with authorization
+      final headers = {
+        'Content-Type': 'application/json',
+        if (authToken != null) 'Authorization': 'Bearer $authToken',
+      };
+
+      final response = await http.post(
+        url,
+        headers: headers,
+        body: jsonEncode({'amount': amount}),
+      );
+      print('[Recharge] API response: ${response.statusCode} ${response.body}');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Wallet recharged successfully!')),
+          );
+        } else {
+          String errorMessage = data['message'] ?? 'Recharge failed';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Recharge failed: $errorMessage')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('API error: ${response.statusCode}')),
+        );
+      }
+    } on SocketException catch (e) {
+      print('[Recharge] Network error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Network error: Please check your connection')),
+      );
+    } on http.ClientException catch (e) {
+      print('[Recharge] Client error: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Connection error: $e')));
+    } catch (e, st) {
+      print('[Recharge] Exception: $e\n$st');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Recharge error: $e')));
+    }
+  }
 
   @override
   void initState() {
@@ -60,6 +124,22 @@ class _HomeScreenState extends State<MainHome> {
   List<Map<String, dynamic>> _applyFilter(List<Map<String, dynamic>> profiles) {
     // Add real filter logic if needed
     return profiles;
+  }
+
+  void _navigateToFemaleProfile(Map<String, dynamic> profile) {
+    // Convert the profile map to a FemaleUser object
+    final femaleUser = FemaleUser(
+      id: profile['_id']?.toString() ?? '',
+      name: profile['name']?.toString() ?? 'Unknown',
+      age: int.tryParse(profile['age']?.toString() ?? '0') ?? 0,
+      bio: profile['bio']?.toString() ?? '',
+      avatarUrl: profile['avatarUrl']?.toString() ?? '',
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => FemaleProfileScreen(user: femaleUser)),
+    );
   }
 
   Future<void> _startCall({
@@ -140,7 +220,11 @@ class _HomeScreenState extends State<MainHome> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const _QuickActionsBottomSheet(),
+      builder: (_) => _QuickActionsBottomSheet(
+        onRechargePressed: () {
+          rechargeWallet(250); // Call the API for 250 coins
+        },
+      ),
     );
   }
 
@@ -370,7 +454,7 @@ class _HomeScreenState extends State<MainHome> {
                   age: ageStr,
                   callRate: '10/min',
                   videoRate: '20/min',
-                  onCardTap: () => _showCallTypePopup(profile),
+                  onCardTap: () => _navigateToFemaleProfile(profile),
                   onAudioCallTap: () =>
                       _startCall(isVideo: false, profile: profile),
                   onVideoCallTap: () =>
@@ -391,7 +475,8 @@ class _HomeScreenState extends State<MainHome> {
 
 /// Quick sheet and promo card
 class _QuickActionsBottomSheet extends StatelessWidget {
-  const _QuickActionsBottomSheet();
+  final VoidCallback onRechargePressed;
+  const _QuickActionsBottomSheet({required this.onRechargePressed});
 
   @override
   Widget build(BuildContext context) {
@@ -414,7 +499,9 @@ class _QuickActionsBottomSheet extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: ListView(children: [_PromoCoinsCard(onPressed: () {})]),
+                child: ListView(
+                  children: [_PromoCoinsCard(onPressed: onRechargePressed)],
+                ),
               ),
             ],
           ),

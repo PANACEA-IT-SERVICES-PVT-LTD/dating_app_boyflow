@@ -34,38 +34,22 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final firstName = _firstNameCtrl.text.trim();
-    final email = _emailCtrl.text.trim();
-    final referral = _referralCtrl.text.trim();
-
     setState(() => _submitting = true);
 
     try {
-      final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.signupMale}",
-      );
-
       final resp = await http.post(
-        url,
+        Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.signupMale}"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
-          "firstName": firstName,
-          "email": email,
-          "referralCode": referral,
+          "firstName": _firstNameCtrl.text.trim(),
+          "email": _emailCtrl.text.trim(),
+          "referralCode": _referralCtrl.text.trim(),
         }),
       );
 
-      dynamic body;
-      try {
-        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
-      } catch (_) {
-        body = {};
-      }
-
-      final success = body is Map && body["success"] == true;
-      final message =
-          body["message"] ??
-          (success ? "Registration successful" : "Registration failed");
+      final body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
+      final success = body["success"] == true;
+      final message = body["message"] ?? "Something went wrong";
 
       if (!mounted) return;
 
@@ -78,8 +62,8 @@ class _SignupScreenState extends State<SignupScreen> {
           context,
           AppRoutes.signupVerification,
           arguments: {
-            'email': email,
-            if (body['otp'] != null) 'otp': body['otp'].toString(),
+            "email": _emailCtrl.text.trim(),
+            if (body["otp"] != null) "otp": body["otp"].toString(),
           },
         );
       } else {
@@ -88,10 +72,9 @@ class _SignupScreenState extends State<SignupScreen> {
         ).showSnackBar(SnackBar(content: Text("❌ $message")));
       }
     } catch (e) {
-      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("❌ Error: $e")));
+      ).showSnackBar(SnackBar(content: Text("❌ $e")));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -103,18 +86,22 @@ class _SignupScreenState extends State<SignupScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.white,
-      resizeToAvoidBottomInset: true,
+
+      /// 🔥 VERY IMPORTANT
+      resizeToAvoidBottomInset: false,
+
+      /// ================= BODY =================
       body: Column(
         children: [
-          /// ================= HEADER =================
+          /// HEADER
           Container(
             width: double.infinity,
             padding: const EdgeInsets.only(bottom: 6),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
+                colors: [AppColors.gradientTop, AppColors.gradientBottom],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [AppColors.gradientTop, AppColors.gradientBottom],
               ),
             ),
             child: Column(
@@ -150,138 +137,113 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
           ),
 
-          /// ================= FORM =================
+          /// FORM (Scrollable)
           Expanded(
-            child: NotificationListener<OverscrollIndicatorNotification>(
-              onNotification: (o) {
-                o.disallowIndicator();
-                return true;
-              },
-              child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-                  decoration: const BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
-                    ),
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Center(
-                          child: Text(
-                            "Register yourself",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Center(
+                      child: Text(
+                        "Register yourself",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
                         ),
-                        const SizedBox(height: 6),
-                        const Center(
-                          child: Text(
-                            "Please register or sign up",
-                            style: TextStyle(fontSize: 13),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        /// First Name
-                        const Text("First Name"),
-                        const SizedBox(height: 8),
-                        _buildInput(
-                          controller: _firstNameCtrl,
-                          hint: "Enter first name",
-                          validator: (v) => v == null || v.trim().isEmpty
-                              ? "Enter first name"
-                              : null,
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        /// Email
-                        const Text("Email"),
-                        const SizedBox(height: 8),
-                        _buildInput(
-                          controller: _emailCtrl,
-                          hint: "Enter email",
-                          keyboardType: TextInputType.emailAddress,
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) {
-                              return "Enter email";
-                            }
-                            if (!RegExp(
-                              r'^[^@]+@[^@]+\.[^@]+',
-                            ).hasMatch(v.trim())) {
-                              return "Enter valid email";
-                            }
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        /// Referral
-                        const Text("Referral Code (optional)"),
-                        const SizedBox(height: 8),
-                        _buildInput(
-                          controller: _referralCtrl,
-                          hint: "Enter referral code (if any)",
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          /// ================= BOTTOM =================
-          SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: GradientButton(
-                      text: _submitting ? "Registering..." : "Register",
-                      onPressed: _submitting ? null : _submit,
-                      buttonText: '',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, AppRoutes.login);
-                    },
-                    child: const Text(
-                      "Log In",
-                      style: TextStyle(
-                        decoration: TextDecoration.underline,
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 6),
+                    const Center(
+                      child: Text(
+                        "Please register or sign up",
+                        style: TextStyle(fontSize: 13),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    const Text("First Name"),
+                    const SizedBox(height: 8),
+                    _input(
+                      _firstNameCtrl,
+                      "Enter first name",
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? "Enter first name"
+                          : null,
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    const Text("Email"),
+                    const SizedBox(height: 8),
+                    _input(
+                      _emailCtrl,
+                      "Enter email",
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return "Enter email";
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
+                          return "Enter valid email";
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    const Text("Referral Code (optional)"),
+                    const SizedBox(height: 8),
+                    _input(_referralCtrl, "Enter referral code"),
+                  ],
+                ),
               ),
             ),
           ),
         ],
       ),
+
+      /// ================= FIXED BOTTOM =================
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: GradientButton(
+                  text: _submitting ? "Registering..." : "Register",
+                  onPressed: _submitting ? null : _submit,
+                  buttonText: '',
+                ),
+              ),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, AppRoutes.login);
+                },
+                child: const Text(
+                  "Log In",
+                  style: TextStyle(
+                    decoration: TextDecoration.underline,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildInput({
-    required TextEditingController controller,
-    required String hint,
+  Widget _input(
+    TextEditingController ctrl,
+    String hint, {
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
   }) {
@@ -292,7 +254,7 @@ class _SignupScreenState extends State<SignupScreen> {
         borderRadius: BorderRadius.circular(10),
       ),
       child: TextFormField(
-        controller: controller,
+        controller: ctrl,
         keyboardType: keyboardType,
         validator: validator,
         decoration: InputDecoration(hintText: hint, border: InputBorder.none),

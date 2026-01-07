@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:Boy_flow/views/screens/main_navigation.dart';
 import '../../controllers/api_controller.dart';
 import '../../core/routes/app_routes.dart';
 // Removed unused imports
@@ -61,7 +62,10 @@ class _LoginVerificationScreenState extends State<LoginVerificationScreen> {
 
       if (mounted) {
         if (success) {
-          Navigator.pushReplacementNamed(context, AppRoutes.home);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+          );
         } else {
           setState(() => _errorMessage = 'Invalid OTP. Please try again.');
         }

@@ -1,4 +1,6 @@
 import 'package:Boy_flow/views/screens/profile_gallery_screen.dart';
+import 'package:Boy_flow/models/female_user.dart';
+import 'package:Boy_flow/models/female_user.dart';
 import 'package:flutter/material.dart';
 // Removed unused import
 
@@ -112,7 +114,18 @@ class _CallScreenState extends State<CallScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ProfileGalleryScreen()),
+                // TODO: Pass the correct FemaleUser instance here. For now, pass a dummy user or refactor to get user from arguments.
+                MaterialPageRoute(
+                  builder: (context) => ProfileGalleryScreen(
+                    user: FemaleUser(
+                      id: 'demo',
+                      name: 'Demo',
+                      age: 0,
+                      bio: '',
+                      avatarUrl: '',
+                    ),
+                  ),
+                ),
               );
             },
 

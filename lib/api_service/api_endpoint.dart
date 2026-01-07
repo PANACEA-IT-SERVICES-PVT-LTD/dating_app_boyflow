@@ -1,5 +1,5 @@
 class ApiEndPoints {
-  static const String baseUrls = "https://friend-circle-nine.vercel.app";
+  static const String baseUrls = "https://friend-circle-2.vercel.app";
 
   // Male auth & profile
   static const String signupMale = "/male-user/register";
@@ -29,4 +29,7 @@ class ApiEndPoints {
   static const String login = "/female-user/login";
   static const String loginotp = "/female-user/verify-login-otp";
   static const String profiledetails = "/female-user/add-info";
+
+  // Wallet/Payment
+  static const String maleWalletRecharge = "/male-user/payment/wallet/order";
 }

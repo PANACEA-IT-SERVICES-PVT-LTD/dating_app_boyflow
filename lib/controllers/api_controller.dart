@@ -162,7 +162,13 @@ class ApiController extends ChangeNotifier {
   }) async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
+    if (WidgetsBinding.instance != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+    } else {
+      notifyListeners();
+    }
 
     try {
       // Call service (expected to return a typed model or Map/List)
@@ -312,6 +318,22 @@ class ApiController extends ChangeNotifier {
         return parsed;
       }
 
+      // Handle empty response case differently from actual errors
+      if (parsed.isEmpty) {
+        // Empty list is not an error, just no profiles available
+        _femaleProfiles = [];
+        _isLoading = false;
+        _error = null; // No error for empty profiles
+        if (WidgetsBinding.instance != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            notifyListeners();
+          });
+        } else {
+          notifyListeners();
+        }
+        return [];
+      }
+
       // Failure path: build friendly message and throw
       String serverMessage = 'No profiles found';
       try {
@@ -332,14 +354,26 @@ class ApiController extends ChangeNotifier {
       _femaleProfiles = [];
       _isLoading = false;
       _error = _friendlyMessage(serverMessage);
-      notifyListeners();
+      if (WidgetsBinding.instance != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+      } else {
+        notifyListeners();
+      }
       throw Exception(_error);
     } catch (e, st) {
       debugPrint("❌ fetchBrowseFemales exception: $e\n$st");
       _femaleProfiles = [];
       _isLoading = false;
       _error = e.toString();
-      notifyListeners();
+      if (WidgetsBinding.instance != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+      } else {
+        notifyListeners();
+      }
       rethrow;
     }
   }

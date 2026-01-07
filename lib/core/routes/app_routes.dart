@@ -19,6 +19,7 @@ import 'package:Boy_flow/views/screens/help_videos_screen.dart';
 import 'package:Boy_flow/views/screens/chat_detail_screen.dart';
 import 'package:Boy_flow/views/screens/call_user_details_screen.dart';
 import 'package:Boy_flow/views/screens/profile_gallery_screen.dart';
+import 'package:Boy_flow/models/female_user.dart';
 import 'package:Boy_flow/views/screens/support_service_screen.dart';
 import 'package:Boy_flow/views/screens/call_rate_screen.dart';
 import 'package:Boy_flow/views/screens/withdraws_screen.dart';
@@ -151,7 +152,18 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const CallUserDetailsScreen());
 
       case profilegallery:
-        return MaterialPageRoute(builder: (_) => const ProfileGalleryScreen());
+        // TODO: Pass the correct FemaleUser instance here. For now, pass a dummy user or refactor to get user from arguments.
+        return MaterialPageRoute(
+          builder: (_) => ProfileGalleryScreen(
+            user: FemaleUser(
+              id: 'demo',
+              name: 'Demo',
+              age: 0,
+              bio: '',
+              avatarUrl: '',
+            ),
+          ),
+        );
 
       case callrate:
         return MaterialPageRoute(builder: (_) => const MyCallRate());
