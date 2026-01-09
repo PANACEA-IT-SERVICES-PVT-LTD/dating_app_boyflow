@@ -12,7 +12,7 @@ class ApiEndPoints {
   static const String maleMe = "/male-user/me";
   static const String maleInterests = "/male-user/interests";
   static const String maleLanguages = "/male-user/languages";
-  static const String fetchfemaleusers = "male-user/browse-females";
+  static const String fetchfemaleusers = "/male-user/browse-females";
 
   // Male follow/unfollow
   static const String maleUnfollow = "/male-user/unfollow";

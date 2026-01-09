@@ -1,20 +1,16 @@
 import 'dart:async';
 
-
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-
 import '../../services/token_service.dart';
-
 
 const String kDefaultAgoraAppId = '3b2d066ea4da4c84ad4492ea72780653';
 const String kAgoraAppId = String.fromEnvironment(
   'AGORA_APP_ID',
   defaultValue: kDefaultAgoraAppId,
 );
-
 
 class CallPage extends StatefulWidget {
   const CallPage({
@@ -24,16 +20,13 @@ class CallPage extends StatefulWidget {
     this.isInitiator = false,
   });
 
-
   final String channelName;
   final bool enableVideo;
   final bool isInitiator;
 
-
   @override
   State<CallPage> createState() => _CallPageState();
 }
-
 
 class _CallPageState extends State<CallPage> {
   RtcEngine? _engine;
@@ -43,7 +36,6 @@ class _CallPageState extends State<CallPage> {
   bool _videoEnabled = true;
   StreamSubscription? _engineEventSub;
 
-
   @override
   void initState() {
     super.initState();
@@ -51,16 +43,16 @@ class _CallPageState extends State<CallPage> {
     _init();
   }
 
-
   Future<void> _init() async {
     if (kAgoraAppId.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Missing AGORA_APP_ID. Pass with --dart-define.')),
+        const SnackBar(
+          content: Text('Missing AGORA_APP_ID. Pass with --dart-define.'),
+        ),
       );
       return;
     }
-
 
     if (!(await _ensurePermissions())) {
       if (!mounted) return;
@@ -70,44 +62,65 @@ class _CallPageState extends State<CallPage> {
       return;
     }
 
-
     final engine = createAgoraRtcEngine();
     _engine = engine;
     await engine.initialize(const RtcEngineContext(appId: kAgoraAppId));
 
+    engine.registerEventHandler(
+      RtcEngineEventHandler(
+        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+          setState(() => _joined = true);
+        },
+        onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
+          setState(() => _remoteUid = remoteUid);
+        },
+        onUserOffline:
+            (
+              RtcConnection connection,
+              int remoteUid,
+              UserOfflineReasonType reason,
+            ) {
+              setState(() => _remoteUid = null);
+            },
+        onError: (ErrorCodeType err, String msg) {
+          if (mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Call Error: $msg')));
+          }
+        },
+      ),
+    );
 
-    engine.registerEventHandler(RtcEngineEventHandler(
-      onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-        setState(() => _joined = true);
-      },
-      onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-        setState(() => _remoteUid = remoteUid);
-      },
-      onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
-        setState(() => _remoteUid = null);
-      },
-      onError: (ErrorCodeType err, String msg) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Call Error: $msg')),
-          );
-        }
-      },
-    ));
-
+    // Configure engine with memory-optimized settings
+    await engine.setParameters('{"rtc.log_level":3}');
 
     await engine.enableAudio();
     if (widget.enableVideo) {
       await engine.enableVideo();
+
+      // Set video encoding parameters to reduce memory usage
+      await engine.setVideoEncoderConfiguration(
+        const VideoEncoderConfiguration(
+          dimensions: VideoDimensions(
+            width: 320,
+            height: 240,
+          ), // Lower resolution
+          frameRate: 15, // Lower frame rate
+          bitrate: 300, // Lower bitrate
+        ),
+      );
+
       await Future.delayed(const Duration(milliseconds: 100));
       await engine.startPreview();
     } else {
       await engine.disableVideo();
     }
 
-
-    final token = await TokenService.fetchToken(channelName: widget.channelName, uid: 0);
-
+    final token = await TokenService.fetchToken(
+      channelName: widget.channelName,
+      uid: 0,
+    );
 
     await engine.joinChannel(
       token: token,
@@ -122,26 +135,22 @@ class _CallPageState extends State<CallPage> {
     );
   }
 
-
   Future<bool> _ensurePermissions() async {
-    final statuses = await [
-      Permission.microphone,
-      Permission.camera,
-    ].request();
+    final statuses = await [Permission.microphone, Permission.camera].request();
 
-    final micGranted = statuses[Permission.microphone] == PermissionStatus.granted;
+    final micGranted =
+        statuses[Permission.microphone] == PermissionStatus.granted;
     final camGranted = statuses[Permission.camera] == PermissionStatus.granted;
     return micGranted && camGranted;
   }
-
 
   @override
   void dispose() {
     _engineEventSub?.cancel();
     _leave();
+    _engine = null;
     super.dispose();
   }
-
 
   Future<void> _leave() async {
     try {
@@ -154,13 +163,13 @@ class _CallPageState extends State<CallPage> {
           await engine.disableVideo();
         } catch (_) {}
         await engine.leaveChannel();
+        // Properly release engine resources to minimize memory usage
         await engine.release();
       }
     } finally {
       if (mounted) setState(() => _joined = false);
     }
   }
-
 
   Future<void> _toggleMute() async {
     final next = !_muted;
@@ -170,13 +179,11 @@ class _CallPageState extends State<CallPage> {
     setState(() => _muted = next);
   }
 
-
   Future<void> _switchCamera() async {
     final engine = _engine;
     if (engine == null) return;
     await engine.switchCamera();
   }
-
 
   Future<void> _toggleLocalVideo() async {
     final next = !_videoEnabled;
@@ -194,13 +201,10 @@ class _CallPageState extends State<CallPage> {
     setState(() => _videoEnabled = next);
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Channel: ${widget.channelName}'),
-      ),
+      appBar: AppBar(title: Text('Channel: ${widget.channelName}')),
       body: Column(
         children: [
           Expanded(
@@ -214,7 +218,9 @@ class _CallPageState extends State<CallPage> {
                             controller: VideoViewController.remote(
                               rtcEngine: _engine!,
                               canvas: VideoCanvas(uid: _remoteUid),
-                              connection: RtcConnection(channelId: widget.channelName),
+                              connection: RtcConnection(
+                                channelId: widget.channelName,
+                              ),
                             ),
                           )
                         : Center(
@@ -266,7 +272,9 @@ class _CallPageState extends State<CallPage> {
                   if (widget.enableVideo)
                     IconButton(
                       onPressed: _toggleLocalVideo,
-                      icon: Icon(_videoEnabled ? Icons.videocam : Icons.videocam_off),
+                      icon: Icon(
+                        _videoEnabled ? Icons.videocam : Icons.videocam_off,
+                      ),
                     ),
                   if (widget.enableVideo)
                     IconButton(
@@ -274,7 +282,9 @@ class _CallPageState extends State<CallPage> {
                       icon: const Icon(Icons.cameraswitch),
                     ),
                   ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.call_end),
                     label: const Text('Leave'),

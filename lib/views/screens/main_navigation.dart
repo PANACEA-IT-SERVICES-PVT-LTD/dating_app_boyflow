@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'mainhome.dart';
 import 'chat_screen.dart';
 import 'call_screen.dart';
+
 import 'notification_screen.dart';
 import 'account_screen.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/api_controller.dart';
+import 'login_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -22,6 +26,34 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     NotificationScreen(),
     AccountScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Set up forced logout callback
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      apiController.onForceLogout = _handleForcedLogout;
+    });
+  }
+
+  @override
+  void dispose() {
+    // Clean up forced logout callback
+    final apiController = Provider.of<ApiController>(context, listen: false);
+    if (apiController.onForceLogout == _handleForcedLogout) {
+      apiController.onForceLogout = null;
+    }
+    super.dispose();
+  }
+
+  void _handleForcedLogout() {
+    // Remove all routes and go to login
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

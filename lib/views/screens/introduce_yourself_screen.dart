@@ -1,6 +1,6 @@
 // ignore_for_file: sort_child_properties_last
 
-import 'dart:io' show File;
+import 'dart:io';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -9,12 +9,12 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-// import 'package:provider/provider.dart';
+import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 import '../../widgets/gradient_button.dart';
 // Removed unused import: registration_status.dart
 import '../../api_service/api_endpoint.dart';
-// import '../../controllers/api_controller.dart'; // <- make sure the path is correct in your project
+import '../../controllers/api_controller.dart'; // <- make sure the path is correct in your project
 // import '../../api_service/api_endpoint.dart'; // only used for constants in comments
 
 // Helper to save token after login
@@ -51,363 +51,280 @@ class IntroduceYourselfScreen extends StatefulWidget {
 }
 
 class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
-  Future<void> _uploadProfileImage(dynamic imageFile) async {
-    // TODO: Implement image upload logic
-    // For now, just simulate upload and set a dummy URL
-    setState(() {
-      _uploadedPhotoUrl =
-          'https://dummyimage.com/200x200/cccccc/000000&text=Uploaded';
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('✅ (Stub) Image uploaded successfully')),
-    );
-  }
-
-  // Add stubs for missing methods at the bottom if needed
-  File? _photo; // selected image file (local)
-  VideoPlayerController? _videoController;
-
-  String? _uploadedPhotoUrl;
-
   final _formKey = GlobalKey<FormState>();
+  final Map<String, dynamic> _formData = {};
 
+  File? _selectedImage;
+
+  // Controllers for text fields
   final _firstNameController = TextEditingController();
-  final _ageController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _mobileController = TextEditingController();
+  final _dobController = TextEditingController();
+  final _bioController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _searchPreferencesController = TextEditingController();
+  final _filmController = TextEditingController();
+  final _musicController = TextEditingController();
+  final _travelController = TextEditingController();
+  final _latitudeController = TextEditingController();
+  final _longitudeController = TextEditingController();
 
-  String _gender = 'Male'; // default to match sample payload
+  // Dropdowns/multi-selects
+  String? _gender = 'male';
+  String? _selectedReligionId;
+  List<String> _interests = [];
+  List<String> _languages = [];
+  List<String> _relationshipGoals = [];
+  List<String> _hobbies = [];
+  List<String> _sports = [];
 
-  // Removed interests and languages
+  // Sample religion options - in a real app, you'd fetch these from an API
+  final List<Map<String, String>> _religions = [
+    {'id': '694f63d08389fc82a4345083', 'name': 'Hindu'},
+    {'id': '694f63d08389fc82a4345084', 'name': 'Muslim'},
+    {'id': '694f63d08389fc82a4345085', 'name': 'Christian'},
+    {'id': '694f63d08389fc82a4345086', 'name': 'Sikh'},
+    {'id': '694f63d08389fc82a4345087', 'name': 'Buddhist'},
+    {'id': '694f63d08389fc82a4345088', 'name': 'Jewish'},
+    {'id': '694f63d08389fc82a4345089', 'name': 'Other'},
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    _fetchCurrentMaleProfile();
-  }
+  // (No duplicate _submit method here)
 
   @override
   void dispose() {
-    _videoController?.dispose();
     _firstNameController.dispose();
-    _ageController.dispose();
+    _lastNameController.dispose();
+    _mobileController.dispose();
+    _dobController.dispose();
+    _bioController.dispose();
+    _heightController.dispose();
+    _searchPreferencesController.dispose();
+    _filmController.dispose();
+    _musicController.dispose();
+    _travelController.dispose();
+    _latitudeController.dispose();
+    _longitudeController.dispose();
     super.dispose();
   }
 
   Future<void> _pickImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      if (kIsWeb) {
-        setState(() => _photo = null); // Don't use File on web
-        await _uploadProfileImage(picked); // Pass XFile
-      } else {
-        setState(() => _photo = File(picked.path));
-        await _uploadProfileImage(File(picked.path));
-      }
+      setState(() {
+        _selectedImage = File(picked.path);
+      });
     }
   }
 
-  Future<void> _fetchCurrentMaleProfile() async {
-    try {
-      final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.maleMe}");
-      final resp = await http.get(url);
-      dynamic body;
-      try {
-        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
-      } catch (_) {
-        body = {"raw": resp.body};
-      }
-      if (!mounted) return;
-      if (body is Map && body["success"] == true && body["data"] is Map) {
-        final data = body["data"] as Map;
-        final firstName = (data["firstName"] ?? "").toString();
-        final gender = (data["gender"] ?? "").toString();
-        final dobStr = (data["dateOfBirth"] ?? "").toString();
-        final images = data["images"];
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          setState(() {
-            _firstNameController.text = firstName;
-            if (dobStr.isNotEmpty) {
-              final dob = DateTime.tryParse(dobStr);
-              if (dob != null) {
-                final now = DateTime.now();
-                final years =
-                    now.year -
-                    dob.year -
-                    ((now.month < dob.month ||
-                            (now.month == dob.month && now.day < dob.day))
-                        ? 1
-                        : 0);
-                if (years > 0) {
-                  _ageController.text = years.toString();
-                }
-              }
-            }
-            if (gender.toLowerCase() == 'male') {
-              _gender = 'Male';
-            } else if (gender.toLowerCase() == 'female') {
-              _gender = 'Female';
-            }
-            if (images is List && images.isNotEmpty) {
-              _uploadedPhotoUrl = images.first.toString();
-            }
-          });
-        });
-      }
-    } catch (_) {
-      if (!mounted) return;
-    }
-  }
-
-  Future<void> _onApprovePressed() async {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    _formKey.currentState!.save();
 
-    // Check if image is uploaded
-    if (_uploadedPhotoUrl == null || _uploadedPhotoUrl!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ Please upload a profile image before submitting.'),
-        ),
+    final Map<String, dynamic> payload = {
+      'firstName': _firstNameController.text.trim(),
+      'lastName': _lastNameController.text.trim(),
+      'mobileNumber': _mobileController.text.trim(),
+      'dateOfBirth': _dobController.text.trim(),
+      'gender': _gender,
+      'bio': _bioController.text.trim(),
+      'interests': _interests,
+      'languages': _languages,
+      'religion': _selectedReligionId,
+      'relationshipGoals': _relationshipGoals,
+      'height': _heightController.text.trim(),
+      'searchPreferences': _searchPreferencesController.text.trim(),
+      'hobbies': _hobbies,
+      'sports': _sports,
+      'film': _filmController.text.trim(),
+      'music': _musicController.text.trim(),
+      'travel': _travelController.text.trim(),
+      'latitude': _latitudeController.text.trim(),
+      'longitude': _longitudeController.text.trim(),
+    };
+
+    List<http.MultipartFile> images = [];
+    if (_selectedImage != null) {
+      images.add(
+        await http.MultipartFile.fromPath('images', _selectedImage!.path),
       );
-      return;
-    }
-    final uri = Uri.parse(
-      "${ApiEndPoints.baseUrls}${ApiEndPoints.maleProfileDetails}",
-    );
-
-    final firstName = _firstNameController.text.trim();
-    String? dateOfBirth;
-    final ageText = _ageController.text.trim();
-    final age = int.tryParse(ageText);
-    if (age != null && age > 0) {
-      final now = DateTime.now();
-      final approxDob = DateTime(now.year - age, 1, 1);
-      dateOfBirth = approxDob.toIso8601String().split('T').first;
     }
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      String? token =
-          prefs.getString('token') ?? prefs.getString('access_token') ?? '';
-      if (token.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ Login required. Token missing.')),
-        );
-        return;
-      }
-
-      final resp = await http.patch(
-        uri,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode({
-          "firstName": firstName,
-          if (dateOfBirth != null) "dateOfBirth": dateOfBirth,
-          "gender": _gender.toLowerCase(),
-          if (_uploadedPhotoUrl != null && _uploadedPhotoUrl!.isNotEmpty)
-            "images": [_uploadedPhotoUrl],
-        }),
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      await apiController.updateUserProfile(
+        fields: payload,
+        images: images.isNotEmpty ? images : null,
       );
-
-      dynamic body;
-      try {
-        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
-      } catch (_) {
-        body = {"raw": resp.body};
-      }
-
-      if (!mounted) return;
-
-      if (body is Map && body["success"] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Profile updated successfully!')),
-        );
-        Navigator.pop(context, true); // Return true to indicate update
-      } else {
-        final msg =
-            (body is Map ? (body["message"] ?? body["error"]) : null) ??
-            "Profile update failed";
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('❌ $msg')));
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile updated!')));
+      // Navigate to dashboard or next screen
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Error updating profile: \\${e.toString()}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Mock loading state for screen-only development
-    bool isLoading = false;
-
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: AppBar(
-          leading: const BackButton(color: Colors.white),
-          backgroundColor: Colors.white,
-          elevation: 0,
-          centerTitle: false,
-          title: Column(
+      appBar: AppBar(title: const Text('Introduce Yourself')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
             children: [
-              const Text(
-                'Profile Update',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              TextFormField(
+                controller: _firstNameController,
+                decoration: const InputDecoration(labelText: 'First Name'),
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: _lastNameController,
+                decoration: const InputDecoration(labelText: 'Last Name'),
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+              ),
+              TextFormField(
+                controller: _mobileController,
+                decoration: const InputDecoration(labelText: 'Mobile Number'),
+              ),
+              TextFormField(
+                controller: _dobController,
+                decoration: const InputDecoration(
+                  labelText: 'Date of Birth (YYYY-MM-DD)',
                 ),
               ),
+              DropdownButtonFormField<String>(
+                value: _gender,
+                decoration: const InputDecoration(labelText: 'Gender'),
+                items: ['male', 'female']
+                    .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                    .toList(),
+                onChanged: (v) => setState(() => _gender = v),
+              ),
+              TextFormField(
+                controller: _bioController,
+                decoration: const InputDecoration(labelText: 'Bio'),
+              ),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Interests (comma separated IDs)',
+                ),
+                onSaved: (v) => _interests = v!
+                    .split(',')
+                    .map((e) => e.trim())
+                    .where((e) => e.isNotEmpty)
+                    .toList(),
+              ),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Languages (comma separated IDs)',
+                ),
+                onSaved: (v) => _languages = v!
+                    .split(',')
+                    .map((e) => e.trim())
+                    .where((e) => e.isNotEmpty)
+                    .toList(),
+              ),
+              DropdownButtonFormField<String>(
+                value: _selectedReligionId,
+                decoration: const InputDecoration(labelText: 'Religion'),
+                items: _religions.map((religion) {
+                  return DropdownMenuItem(
+                    value: religion['id'],
+                    child: Text(religion['name']!),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedReligionId = newValue;
+                  });
+                },
+              ),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Relationship Goals (comma separated IDs)',
+                ),
+                onSaved: (v) => _relationshipGoals = v!
+                    .split(',')
+                    .map((e) => e.trim())
+                    .where((e) => e.isNotEmpty)
+                    .toList(),
+              ),
+              TextFormField(
+                controller: _heightController,
+                decoration: const InputDecoration(labelText: 'Height'),
+              ),
+              TextFormField(
+                controller: _searchPreferencesController,
+                decoration: const InputDecoration(
+                  labelText: 'Search Preferences',
+                ),
+              ),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Hobbies (comma separated)',
+                ),
+                onSaved: (v) => _hobbies = v!
+                    .split(',')
+                    .map((e) => e.trim())
+                    .where((e) => e.isNotEmpty)
+                    .toList(),
+              ),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Sports (comma separated)',
+                ),
+                onSaved: (v) => _sports = v!
+                    .split(',')
+                    .map((e) => e.trim())
+                    .where((e) => e.isNotEmpty)
+                    .toList(),
+              ),
+              TextFormField(
+                controller: _filmController,
+                decoration: const InputDecoration(labelText: 'Film'),
+              ),
+              TextFormField(
+                controller: _musicController,
+                decoration: const InputDecoration(labelText: 'Music'),
+              ),
+              TextFormField(
+                controller: _travelController,
+                decoration: const InputDecoration(labelText: 'Travel'),
+              ),
+              Row(
+                children: [
+                  _selectedImage != null
+                      ? Image.file(_selectedImage!, width: 80, height: 80)
+                      : const Text('No image selected'),
+                  TextButton(
+                    onPressed: _pickImage,
+                    child: const Text('Pick Image'),
+                  ),
+                ],
+              ),
+              TextFormField(
+                controller: _latitudeController,
+                decoration: const InputDecoration(labelText: 'Latitude'),
+              ),
+              TextFormField(
+                controller: _longitudeController,
+                decoration: const InputDecoration(labelText: 'Longitude'),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(onPressed: _submit, child: const Text('Submit')),
             ],
           ),
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
-        ),
-      ),
-      body: AbsorbPointer(
-        absorbing: isLoading,
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    // Photo (circular avatar)
-                    GestureDetector(
-                      onTap: _pickImage,
-                      child: _photo != null
-                          ? CircleAvatar(
-                              radius: 60,
-                              backgroundImage: FileImage(_photo!),
-                            )
-                          : (_uploadedPhotoUrl != null &&
-                                    _uploadedPhotoUrl!.isNotEmpty
-                                ? CircleAvatar(
-                                    radius: 60,
-                                    backgroundImage: NetworkImage(
-                                      _uploadedPhotoUrl!,
-                                    ),
-                                  )
-                                : const _DottedBorderBox(
-                                    label: 'Upload photo',
-                                  )),
-                    ),
-                    const SizedBox(height: 24),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Name', style: _labelStyle()),
-                    ),
-                    const SizedBox(height: 6),
-                    _buildRoundedTextField(
-                      controller: _firstNameController,
-                      hint: 'Enter your name',
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? 'Name is required'
-                          : null,
-                    ),
-                    const SizedBox(height: 16),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Age', style: _labelStyle()),
-                    ),
-                    const SizedBox(height: 6),
-                    _buildRoundedTextField(
-                      controller: _ageController,
-                      hint: '30',
-                      keyboardType: TextInputType.number,
-                      validator: (v) {
-                        if (v == null || v.trim().isEmpty)
-                          return 'Age is required';
-                        final n = int.tryParse(v.trim());
-                        if (n == null || n < 18 || n > 99)
-                          return 'Enter a valid age (18-99)';
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text('Gender', style: _labelStyle()),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _genderOption('Male', Icons.male),
-                        const SizedBox(width: 15),
-                        _genderOption('Female', Icons.female),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: GradientButton(
-                        text: isLoading
-                            ? 'Saving...'
-                            : 'Submit', // TODO: Remove dead code above if unreachable
-                        onPressed: _onApprovePressed,
-                        buttonText: '',
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
-  }
-
-  Widget _genderOption(String value, IconData icon) {
-    final isSelected = _gender == value;
-    return ChoiceChip(
-      labelPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 16,
-            color: isSelected ? Colors.white : const Color(0xFFE91EC7),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: isSelected ? Colors.white : Colors.black,
-            ),
-          ),
-        ],
-      ),
-      selected: isSelected,
-      selectedColor: const Color(0xFFE91EC7),
-      backgroundColor: const Color(0xFFF5F5F5),
-      shape: const StadiumBorder(),
-      onSelected: (_) {
-        setState(() => _gender = value);
-      },
-    );
-  }
+}
 }
 
 TextStyle _labelStyle() {

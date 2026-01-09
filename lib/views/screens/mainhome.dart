@@ -27,6 +27,11 @@ class _HomeScreenState extends State<MainHome> {
   String _filter = 'All';
   final CallManager _callManager = CallManager();
 
+  // --- Followed profiles state ---
+  List<Map<String, dynamic>> _followedProfiles = [];
+  bool _isLoadingFollowed = false;
+  String? _followedError;
+
   Future<void> rechargeWallet(int amount) async {
     try {
       final url = Uri.parse(
@@ -90,6 +95,7 @@ class _HomeScreenState extends State<MainHome> {
     super.initState();
     _loadProfiles();
     _loadSentFollowRequests();
+    _loadFollowedProfiles();
   }
 
   Future<void> _loadSentFollowRequests() async {
@@ -118,6 +124,31 @@ class _HomeScreenState extends State<MainHome> {
           ),
         );
       }
+    }
+  }
+
+  // --- Followed profiles fetch method ---
+  Future<void> _loadFollowedProfiles() async {
+    setState(() {
+      _isLoadingFollowed = true;
+      _followedError = null;
+    });
+    try {
+      final apiService = Provider.of<ApiController>(
+        context,
+        listen: false,
+      ).apiService;
+      final result = await apiService.fetchFollowedFemales(page: 1, limit: 10);
+      final results = result['data']?['results'] ?? [];
+      setState(() {
+        _followedProfiles = List<Map<String, dynamic>>.from(results);
+        _isLoadingFollowed = false;
+      });
+    } catch (e) {
+      setState(() {
+        _followedError = e.toString();
+        _isLoadingFollowed = false;
+      });
     }
   }
 
@@ -313,8 +344,16 @@ class _HomeScreenState extends State<MainHome> {
       );
     }
 
-    final profiles = _applyFilter(apiController.femaleProfiles);
+    final profiles = _filter == 'Follow'
+        ? _followedProfiles
+        : _applyFilter(apiController.femaleProfiles);
 
+    if (_filter == 'Follow' && _isLoadingFollowed) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_filter == 'Follow' && _followedError != null) {
+      return Center(child: Text('Error: $_followedError'));
+    }
     if (profiles.isEmpty) {
       return Center(
         child: Column(
@@ -323,7 +362,9 @@ class _HomeScreenState extends State<MainHome> {
             const Text('No profiles found'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _loadProfiles,
+              onPressed: _filter == 'Follow'
+                  ? _loadFollowedProfiles
+                  : _loadProfiles,
               child: const Text('Refresh'),
             ),
           ],
@@ -410,8 +451,9 @@ class _HomeScreenState extends State<MainHome> {
                     FilterChipWidget(
                       label: 'Follow',
                       selected: _filter == 'Follow',
-                      onSelected: (v) {
+                      onSelected: (v) async {
                         setState(() => _filter = 'Follow');
+                        await _loadFollowedProfiles();
                       },
                     ),
                     const SizedBox(width: 10),

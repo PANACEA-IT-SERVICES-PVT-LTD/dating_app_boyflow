@@ -6,6 +6,40 @@ import '../models/female_user.dart';
 import '../api_service/api_endpoint.dart';
 
 class ApiService {
+  // Login method (stub, implement as needed)
+  Future<bool> login(String email) async {
+    // TODO: Implement actual login logic (send OTP, etc.)
+    // For now, just return true to allow flow
+    return true;
+  }
+
+  // Update user profile (stub, implement as needed)
+  Future<Map<String, dynamic>> updateUserProfile({
+    required Map<String, dynamic> fields,
+    List<http.MultipartFile>? images,
+  }) async {
+    // TODO: Implement actual update logic
+    return {'success': true, 'message': 'Profile updated (stub)'};
+  }
+
+  // Update profile details (stub, implement as needed)
+  Future<Map<String, dynamic>> updateProfileDetails({
+    String? firstName,
+    String? lastName,
+    String? height,
+    String? religion,
+    String? imageUrl,
+  }) async {
+    // TODO: Implement actual update logic
+    return {'success': true, 'message': 'Profile details updated (stub)'};
+  }
+
+  // Fetch current male profile (stub, implement as needed)
+  Future<Map<String, dynamic>> fetchCurrentMaleProfile() async {
+    // TODO: Implement actual fetch logic
+    return {'success': true, 'data': {}};
+  }
+
   // Fetch sent follow requests
   Future<List<Map<String, dynamic>>> fetchSentFollowRequests() async {
     final url = Uri.parse(
@@ -54,10 +88,8 @@ class ApiService {
 
   // Get auth token from shared preferences
   Future<void> _getAuthToken() async {
-    if (_authToken == null) {
-      final prefs = await SharedPreferences.getInstance();
-      _authToken = prefs.getString('token');
-    }
+    final prefs = await SharedPreferences.getInstance();
+    _authToken = prefs.getString('token');
   }
 
   // Get headers with authorization
@@ -76,10 +108,17 @@ class ApiService {
       if (responseBody is String) {
         final jsonResponse = json.decode(responseBody);
         message = jsonResponse['message'] ?? message;
+        if (message.toLowerCase().contains('user not found')) {
+          throw Exception(
+            'Your session has expired or user does not exist. Please log in again.',
+          );
+        }
       }
     } catch (e) {
-      // If we can't parse the error message, use the status code
       message = 'Error: $statusCode';
+    }
+    if (statusCode == 404) {
+      message = 'No profiles found or resource does not exist (404).';
     }
     throw Exception(message);
   }
@@ -90,32 +129,80 @@ class ApiService {
     int limit = 10,
   }) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/male-user/browse-females?page=$page&limit=$limit'),
-        headers: await _getHeaders(),
+      final url = Uri.parse(
+        '$baseUrl${ApiEndPoints.fetchfemaleusers}?page=$page&limit=$limit',
       );
+      final headers = await _getHeaders();
+      print('URL: $url');
+      print('Headers: $headers');
+      print('Token: $_authToken');
+
+      final response = await http.get(url, headers: headers);
+      print('API Response Status: ${response.statusCode}');
+      print('API Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
-        // Expecting { data: [ ... ] }
         final data = decoded['data'];
         if (data is List) {
           return data
               .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
               .toList();
         } else {
+          print('Unexpected data format: $data');
           return <Map<String, dynamic>>[];
         }
       } else {
+        print('Error: ${response.statusCode} - ${response.body}');
         _handleError(response.statusCode, response.body);
         throw Exception('Failed to load female users');
+      }
+    } on SocketException catch (e) {
+      print('SocketException: $e');
+      throw Exception('Network error: $e');
+    } on http.ClientException catch (e) {
+      print('ClientException: $e');
+      throw Exception('Connection error: $e');
+    } catch (e, st) {
+      print('General Exception in fetchFemaleUsers: $e\n$st');
+      throw Exception('Network error: $e');
+    }
+  }
+
+  // Register new male user
+  Future<Map<String, dynamic>> registerMaleUser({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+    String? referralCode,
+  }) async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiEndPoints.signupMale}');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'firstName': firstName,
+          'lastName': lastName,
+          'email': email,
+          'password': password,
+          if (referralCode != null) 'referralCode': referralCode,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to register user');
       }
     } on SocketException {
       throw Exception('Network error: Please check your internet connection');
     } on http.ClientException {
       throw Exception('Connection error: Unable to connect to server');
     } catch (e) {
-      throw Exception('Network error: $e');
+      throw Exception('Registration error: $e');
     }
   }
 
@@ -135,6 +222,27 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Failed to fetch profile: $e');
+    }
+  }
+
+  // Fetch followed female users for dashboard
+  Future<Map<String, dynamic>> fetchFollowedFemales({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    final url = Uri.parse(
+      '$baseUrl/male-user/dashboard?section=followed&page=$page&limit=$limit',
+    );
+    final headers = await _getHeaders();
+    final response = await http.get(url, headers: headers);
+    print('URL: $url');
+    print('Headers: $headers');
+    print('Token: $_authToken');
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to fetch followed female users');
     }
   }
 }

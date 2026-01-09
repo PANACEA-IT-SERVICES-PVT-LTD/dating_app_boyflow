@@ -1,8 +1,7 @@
 // lib/views/screens/mainhome.dart
 import 'package:Boy_flow/controllers/api_controller.dart';
 import 'package:Boy_flow/views/screens/call_page.dart';
-import 'package:Boy_flow/views/screens/profile_gallery_screen.dart';
-import 'package:Boy_flow/widgets/bottom_nav.dart';
+// ...existing code...
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

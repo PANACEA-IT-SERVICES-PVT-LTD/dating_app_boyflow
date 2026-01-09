@@ -71,7 +71,9 @@ class _SignupVerificationScreenState extends State<SignupVerificationScreen> {
 
       if (mounted) {
         if (success) {
-          Navigator.pushReplacementNamed(context, AppRoutes.login);
+          // After successful signup verification, navigate directly to home screen
+          // This provides direct access after signup without needing to login again
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
         } else {
           setState(() => _errorMessage = 'Invalid OTP. Please try again.');
         }

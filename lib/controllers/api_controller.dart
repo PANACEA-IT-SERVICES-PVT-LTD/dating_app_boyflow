@@ -9,6 +9,84 @@ import '../utils/token_helper.dart';
 import 'package:http/http.dart' as http;
 
 class ApiController extends ChangeNotifier {
+  /// Login method to send OTP or authenticate user
+  Future<bool> login(String email) async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+    try {
+      final result = await _apiService.login(email);
+      _isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+
+  // Expose the ApiService instance for external use (e.g., in MainHome)
+  ApiService get apiService => _apiService;
+
+  /// Callback to be set by UI to handle forced logout (e.g., redirect to login)
+  VoidCallback? onForceLogout;
+
+  // Handle token errors: clear token and notify UI for forced logout
+  Future<void> _handleTokenError(Object e) async {
+    final msg = e.toString().toLowerCase();
+    if (msg.contains('no valid token') || msg.contains('please log in again')) {
+      // Clear token from storage
+      try {
+        await saveLoginToken('');
+      } catch (_) {}
+      _authToken = null;
+      // Notify UI to redirect to login if callback is set
+      if (onForceLogout != null) {
+        onForceLogout!();
+      }
+    }
+  }
+
+  /// Update user profile using PATCH API
+  Future<Map<String, dynamic>> updateUserProfile({
+    required Map<String, dynamic> fields,
+    List<http.MultipartFile>? images,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+    try {
+      final result = await _apiService.updateUserProfile(
+        fields: fields,
+        images: images,
+      );
+      _isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+
   // Sent follow requests cache
   List<Map<String, dynamic>> _sentFollowRequests = [];
   List<Map<String, dynamic>> get sentFollowRequests =>
@@ -18,17 +96,24 @@ class ApiController extends ChangeNotifier {
   Future<List<Map<String, dynamic>>> fetchSentFollowRequests() async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
     try {
       final res = await _apiService.fetchSentFollowRequests();
       _sentFollowRequests = res;
       _isLoading = false;
-      notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
       return res;
     } catch (e) {
       _isLoading = false;
       _error = e.toString();
-      notifyListeners();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
       rethrow;
     }
   }
@@ -37,18 +122,63 @@ class ApiController extends ChangeNotifier {
   Future<Map<String, dynamic>> sendFollowRequest(String femaleUserId) async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
     try {
       final result = await _apiService.sendFollowRequest(
         femaleUserId: femaleUserId,
       );
       _isLoading = false;
-      notifyListeners();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
       return result;
     } catch (e) {
       _isLoading = false;
       _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+
+  /// Register new male user
+  Future<Map<String, dynamic>> registerMaleUser({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+    String? referralCode,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       notifyListeners();
+    });
+    try {
+      final result = await _apiService.registerMaleUser(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        password: password,
+        referralCode: referralCode,
+      );
+      _isLoading = false;
+      _signupResponse = result;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
       rethrow;
     }
   }
@@ -179,17 +309,15 @@ class ApiController extends ChangeNotifier {
 
       debugPrint("📥 fetchBrowseFemales raw response: $res");
 
-      // Helper: convert many shapes into List<Map<String,dynamic>>
-      List<Map<String, dynamic>> _normalizeList(dynamic input) {
-        if (input == null) return <Map<String, dynamic>>[];
+      // ...existing code for _normalizeList and data extraction...
 
-        // If it's already a List, try to convert each element to Map
+      List<Map<String, dynamic>> _normalizeList(dynamic input) {
+        if (input is List<Map<String, dynamic>>) return input;
         if (input is List) {
           return input
               .where((e) => e != null)
               .map((e) {
                 if (e is Map) return Map<String, dynamic>.from(e);
-                // If it's a model object, try to call toJson()
                 try {
                   final jsonLike = (e as dynamic).toJson();
                   if (jsonLike is Map)
@@ -200,13 +328,9 @@ class ApiController extends ChangeNotifier {
               .where((m) => m.isNotEmpty)
               .toList();
         }
-
-        // If it's a Map, try to detect nested lists (common keys)
         if (input is Map) {
-          final Map mapInput = input;
-          final candidates = <dynamic>[
-            mapInput['data'],
-            mapInput['docs'],
+          final mapInput = Map<String, dynamic>.from(input);
+          final candidates = [
             mapInput['items'],
             mapInput['list'],
             mapInput['results'],
@@ -217,17 +341,15 @@ class ApiController extends ChangeNotifier {
             }
           }
         }
-
-        // If nothing matched, return empty
         return <Map<String, dynamic>>[];
       }
 
-      // Determine raw data candidate(s) from `res`
-      dynamic rawData;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
 
-      // If service returned a Map-like response
+      dynamic rawData;
       if (res is Map) {
-        // Common patterns: { success: true, data: [...] } or { data: { docs: [...] } }
         if (res['data'] != null) {
           rawData = res['data'];
         } else if (res['docs'] != null) {
@@ -239,12 +361,9 @@ class ApiController extends ChangeNotifier {
         } else if (res['results'] != null) {
           rawData = res['results'];
         } else {
-          // fallback: maybe the map itself is a single profile object
           rawData = res;
         }
-      }
-      // If service returned a typed model object that exposes toJson()
-      else {
+      } else {
         try {
           final jsonForm = (res as dynamic).toJson();
           if (jsonForm is Map) {
@@ -261,17 +380,13 @@ class ApiController extends ChangeNotifier {
             rawData = res;
           }
         } catch (_) {
-          // not a model with toJson, use res directly
           rawData = res;
         }
       }
 
-      // Normalize into a list
-      List<Map<String, dynamic>> parsed = _normalizeList(rawData);
+      List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
 
-      // If parsed is empty, try alternative heuristics:
-      if (parsed.isEmpty) {
-        // 1) If `rawData` is a Map representing a single profile, wrap it
+      if (normalizedProfiles.isEmpty) {
         if (rawData is Map) {
           final Map<String, dynamic> candidateMap = Map<String, dynamic>.from(
             rawData,
@@ -280,32 +395,27 @@ class ApiController extends ChangeNotifier {
               candidateMap.containsKey('_id') ||
               candidateMap.containsKey('avatarUrl') ||
               candidateMap.containsKey('avatar')) {
-            parsed = [candidateMap];
+            normalizedProfiles = [candidateMap];
           }
         }
-
-        // 2) If original `res` had any top-level List value, use the first one
-        if (parsed.isEmpty && res is Map) {
+        if (normalizedProfiles.isEmpty && res is Map) {
           for (final v in res.values) {
             if (v is List) {
-              parsed = _normalizeList(v);
-              if (parsed.isNotEmpty) break;
+              normalizedProfiles = _normalizeList(v);
+              if (normalizedProfiles.isNotEmpty) break;
             }
           }
         }
-
-        // 3) As a last attempt, if res itself is a List-like model or toJson returned a List
-        if (parsed.isEmpty) {
+        if (normalizedProfiles.isEmpty) {
           try {
             final jsonForm = (res as dynamic).toJson();
-            if (jsonForm is List) parsed = _normalizeList(jsonForm);
+            if (jsonForm is List) normalizedProfiles = _normalizeList(jsonForm);
           } catch (_) {}
         }
       }
 
-      // Success path
-      if (parsed.isNotEmpty) {
-        _femaleProfiles = parsed;
+      if (normalizedProfiles.isNotEmpty) {
+        _femaleProfiles = normalizedProfiles;
         _isLoading = false;
         _error = null;
         if (WidgetsBinding.instance != null) {
@@ -315,15 +425,13 @@ class ApiController extends ChangeNotifier {
         } else {
           notifyListeners();
         }
-        return parsed;
+        return normalizedProfiles;
       }
 
-      // Handle empty response case differently from actual errors
-      if (parsed.isEmpty) {
-        // Empty list is not an error, just no profiles available
+      if (normalizedProfiles.isEmpty) {
         _femaleProfiles = [];
         _isLoading = false;
-        _error = null; // No error for empty profiles
+        _error = null;
         if (WidgetsBinding.instance != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             notifyListeners();
@@ -334,7 +442,6 @@ class ApiController extends ChangeNotifier {
         return [];
       }
 
-      // Failure path: build friendly message and throw
       String serverMessage = 'No profiles found';
       try {
         if (res is Map) {
@@ -342,7 +449,6 @@ class ApiController extends ChangeNotifier {
               (res['message'] ?? res['error'] ?? res['msg'] ?? serverMessage)
                   .toString();
         } else {
-          // try model's message fields if available
           final modelMsg =
               (res as dynamic).message ??
               (res as dynamic).error ??
@@ -367,6 +473,7 @@ class ApiController extends ChangeNotifier {
       _femaleProfiles = [];
       _isLoading = false;
       _error = e.toString();
+      _handleTokenError(e);
       if (WidgetsBinding.instance != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           notifyListeners();
@@ -376,6 +483,88 @@ class ApiController extends ChangeNotifier {
       }
       rethrow;
     }
+    // ...existing code...
+  }
+
+  /// Update specific profile details
+  Future<Map<String, dynamic>> updateProfileDetails({
+    String? firstName,
+    String? lastName,
+    String? height,
+    String? religion,
+    String? imageUrl,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+    try {
+      // Validate religion if provided
+      if (religion != null && !_isValidObjectId(religion)) {
+        throw Exception('Invalid religion ID format');
+      }
+
+      final result = await _apiService.updateProfileDetails(
+        firstName: firstName,
+        lastName: lastName,
+        height: height,
+        religion: religion,
+        imageUrl: imageUrl,
+      );
+      _isLoading = false;
+      _updateProfileResponse = result;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+
+  Map<String, dynamic>? _updateProfileResponse;
+  Map<String, dynamic>? get updateProfileResponse => _updateProfileResponse;
+
+  /// Fetch current male user profile
+  Future<Map<String, dynamic>> fetchCurrentMaleProfile() async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+    try {
+      final result = await _apiService.fetchCurrentMaleProfile();
+      _isLoading = false;
+      _currentMaleProfile = result;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+
+  Map<String, dynamic>? _currentMaleProfile;
+  Map<String, dynamic>? get currentMaleProfile => _currentMaleProfile;
+
+  // Check if a string is a valid MongoDB ObjectId (24-character hex string)
+  bool _isValidObjectId(String id) {
+    if (id.length != 24) return false;
+    return RegExp(r'^[0-9a-fA-F]{24}$').hasMatch(id);
   }
 
   String _friendlyMessage(String message) {

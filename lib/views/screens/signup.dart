@@ -7,6 +7,8 @@ import '../../core/routes/app_routes.dart';
 import '../../utils/colors.dart';
 import '../../widgets/gradient_button.dart';
 import '../../api_service/api_endpoint.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/api_controller.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -18,7 +20,9 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _firstNameCtrl = TextEditingController();
+  final TextEditingController _lastNameCtrl = TextEditingController();
   final TextEditingController _emailCtrl = TextEditingController();
+  final TextEditingController _passwordCtrl = TextEditingController();
   final TextEditingController _referralCtrl = TextEditingController();
 
   bool _submitting = false;
@@ -26,7 +30,9 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   void dispose() {
     _firstNameCtrl.dispose();
+    _lastNameCtrl.dispose();
     _emailCtrl.dispose();
+    _passwordCtrl.dispose();
     _referralCtrl.dispose();
     super.dispose();
   }
@@ -37,19 +43,20 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _submitting = true);
 
     try {
-      final resp = await http.post(
-        Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.signupMale}"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "firstName": _firstNameCtrl.text.trim(),
-          "email": _emailCtrl.text.trim(),
-          "referralCode": _referralCtrl.text.trim(),
-        }),
+      // Use the ApiController for registration
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      final result = await apiController.registerMaleUser(
+        firstName: _firstNameCtrl.text.trim(),
+        lastName: _lastNameCtrl.text.trim(),
+        email: _emailCtrl.text.trim(),
+        password: _passwordCtrl.text.trim(),
+        referralCode: _referralCtrl.text.trim().isNotEmpty
+            ? _referralCtrl.text.trim()
+            : null,
       );
 
-      final body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
-      final success = body["success"] == true;
-      final message = body["message"] ?? "Something went wrong";
+      final success = result["success"] == true;
+      final message = result["message"] ?? "Registration successful";
 
       if (!mounted) return;
 
@@ -63,7 +70,9 @@ class _SignupScreenState extends State<SignupScreen> {
           AppRoutes.signupVerification,
           arguments: {
             "email": _emailCtrl.text.trim(),
-            if (body["otp"] != null) "otp": body["otp"].toString(),
+            if (result["otp"] != null) "otp": result["otp"].toString(),
+            if (result["data"] != null && result["data"]["otp"] != null)
+              "otp": result["data"]["otp"].toString(),
           },
         );
       } else {
@@ -72,9 +81,10 @@ class _SignupScreenState extends State<SignupScreen> {
         ).showSnackBar(SnackBar(content: Text("❌ $message")));
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("❌ $e")));
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Registration failed: ${e.toString()}")),
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -176,6 +186,18 @@ class _SignupScreenState extends State<SignupScreen> {
 
                     const SizedBox(height: 16),
 
+                    const Text("Last Name"),
+                    const SizedBox(height: 8),
+                    _input(
+                      _lastNameCtrl,
+                      "Enter last name",
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? "Enter last name"
+                          : null,
+                    ),
+
+                    const SizedBox(height: 16),
+
                     const Text("Email"),
                     const SizedBox(height: 8),
                     _input(
@@ -188,6 +210,25 @@ class _SignupScreenState extends State<SignupScreen> {
                         }
                         if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
                           return "Enter valid email";
+                        }
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    const Text("Password"),
+                    const SizedBox(height: 8),
+                    _input(
+                      _passwordCtrl,
+                      "Enter password",
+                      obscureText: true,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return "Enter password";
+                        }
+                        if (v.trim().length < 6) {
+                          return "Password must be at least 6 characters";
                         }
                         return null;
                       },
@@ -246,6 +287,7 @@ class _SignupScreenState extends State<SignupScreen> {
     String hint, {
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
+    bool obscureText = false,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -257,6 +299,7 @@ class _SignupScreenState extends State<SignupScreen> {
         controller: ctrl,
         keyboardType: keyboardType,
         validator: validator,
+        obscureText: obscureText,
         decoration: InputDecoration(hintText: hint, border: InputBorder.none),
       ),
     );

@@ -29,6 +29,18 @@ class Profiledetails {
   final String? name;
   final String? videoUrl;
   final List<dynamic> images;
+  final List<String> hobbies;
+  final List<String> sports;
+  final List<String> film;
+  final List<String> music;
+  final List<String> travel;
+  final int? balance;
+  final bool? isActive;
+  final List<dynamic> malefollowing;
+  final List<dynamic> malefollowers;
+  final bool? profileCompleted;
+  final List<dynamic> referredBy;
+  final Map<String, dynamic>? searchPreferences;
 
   const Profiledetails({
     this.id,
@@ -61,6 +73,18 @@ class Profiledetails {
     this.name,
     this.videoUrl,
     this.images = const [],
+    this.hobbies = const [],
+    this.sports = const [],
+    this.film = const [],
+    this.music = const [],
+    this.travel = const [],
+    this.balance,
+    this.isActive,
+    this.malefollowing = const [],
+    this.malefollowers = const [],
+    this.profileCompleted,
+    this.referredBy = const [],
+    this.searchPreferences,
   });
 
   factory Profiledetails.fromJson(Map<String, dynamic> json) {
@@ -127,6 +151,42 @@ class Profiledetails {
       images: (json["images"] is List)
           ? List<dynamic>.from(json["images"])
           : const [],
+      hobbies: (json["hobbies"] is List)
+          ? List<String>.from(
+              (json["hobbies"] as List).map((e) => e.toString()),
+            )
+          : const [],
+      sports: (json["sports"] is List)
+          ? List<String>.from((json["sports"] as List).map((e) => e.toString()))
+          : const [],
+      film: (json["film"] is List)
+          ? List<String>.from((json["film"] as List).map((e) => e.toString()))
+          : const [],
+      music: (json["music"] is List)
+          ? List<String>.from((json["music"] as List).map((e) => e.toString()))
+          : const [],
+      travel: (json["travel"] is List)
+          ? List<String>.from((json["travel"] as List).map((e) => e.toString()))
+          : const [],
+      balance: json["balance"] is int
+          ? json["balance"] as int
+          : _tryParseInt(json["balance"]),
+      isActive: json["isActive"] is bool ? json["isActive"] as bool : null,
+      malefollowing: (json["malefollowing"] is List)
+          ? List<dynamic>.from(json["malefollowing"])
+          : const [],
+      malefollowers: (json["malefollowers"] is List)
+          ? List<dynamic>.from(json["malefollowers"])
+          : const [],
+      profileCompleted: json["profileCompleted"] is bool
+          ? json["profileCompleted"] as bool
+          : null,
+      referredBy: (json["referredBy"] is List)
+          ? List<dynamic>.from(json["referredBy"])
+          : const [],
+      searchPreferences: json["searchPreferences"] is Map<String, dynamic>
+          ? Map<String, dynamic>.from(json["searchPreferences"] as Map)
+          : null,
     );
   }
 
@@ -162,6 +222,18 @@ class Profiledetails {
       "name": name,
       "videoUrl": videoUrl,
       "images": images,
+      "hobbies": hobbies,
+      "sports": sports,
+      "film": film,
+      "music": music,
+      "travel": travel,
+      "balance": balance,
+      "isActive": isActive,
+      "malefollowing": malefollowing,
+      "malefollowers": malefollowers,
+      "profileCompleted": profileCompleted,
+      "referredBy": referredBy,
+      "searchPreferences": searchPreferences,
     };
   }
 
