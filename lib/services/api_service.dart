@@ -6,6 +6,19 @@ import '../models/female_user.dart';
 import '../api_service/api_endpoint.dart';
 
 class ApiService {
+  // Fetch all dropdown options from profile-and-image endpoint
+  Future<Map<String, dynamic>> fetchProfileAndImageOptions() async {
+    final url = Uri.parse('$baseUrl${ApiEndPoints.maleProfileAndImage}');
+    final headers = await _getHeaders();
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to fetch profile and image options');
+    }
+  }
+
   // Fetch male user profile (GET /male-user/me)
   Future<Map<String, dynamic>> fetchMaleMe() async {
     final url = Uri.parse('$baseUrl/male-user/me');

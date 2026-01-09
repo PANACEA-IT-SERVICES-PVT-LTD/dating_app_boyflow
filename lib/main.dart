@@ -11,6 +11,7 @@ import 'views/screens/introduce_yourself_screen.dart';
 
 import 'controllers/api_controller.dart';
 // Removed unused import
+import 'views/screens/account_screen.dart';
 import 'views/screens/main_navigation.dart';
 
 void main() {
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       onGenerateRoute: AppRoutes.generateRoute,
-      home: AuthCheck(),
+      home: AccountScreen(),
     );
   }
 }
@@ -84,13 +85,6 @@ class _AuthCheckState extends State<AuthCheck> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => MainNavigationScreen()),
-            );
-          } else {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => IntroduceYourselfScreen(),
-              ),
             );
           }
         });

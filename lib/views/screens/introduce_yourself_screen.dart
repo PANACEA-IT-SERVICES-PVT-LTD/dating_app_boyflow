@@ -161,6 +161,7 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
         final result = await apiController.uploadUserImage(
           imageFile: File(picked.path),
         );
+        print('DEBUG: image upload result: $result');
         if (result['success'] == true &&
             result['urls'] != null &&
             result['urls'] is List &&
@@ -177,6 +178,7 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
           ),
         );
       } catch (e) {
+        print('DEBUG: Error uploading image: $e');
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
@@ -195,9 +197,13 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
     final apiController = Provider.of<ApiController>(context, listen: false);
     try {
       final sports = await apiController.fetchAllSports();
+      print('DEBUG: sports response: $sports');
       final film = await apiController.fetchAllFilm();
+      print('DEBUG: film response: $film');
       final music = await apiController.fetchAllMusic();
+      print('DEBUG: music response: $music');
       final travel = await apiController.fetchAllTravel();
+      print('DEBUG: travel response: $travel');
       if (!mounted) return;
       setState(() {
         _availableSports = sports;
@@ -206,14 +212,14 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
         _availableTravel = travel;
       });
     } catch (e) {
-      // Optionally show error
+      print('DEBUG: Error fetching options: $e');
     }
   }
 
   Future<void> _loadProfile() async {
     try {
       final apiController = Provider.of<ApiController>(context, listen: false);
-      final profileData = await apiController.fetchMaleProfileAndImage();
+      final profileData = await apiController.fetchMaleMe();
       if (!mounted) return;
       setState(() {
         _isLoading = false;

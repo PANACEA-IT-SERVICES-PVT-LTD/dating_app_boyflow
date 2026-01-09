@@ -10,6 +10,11 @@ import '../utils/token_helper.dart';
 import 'package:http/http.dart' as http;
 
 class ApiController extends ChangeNotifier {
+  // Fetch all dropdown options from profile-and-image endpoint
+  Future<Map<String, dynamic>> fetchProfileAndImageOptions() async {
+    return await _apiService.fetchProfileAndImageOptions();
+  }
+
   // Fetch male user profile (GET /male-user/me)
   Future<Map<String, dynamic>> fetchMaleMe() async {
     return await _apiService.fetchMaleMe();
