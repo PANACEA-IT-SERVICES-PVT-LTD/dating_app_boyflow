@@ -27,11 +27,6 @@ class _HomeScreenState extends State<MainHome> {
   String _filter = 'All';
   final CallManager _callManager = CallManager();
 
-  // --- Followed profiles state ---
-  List<Map<String, dynamic>> _followedProfiles = [];
-  bool _isLoadingFollowed = false;
-  String? _followedError;
-
   Future<void> rechargeWallet(int amount) async {
     try {
       final url = Uri.parse(
@@ -93,9 +88,10 @@ class _HomeScreenState extends State<MainHome> {
   @override
   void initState() {
     super.initState();
-    _loadProfiles();
-    _loadSentFollowRequests();
-    _loadFollowedProfiles();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProfiles();
+      _loadSentFollowRequests();
+    });
   }
 
   Future<void> _loadSentFollowRequests() async {
@@ -104,9 +100,15 @@ class _HomeScreenState extends State<MainHome> {
       await apiController.fetchSentFollowRequests();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load sent follow requests: $e')),
-        );
+        // Only show error if it's not a token error (handled by the controller)
+        final errorMessage = e.toString().toLowerCase();
+        if (!errorMessage.contains('no valid token') &&
+            !errorMessage.contains('please log in again') &&
+            !errorMessage.contains('invalid token')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to load sent follow requests: $e')),
+          );
+        }
       }
     }
   }
@@ -117,38 +119,19 @@ class _HomeScreenState extends State<MainHome> {
       await apiController.fetchBrowseFemales(page: 1, limit: 10);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load profiles: $e'),
-            action: SnackBarAction(label: 'Retry', onPressed: _loadProfiles),
-          ),
-        );
+        // Only show error if it's not a token error (handled by the controller)
+        final errorMessage = e.toString().toLowerCase();
+        if (!errorMessage.contains('no valid token') &&
+            !errorMessage.contains('please log in again') &&
+            !errorMessage.contains('invalid token')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to load profiles: $e'),
+              action: SnackBarAction(label: 'Retry', onPressed: _loadProfiles),
+            ),
+          );
+        }
       }
-    }
-  }
-
-  // --- Followed profiles fetch method ---
-  Future<void> _loadFollowedProfiles() async {
-    setState(() {
-      _isLoadingFollowed = true;
-      _followedError = null;
-    });
-    try {
-      final apiService = Provider.of<ApiController>(
-        context,
-        listen: false,
-      ).apiService;
-      final result = await apiService.fetchFollowedFemales(page: 1, limit: 10);
-      final results = result['data']?['results'] ?? [];
-      setState(() {
-        _followedProfiles = List<Map<String, dynamic>>.from(results);
-        _isLoadingFollowed = false;
-      });
-    } catch (e) {
-      setState(() {
-        _followedError = e.toString();
-        _isLoadingFollowed = false;
-      });
     }
   }
 
@@ -215,34 +198,6 @@ class _HomeScreenState extends State<MainHome> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Failed to start call: $e')));
-    }
-  }
-
-  Future<void> _showCallTypePopup(Map<String, dynamic> profile) async {
-    final type = await showModalBottomSheet<bool>(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.call),
-                title: const Text('Audio Call'),
-                onTap: () => Navigator.pop(ctx, false),
-              ),
-              ListTile(
-                leading: const Icon(Icons.videocam),
-                title: const Text('Video Call'),
-                onTap: () => Navigator.pop(ctx, true),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-    if (type != null) {
-      await _startCall(isVideo: type, profile: profile);
     }
   }
 
@@ -344,16 +299,8 @@ class _HomeScreenState extends State<MainHome> {
       );
     }
 
-    final profiles = _filter == 'Follow'
-        ? _followedProfiles
-        : _applyFilter(apiController.femaleProfiles);
+    final profiles = _applyFilter(apiController.femaleProfiles);
 
-    if (_filter == 'Follow' && _isLoadingFollowed) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (_filter == 'Follow' && _followedError != null) {
-      return Center(child: Text('Error: $_followedError'));
-    }
     if (profiles.isEmpty) {
       return Center(
         child: Column(
@@ -362,9 +309,7 @@ class _HomeScreenState extends State<MainHome> {
             const Text('No profiles found'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _filter == 'Follow'
-                  ? _loadFollowedProfiles
-                  : _loadProfiles,
+              onPressed: _loadProfiles,
               child: const Text('Refresh'),
             ),
           ],
@@ -396,7 +341,12 @@ class _HomeScreenState extends State<MainHome> {
                     const SizedBox(height: 8),
                     ...apiController.sentFollowRequests.map((req) {
                       final female = req['femaleUserId'] ?? {};
-                      final name = female['email'] ?? 'Unknown';
+                      // Fallback: Try name, then email, then ''
+                      final name = (female != null)
+                          ? (female['name']?.toString() ??
+                                female['email']?.toString() ??
+                                'Unknown')
+                          : 'Unknown';
                       final status = req['status'] ?? 'pending';
                       return Container(
                         margin: const EdgeInsets.only(bottom: 6),
@@ -451,9 +401,8 @@ class _HomeScreenState extends State<MainHome> {
                     FilterChipWidget(
                       label: 'Follow',
                       selected: _filter == 'Follow',
-                      onSelected: (v) async {
+                      onSelected: (v) {
                         setState(() => _filter = 'Follow');
-                        await _loadFollowedProfiles();
                       },
                     ),
                     const SizedBox(width: 10),
@@ -488,7 +437,7 @@ class _HomeScreenState extends State<MainHome> {
 
               return Padding(
                 padding: const EdgeInsets.only(left: 10, right: 10, bottom: 16),
-                child: _FollowableProfileCard(
+                child: _BlockableProfileCard(
                   name: name,
                   badgeImagePath: 'assets/vector.png',
                   imagePath: 'assets/img_1.png',
@@ -1039,14 +988,14 @@ class _FollowableProfileCardState extends State<_FollowableProfileCard> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Follow request sent to  24{widget.femaleName}'),
+            content: Text('Follow request sent to ${widget.femaleName}'),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send follow request:  24e')),
+          SnackBar(content: Text('Failed to send follow request: $e')),
         );
       }
     } finally {
@@ -1069,6 +1018,173 @@ class _FollowableProfileCardState extends State<_FollowableProfileCard> {
       onVideoCallTap: widget.onVideoCallTap,
       onFollowTap: _isLoading ? null : _handleFollow,
       isFollowLoading: _isLoading,
+    );
+  }
+}
+
+// Updated widget to include block functionality
+class _BlockableProfileCard extends StatefulWidget {
+  final String name;
+  final String language;
+  final String age;
+  final String callRate;
+  final String videoRate;
+  final String imagePath;
+  final String badgeImagePath;
+  final VoidCallback? onCardTap;
+  final VoidCallback? onAudioCallTap;
+  final VoidCallback? onVideoCallTap;
+  final String femaleUserId;
+  final String femaleName;
+
+  const _BlockableProfileCard({
+    required this.name,
+    required this.language,
+    required this.age,
+    required this.callRate,
+    required this.videoRate,
+    required this.imagePath,
+    required this.badgeImagePath,
+    this.onCardTap,
+    this.onAudioCallTap,
+    this.onVideoCallTap,
+    required this.femaleUserId,
+    required this.femaleName,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<_BlockableProfileCard> createState() => _BlockableProfileCardState();
+}
+
+class _BlockableProfileCardState extends State<_BlockableProfileCard> {
+  bool _isLoading = false;
+  bool _isBlocking = false;
+
+  Future<void> _handleFollow() async {
+    if (widget.femaleUserId.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Invalid user ID')));
+      return;
+    }
+    setState(() => _isLoading = true);
+    final apiController = Provider.of<ApiController>(context, listen: false);
+    try {
+      await apiController.sendFollowRequest(widget.femaleUserId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Follow request sent to ${widget.femaleName}'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send follow request: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleBlock() async {
+    if (widget.femaleUserId.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Invalid user ID')));
+      return;
+    }
+
+    // Confirm blocking action
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Block user'),
+        content: Text(
+          'Are you sure you want to block ${widget.femaleName}? '
+          'This will remove all connections.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Block'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() => _isBlocking = true);
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      try {
+        await apiController.blockUser(femaleUserId: widget.femaleUserId);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('User blocked successfully')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to block user: $e')));
+        }
+      } finally {
+        if (mounted) setState(() => _isBlocking = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        ProfileCardWidget(
+          name: widget.name,
+          badgeImagePath: widget.badgeImagePath,
+          imagePath: widget.imagePath,
+          language: widget.language,
+          age: widget.age,
+          callRate: widget.callRate,
+          videoRate: widget.videoRate,
+          onCardTap: widget.onCardTap,
+          onAudioCallTap: widget.onAudioCallTap,
+          onVideoCallTap: widget.onVideoCallTap,
+          onFollowTap: _isLoading ? null : _handleFollow,
+          isFollowLoading: _isLoading,
+        ),
+        Positioned(
+          top: 10,
+          right: 10,
+          child: PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            onSelected: (String result) async {
+              if (result == 'block') {
+                await _handleBlock();
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem<String>(
+                value: 'block',
+                child: Row(
+                  children: [
+                    const Icon(Icons.block, color: Colors.red),
+                    const SizedBox(width: 8),
+                    Text('Block User', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

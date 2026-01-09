@@ -325,6 +325,11 @@ class _AccountScreenState extends State<AccountScreen> {
 
   final List<Map<String, dynamic>> menuItems = [
     {
+      'iconPath': 'assets/profile.png',
+      'label': 'Introduce Yourself',
+      'screen': IntroduceYourselfScreen(),
+    },
+    {
       'iconPath': 'assets/profile&gallery.png',
       'label': 'Talktime Transactions',
       'screen': TransactionsScreen(),

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+// import 'package:provider/provider.dart';
 import '../../core/routes/app_routes.dart';
 import '../../utils/colors.dart';
 import '../../widgets/gradient_button.dart';
-import '../../controllers/api_controller.dart';
+// import '../../controllers/api_controller.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:io';
 import '../../api_service/api_endpoint.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -50,46 +49,52 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _submitting = true);
     try {
-      final apiController = Provider.of<ApiController>(context, listen: false);
-      final success = await apiController.login(email);
+      final url = Uri.parse(
+        "${ApiEndPoints.baseUrls}${ApiEndPoints.loginMale}",
+      );
+      final resp = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email}),
+      );
+
+      dynamic body;
+      try {
+        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
+      } catch (_) {
+        body = {"raw": resp.body};
+      }
+
+      final success = (body is Map && body["success"] == true);
+      final message =
+          (body is Map ? body["message"] : null) ??
+          (resp.statusCode >= 200 && resp.statusCode < 300
+              ? "OTP sent"
+              : "Failed to send OTP");
 
       if (!mounted) return;
 
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("✅ OTP sent successfully!")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("✅ $message")));
 
         if (mounted) {
           Navigator.pushNamed(
             context,
             AppRoutes.loginVerification,
-            arguments: <String, dynamic>{'email': email, 'source': 'login'},
+            arguments: <String, dynamic>{
+              'email': email,
+              'source': 'login',
+              if (body['otp'] != null) 'otp': body['otp'].toString(),
+            },
           );
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("❌ Failed to send OTP. Please try again."),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("❌ $message")));
       }
-    } on SocketException {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "❌ Network error: Please check your internet connection",
-          ),
-        ),
-      );
-    } on http.ClientException {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("❌ Connection error: Unable to connect to server"),
-        ),
-      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(

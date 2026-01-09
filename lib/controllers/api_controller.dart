@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:Boy_flow/api_service/api_endpoint.dart';
 import 'package:Boy_flow/services/api_service.dart';
@@ -9,15 +10,42 @@ import '../utils/token_helper.dart';
 import 'package:http/http.dart' as http;
 
 class ApiController extends ChangeNotifier {
-  /// Login method to send OTP or authenticate user
-  Future<bool> login(String email) async {
+  // Fetch male user profile (GET /male-user/me)
+  Future<Map<String, dynamic>> fetchMaleMe() async {
+    return await _apiService.fetchMaleMe();
+  }
+
+  // Fetch all available sports
+  Future<List<String>> fetchAllSports() async {
+    return await _apiService.fetchAllSports();
+  }
+
+  // Fetch all available film
+  Future<List<String>> fetchAllFilm() async {
+    return await _apiService.fetchAllFilm();
+  }
+
+  // Fetch all available music
+  Future<List<String>> fetchAllMusic() async {
+    return await _apiService.fetchAllMusic();
+  }
+
+  // Fetch all available travel
+  Future<List<String>> fetchAllTravel() async {
+    return await _apiService.fetchAllTravel();
+  }
+
+  /// Upload image for male user
+  Future<Map<String, dynamic>> uploadUserImage({
+    required File imageFile,
+  }) async {
     _isLoading = true;
     _error = null;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       notifyListeners();
     });
     try {
-      final result = await _apiService.login(email);
+      final result = await _apiService.uploadUserImage(imageFile: imageFile);
       _isLoading = false;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         notifyListeners();
@@ -34,8 +62,113 @@ class ApiController extends ChangeNotifier {
     }
   }
 
-  // Expose the ApiService instance for external use (e.g., in MainHome)
-  ApiService get apiService => _apiService;
+  /// Update travel preferences for male user
+  Future<Map<String, dynamic>> updateUserTravel({
+    required List<String> travel,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+    try {
+      final result = await _apiService.updateUserTravel(travel: travel);
+      _isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+
+  /// Update music preferences for male user
+  Future<Map<String, dynamic>> updateUserMusic({
+    required List<String> music,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+    try {
+      final result = await _apiService.updateUserMusic(music: music);
+      _isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+
+  /// Update film preferences for male user
+  Future<Map<String, dynamic>> updateUserFilm({
+    required List<String> film,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+    try {
+      final result = await _apiService.updateUserFilm(film: film);
+      _isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+
+  /// Update sports for male user
+  Future<Map<String, dynamic>> updateUserSports({
+    required List<String> sports,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+    try {
+      final result = await _apiService.updateUserSports(sports: sports);
+      _isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
 
   /// Callback to be set by UI to handle forced logout (e.g., redirect to login)
   VoidCallback? onForceLogout;
@@ -309,8 +442,6 @@ class ApiController extends ChangeNotifier {
 
       debugPrint("📥 fetchBrowseFemales raw response: $res");
 
-      // ...existing code for _normalizeList and data extraction...
-
       List<Map<String, dynamic>> _normalizeList(dynamic input) {
         if (input is List<Map<String, dynamic>>) return input;
         if (input is List) {
@@ -483,7 +614,6 @@ class ApiController extends ChangeNotifier {
       }
       rethrow;
     }
-    // ...existing code...
   }
 
   /// Update specific profile details
@@ -558,6 +688,31 @@ class ApiController extends ChangeNotifier {
     }
   }
 
+  /// Fetch male user profile and images
+  Future<Map<String, dynamic>> fetchMaleProfileAndImage() async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+    try {
+      final result = await _apiService.fetchMaleProfileAndImage();
+      _isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+
   Map<String, dynamic>? _currentMaleProfile;
   Map<String, dynamic>? get currentMaleProfile => _currentMaleProfile;
 
@@ -588,5 +743,86 @@ class ApiController extends ChangeNotifier {
       return "Network error. Please check your internet connection.";
     }
     return message;
+  }
+
+  // Block a female user
+  Future<Map<String, dynamic>> blockUser({required String femaleUserId}) async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+    try {
+      final result = await _apiService.blockUser(femaleUserId: femaleUserId);
+      _isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+
+  // Fetch blocked users list
+  Future<Map<String, dynamic>> fetchBlockedUsersList({
+    required String femaleUserId,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+    try {
+      final result = await _apiService.fetchBlockedUsersList(
+        femaleUserId: femaleUserId,
+      );
+      _isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+
+  // Unblock a female user
+  Future<Map<String, dynamic>> unblockUser({
+    required String femaleUserId,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+    try {
+      final result = await _apiService.unblockUser(femaleUserId: femaleUserId);
+      _isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
   }
 }

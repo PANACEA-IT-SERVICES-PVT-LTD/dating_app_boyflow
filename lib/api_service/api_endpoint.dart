@@ -1,5 +1,10 @@
 class ApiEndPoints {
-  static const String baseUrls = "https://friend-circle-2.vercel.app";
+  // Male user options endpoints
+  static const String maleSports = '/male-user/sports';
+  static const String maleFilm = '/male-user/film';
+  static const String maleMusic = '/male-user/music';
+  static const String maleTravel = '/male-user/travel';
+  static const String baseUrls = "https://friend-circle-nine.vercel.app";
 
   // Male auth & profile
   static const String signupMale = "/male-user/register";
@@ -7,12 +12,13 @@ class ApiEndPoints {
   static const String loginMale = "/male-user/login";
   static const String loginotpMale = "/male-user/verify-login-otp";
   static const String profiledetailsMale = "/male-user/add-info";
-  static const String maleProfileDetails = "/male-user/profile/details";
+  static const String maleProfileDetails = "/male-user/profile-details";
   static const String uploadImageMale = "/male-user/upload-image";
-  static const String maleMe = "/male-user/me";
+  static const String maleMe = '/male-user/me';
+  static const String maleUploadImages = '/male-user/upload-images';
   static const String maleInterests = "/male-user/interests";
   static const String maleLanguages = "/male-user/languages";
-  static const String fetchfemaleusers = "/male-user/browse-females";
+  static const String fetchfemaleusers = "male-user/browse-females";
 
   // Male follow/unfollow
   static const String maleUnfollow = "/male-user/unfollow";
@@ -22,6 +28,7 @@ class ApiEndPoints {
   static const String maleRemoveFavourite = "/male-user/remove-favourite";
   static const String maleBlockList = "/male-user/block-list";
   static const String maleUnblock = "/male-user/unblock";
+  static const String maleBlock = "/male-user/block";
 
   // Female auth & profile
   static const String signup = "/female-user/register";
@@ -32,4 +39,6 @@ class ApiEndPoints {
 
   // Wallet/Payment
   static const String maleWalletRecharge = "/male-user/payment/wallet/order";
+
+  static const String maleProfileAndImage = '/male-user/profile-and-image';
 }
