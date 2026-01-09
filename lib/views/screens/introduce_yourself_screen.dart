@@ -1,47 +1,26 @@
 // ignore_for_file: sort_child_properties_last
 
-import 'dart:io';
+import 'dart:io' show File;
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
-// Removed unused import: account_screen.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
+
 import '../../widgets/gradient_button.dart';
-// Removed unused import: registration_status.dart
 import '../../api_service/api_endpoint.dart';
-import '../../controllers/api_controller.dart'; // <- make sure the path is correct in your project
-// import '../../api_service/api_endpoint.dart'; // only used for constants in comments
+import '../../controllers/api_controller.dart';
 
 // Helper to save token after login
 Future<void> saveLoginToken(String token) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString('token', token);
-  debugPrint('Saved login token: $token');
 }
 
-/// Introduce Yourself Screen
-///
-/// This version wires the UI to your ApiController and posts the profile
-/// details (name, age, gender, bio, interests, languages, videoUrl, photo).
-///
-/// What you need in ApiController (already added in the updated controller I sent):
-///   Future<bool> updateProfileDetails({
-///     required String name,
-///     required int age,
-///     required String gender,
-///     required String bio,
-///     required List<String> interestIds,
-///     required List<String> languageIds,
-///     String? videoUrl,
-///     String? photoUrl,
-///   })
-/// which should POST to your backend endpoint (e.g., ApiEndPoints.updateProfile)
-/// using ApiService.postData.
 class IntroduceYourselfScreen extends StatefulWidget {
   const IntroduceYourselfScreen({super.key});
 
@@ -51,35 +30,51 @@ class IntroduceYourselfScreen extends StatefulWidget {
 }
 
 class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
+  List<String> _availableSports = [];
+  List<String> _availableFilm = [];
+  List<String> _availableMusic = [];
+  List<String> _availableTravel = [];
+  File? _photo;
+  VideoPlayerController? _videoController;
+  String? _uploadedPhotoUrl;
+
   final _formKey = GlobalKey<FormState>();
-  final Map<String, dynamic> _formData = {};
 
-  File? _selectedImage;
-
-  // Controllers for text fields
+  // EXISTING
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _religionController = TextEditingController();
+
+  // 🔹 ADDED (missing from UI image)
   final _mobileController = TextEditingController();
   final _dobController = TextEditingController();
   final _bioController = TextEditingController();
-  final _heightController = TextEditingController();
+  final _interestsController = TextEditingController();
+  final _languagesController = TextEditingController();
+  final _relationshipGoalsController = TextEditingController();
   final _searchPreferencesController = TextEditingController();
+  final _hobbiesController = TextEditingController();
+  final _sportsController = TextEditingController();
   final _filmController = TextEditingController();
   final _musicController = TextEditingController();
   final _travelController = TextEditingController();
+
+  // Multi-select state
+  List<String> _selectedSports = [];
+  List<String> _selectedFilm = [];
+  List<String> _selectedMusic = [];
+  List<String> _selectedTravel = [];
   final _latitudeController = TextEditingController();
   final _longitudeController = TextEditingController();
 
-  // Dropdowns/multi-selects
-  String? _gender = 'male';
+  String _gender = 'Male';
   String? _selectedReligionId;
-  List<String> _interests = [];
-  List<String> _languages = [];
-  List<String> _relationshipGoals = [];
-  List<String> _hobbies = [];
-  List<String> _sports = [];
 
-  // Sample religion options - in a real app, you'd fetch these from an API
+  // State variables for profile data
+  List<Map<String, dynamic>> _images = [];
+  bool _isLoading = true;
+
   final List<Map<String, String>> _religions = [
     {'id': '694f63d08389fc82a4345083', 'name': 'Hindu'},
     {'id': '694f63d08389fc82a4345084', 'name': 'Muslim'},
@@ -90,254 +85,439 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
     {'id': '694f63d08389fc82a4345089', 'name': 'Other'},
   ];
 
-  // (No duplicate _submit method here)
+  // Helper to parse profile data (comma separated or list)
+  List<String> _parseProfileList(dynamic value) {
+    if (value == null) return [];
+    if (value is List) {
+      return value.map((e) => e.toString()).toList();
+    }
+    if (value is String) {
+      return value
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+    }
+    return [];
+  }
 
-  @override
-  void dispose() {
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _mobileController.dispose();
-    _dobController.dispose();
-    _bioController.dispose();
-    _heightController.dispose();
-    _searchPreferencesController.dispose();
-    _filmController.dispose();
-    _musicController.dispose();
-    _travelController.dispose();
-    _latitudeController.dispose();
-    _longitudeController.dispose();
-    super.dispose();
+  // Widget for multi-select chips
+  Widget _buildMultiSelectChips({
+    required String title,
+    required List<String> options,
+    required List<String> selectedValues,
+    required ValueChanged<List<String>> onSelectionChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 6),
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else if (options.isEmpty)
+            const Text(
+              'No options available',
+              style: TextStyle(color: Colors.grey),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: options.map((option) {
+                final isSelected = selectedValues.contains(option);
+                return ChoiceChip(
+                  label: Text(option),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    final newValues = List<String>.from(selectedValues);
+                    if (selected) {
+                      if (!newValues.contains(option)) newValues.add(option);
+                    } else {
+                      newValues.remove(option);
+                    }
+                    onSelectionChanged(newValues);
+                  },
+                  selectedColor: const Color(0xFFE91EC7).withOpacity(0.2),
+                  backgroundColor: const Color(0xFFF9E6F5),
+                  labelStyle: TextStyle(
+                    color: isSelected ? const Color(0xFFE91EC7) : Colors.black,
+                  ),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
   }
 
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      setState(() {
-        _selectedImage = File(picked.path);
-      });
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      try {
+        final result = await apiController.uploadUserImage(
+          imageFile: File(picked.path),
+        );
+        if (result['success'] == true &&
+            result['urls'] != null &&
+            result['urls'] is List &&
+            result['urls'].isNotEmpty) {
+          setState(() {
+            _uploadedPhotoUrl = result['urls'][0];
+            // Optionally update _images if you want to show all images
+            _images.insert(0, {'imageUrl': _uploadedPhotoUrl});
+          });
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Image uploaded successfully.'),
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
+      }
     }
   }
 
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    _formKey.currentState!.save();
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+    _fetchAvailableOptions();
+  }
 
-    final Map<String, dynamic> payload = {
-      'firstName': _firstNameController.text.trim(),
-      'lastName': _lastNameController.text.trim(),
-      'mobileNumber': _mobileController.text.trim(),
-      'dateOfBirth': _dobController.text.trim(),
-      'gender': _gender,
-      'bio': _bioController.text.trim(),
-      'interests': _interests,
-      'languages': _languages,
-      'religion': _selectedReligionId,
-      'relationshipGoals': _relationshipGoals,
-      'height': _heightController.text.trim(),
-      'searchPreferences': _searchPreferencesController.text.trim(),
-      'hobbies': _hobbies,
-      'sports': _sports,
-      'film': _filmController.text.trim(),
-      'music': _musicController.text.trim(),
-      'travel': _travelController.text.trim(),
-      'latitude': _latitudeController.text.trim(),
-      'longitude': _longitudeController.text.trim(),
-    };
-
-    List<http.MultipartFile> images = [];
-    if (_selectedImage != null) {
-      images.add(
-        await http.MultipartFile.fromPath('images', _selectedImage!.path),
-      );
+  Future<void> _fetchAvailableOptions() async {
+    final apiController = Provider.of<ApiController>(context, listen: false);
+    try {
+      final sports = await apiController.fetchAllSports();
+      final film = await apiController.fetchAllFilm();
+      final music = await apiController.fetchAllMusic();
+      final travel = await apiController.fetchAllTravel();
+      if (!mounted) return;
+      setState(() {
+        _availableSports = sports;
+        _availableFilm = film;
+        _availableMusic = music;
+        _availableTravel = travel;
+      });
+    } catch (e) {
+      // Optionally show error
     }
+  }
 
+  Future<void> _loadProfile() async {
     try {
       final apiController = Provider.of<ApiController>(context, listen: false);
-      await apiController.updateUserProfile(
-        fields: payload,
-        images: images.isNotEmpty ? images : null,
-      );
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Profile updated!')));
-      // Navigate to dashboard or next screen
+      final profileData = await apiController.fetchMaleProfileAndImage();
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        if (profileData['success'] == true && profileData['data'] is Map) {
+          final data = profileData['data'] as Map<String, dynamic>;
+          _firstNameController.text = data['firstName']?.toString() ?? '';
+          _lastNameController.text = data['lastName']?.toString() ?? '';
+          _heightController.text = data['height']?.toString() ?? '';
+          _mobileController.text = data['mobileNumber']?.toString() ?? '';
+          _dobController.text = data['dateOfBirth']?.toString() ?? '';
+          _bioController.text = data['bio']?.toString() ?? '';
+          _interestsController.text = data['interests']?.toString() ?? '';
+          _languagesController.text = data['languages']?.toString() ?? '';
+          _relationshipGoalsController.text =
+              data['relationshipGoals']?.toString() ?? '';
+          _searchPreferencesController.text =
+              data['searchPreferences']?.toString() ?? '';
+          _hobbiesController.text = data['hobbies']?.toString() ?? '';
+          _sportsController.text = data['sports']?.toString() ?? '';
+          _filmController.text = data['film']?.toString() ?? '';
+          _musicController.text = data['music']?.toString() ?? '';
+          _travelController.text = data['travel']?.toString() ?? '';
+          // Pre-fill multi-selects from profile data (assume comma separated or list)
+          _selectedSports = _parseProfileList(data['sports']);
+          _selectedFilm = _parseProfileList(data['film']);
+          _selectedMusic = _parseProfileList(data['music']);
+          _selectedTravel = _parseProfileList(data['travel']);
+          _latitudeController.text = data['latitude']?.toString() ?? '';
+          _longitudeController.text = data['longitude']?.toString() ?? '';
+          final religionId = data['religion']?.toString();
+          if (religionId != null && religionId.isNotEmpty) {
+            _selectedReligionId = religionId;
+          }
+          _images = List<Map<String, dynamic>>.from(data['images'] ?? []);
+        }
+      });
     } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ).showSnackBar(SnackBar(content: Text('Failed to load profile: $e')));
     }
+  }
+
+  // Widget for rounded text fields - moved inside the class
+  Widget _buildRoundedTextField({
+    required TextEditingController controller,
+    required String hint,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: const Color(0xFFF9E6F5),
+          hintText: hint,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(20),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Introduce Yourself')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('Introduce Yourself'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
+            ),
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Form(
           key: _formKey,
           child: Column(
             children: [
-              TextFormField(
+              const SizedBox(height: 20),
+
+              GestureDetector(
+                onTap: _pickImage,
+                child: _images.isNotEmpty && _images[0]['imageUrl'] != null
+                    ? CircleAvatar(
+                        radius: 60,
+                        backgroundImage: NetworkImage(_images[0]['imageUrl']),
+                      )
+                    : const _DottedBorderBox(label: 'Pick Image'),
+              ),
+
+              const SizedBox(height: 20),
+
+              _buildRoundedTextField(
                 controller: _firstNameController,
-                decoration: const InputDecoration(labelText: 'First Name'),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                hint: 'First Name',
               ),
-              TextFormField(
+              _buildRoundedTextField(
                 controller: _lastNameController,
-                decoration: const InputDecoration(labelText: 'Last Name'),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                hint: 'Last Name',
               ),
-              TextFormField(
+              _buildRoundedTextField(
                 controller: _mobileController,
-                decoration: const InputDecoration(labelText: 'Mobile Number'),
+                hint: 'Mobile Number',
+                keyboardType: TextInputType.phone,
               ),
-              TextFormField(
+              _buildRoundedTextField(
                 controller: _dobController,
-                decoration: const InputDecoration(
-                  labelText: 'Date of Birth (YYYY-MM-DD)',
-                ),
+                hint: 'Date of Birth (YYYY-MM-DD)',
               ),
-              DropdownButtonFormField<String>(
-                value: _gender,
-                decoration: const InputDecoration(labelText: 'Gender'),
-                items: ['male', 'female']
-                    .map((g) => DropdownMenuItem(value: g, child: Text(g)))
-                    .toList(),
-                onChanged: (v) => setState(() => _gender = v),
-              ),
-              TextFormField(
+              _buildRoundedTextField(
                 controller: _bioController,
-                decoration: const InputDecoration(labelText: 'Bio'),
+                hint: 'Bio',
+                maxLines: 3,
               ),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Interests (comma separated IDs)',
-                ),
-                onSaved: (v) => _interests = v!
-                    .split(',')
-                    .map((e) => e.trim())
-                    .where((e) => e.isNotEmpty)
-                    .toList(),
+              _buildRoundedTextField(
+                controller: _interestsController,
+                hint: 'Interests (comma separated IDs)',
               ),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Languages (comma separated IDs)',
-                ),
-                onSaved: (v) => _languages = v!
-                    .split(',')
-                    .map((e) => e.trim())
-                    .where((e) => e.isNotEmpty)
-                    .toList(),
+              _buildRoundedTextField(
+                controller: _languagesController,
+                hint: 'Languages (comma separated IDs)',
               ),
-              DropdownButtonFormField<String>(
-                value: _selectedReligionId,
-                decoration: const InputDecoration(labelText: 'Religion'),
-                items: _religions.map((religion) {
-                  return DropdownMenuItem(
-                    value: religion['id'],
-                    child: Text(religion['name']!),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
+              _buildRoundedTextField(
+                controller: _relationshipGoalsController,
+                hint: 'Relationship Goals (comma separated IDs)',
+              ),
+              _buildRoundedTextField(
+                controller: _heightController,
+                hint: 'Height',
+                keyboardType: TextInputType.number,
+              ),
+              _buildRoundedTextField(
+                controller: _searchPreferencesController,
+                hint: 'Search Preferences',
+              ),
+              _buildRoundedTextField(
+                controller: _hobbiesController,
+                hint: 'Hobbies (comma separated)',
+              ),
+              _buildMultiSelectChips(
+                title: 'Sports',
+                options: _availableSports,
+                selectedValues: _selectedSports,
+                onSelectionChanged: (values) {
                   setState(() {
-                    _selectedReligionId = newValue;
+                    _selectedSports = values;
+                    _sportsController.text = values.join(',');
                   });
                 },
               ),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Relationship Goals (comma separated IDs)',
-                ),
-                onSaved: (v) => _relationshipGoals = v!
-                    .split(',')
-                    .map((e) => e.trim())
-                    .where((e) => e.isNotEmpty)
-                    .toList(),
+              _buildMultiSelectChips(
+                title: 'Film',
+                options: _availableFilm,
+                selectedValues: _selectedFilm,
+                onSelectionChanged: (values) {
+                  setState(() {
+                    _selectedFilm = values;
+                    _filmController.text = values.join(',');
+                  });
+                },
               ),
-              TextFormField(
-                controller: _heightController,
-                decoration: const InputDecoration(labelText: 'Height'),
+              _buildMultiSelectChips(
+                title: 'Music',
+                options: _availableMusic,
+                selectedValues: _selectedMusic,
+                onSelectionChanged: (values) {
+                  setState(() {
+                    _selectedMusic = values;
+                    _musicController.text = values.join(',');
+                  });
+                },
               ),
-              TextFormField(
-                controller: _searchPreferencesController,
-                decoration: const InputDecoration(
-                  labelText: 'Search Preferences',
-                ),
+              _buildMultiSelectChips(
+                title: 'Travel',
+                options: _availableTravel,
+                selectedValues: _selectedTravel,
+                onSelectionChanged: (values) {
+                  setState(() {
+                    _selectedTravel = values;
+                    _travelController.text = values.join(',');
+                  });
+                },
               ),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Hobbies (comma separated)',
-                ),
-                onSaved: (v) => _hobbies = v!
-                    .split(',')
-                    .map((e) => e.trim())
-                    .where((e) => e.isNotEmpty)
-                    .toList(),
-              ),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Sports (comma separated)',
-                ),
-                onSaved: (v) => _sports = v!
-                    .split(',')
-                    .map((e) => e.trim())
-                    .where((e) => e.isNotEmpty)
-                    .toList(),
-              ),
-              TextFormField(
-                controller: _filmController,
-                decoration: const InputDecoration(labelText: 'Film'),
-              ),
-              TextFormField(
-                controller: _musicController,
-                decoration: const InputDecoration(labelText: 'Music'),
-              ),
-              TextFormField(
-                controller: _travelController,
-                decoration: const InputDecoration(labelText: 'Travel'),
-              ),
-              Row(
-                children: [
-                  _selectedImage != null
-                      ? Image.file(_selectedImage!, width: 80, height: 80)
-                      : const Text('No image selected'),
-                  TextButton(
-                    onPressed: _pickImage,
-                    child: const Text('Pick Image'),
-                  ),
-                ],
-              ),
-              TextFormField(
+
+              _buildRoundedTextField(
                 controller: _latitudeController,
-                decoration: const InputDecoration(labelText: 'Latitude'),
+                hint: 'Latitude',
+                keyboardType: TextInputType.number,
               ),
-              TextFormField(
+              _buildRoundedTextField(
                 controller: _longitudeController,
-                decoration: const InputDecoration(labelText: 'Longitude'),
+                hint: 'Longitude',
+                keyboardType: TextInputType.number,
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(onPressed: _submit, child: const Text('Submit')),
+
+              const SizedBox(height: 30),
+
+              GradientButton(
+                text: 'Submit',
+                onPressed: () async {
+                  final apiController = Provider.of<ApiController>(
+                    context,
+                    listen: false,
+                  );
+                  // Parse sports from controller (comma separated to List<String>)
+                  final sportsText = _sportsController.text.trim();
+                  final sportsList = sportsText.isNotEmpty
+                      ? sportsText
+                            .split(',')
+                            .map((e) => e.trim())
+                            .where((e) => e.isNotEmpty)
+                            .toList()
+                      : <String>[];
+                  // Parse film from controller (comma separated to List<String>)
+                  final filmText = _filmController.text.trim();
+                  final filmList = filmText.isNotEmpty
+                      ? filmText
+                            .split(',')
+                            .map((e) => e.trim())
+                            .where((e) => e.isNotEmpty)
+                            .toList()
+                      : <String>[];
+                  // Parse music from controller (comma separated to List<String>)
+                  final musicText = _musicController.text.trim();
+                  final musicList = musicText.isNotEmpty
+                      ? musicText
+                            .split(',')
+                            .map((e) => e.trim())
+                            .where((e) => e.isNotEmpty)
+                            .toList()
+                      : <String>[];
+                  // Parse travel from controller (comma separated to List<String>)
+                  final travelText = _travelController.text.trim();
+                  final travelList = travelText.isNotEmpty
+                      ? travelText
+                            .split(',')
+                            .map((e) => e.trim())
+                            .where((e) => e.isNotEmpty)
+                            .toList()
+                      : <String>[];
+                  try {
+                    final sportsResult = await apiController.updateUserSports(
+                      sports: sportsList,
+                    );
+                    final filmResult = await apiController.updateUserFilm(
+                      film: filmList,
+                    );
+                    final musicResult = await apiController.updateUserMusic(
+                      music: musicList,
+                    );
+                    final travelResult = await apiController.updateUserTravel(
+                      travel: travelList,
+                    );
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '${sportsResult['message'] ?? 'Sports updated successfully'}\n'
+                          '${filmResult['message'] ?? 'Film preferences updated successfully'}\n'
+                          '${musicResult['message'] ?? 'Music preferences updated successfully'}\n'
+                          '${travelResult['message'] ?? 'Travel preferences updated successfully'}',
+                        ),
+                      ),
+                    );
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to update: $e')),
+                    );
+                  }
+                },
+                buttonText: '',
+              ),
+
+              const SizedBox(height: 40),
             ],
           ),
         ),
       ),
     );
-}
-}
-
-TextStyle _labelStyle() {
-  return const TextStyle(
-    fontWeight: FontWeight.w600,
-    fontSize: 14,
-    color: Colors.black,
-  );
+  }
 }
 
 class _DottedBorderBox extends StatelessWidget {
   final String label;
-
   const _DottedBorderBox({required this.label});
 
   @override
@@ -346,54 +526,19 @@ class _DottedBorderBox extends StatelessWidget {
       width: 120,
       height: 120,
       decoration: BoxDecoration(
-        border: Border.all(
-          color: const Color(0xFFE91EC7),
-          width: 1,
-          style: BorderStyle.solid,
-        ),
+        border: Border.all(color: const Color(0xFFE91EC7)),
         borderRadius: BorderRadius.circular(10),
-        color: Colors.transparent,
       ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.add_a_photo, color: Color(0xFFE91EC7)),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(color: Color(0xFFE91EC7), fontSize: 12),
-              textAlign: TextAlign.center,
-            ),
+            const SizedBox(height: 6),
+            Text(label, style: const TextStyle(color: Color(0xFFE91EC7))),
           ],
         ),
       ),
     );
   }
-}
-
-/// Rounded text field helper
-Widget _buildRoundedTextField({
-  required TextEditingController controller,
-  required String hint,
-  int maxLines = 1,
-  TextInputType keyboardType = TextInputType.text,
-  String? Function(String?)? validator,
-}) {
-  return TextFormField(
-    controller: controller,
-    maxLines: maxLines,
-    keyboardType: keyboardType,
-    validator: validator,
-    decoration: InputDecoration(
-      filled: true,
-      fillColor: const Color(0xFFF9E6F5),
-      hintText: hint,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: BorderSide.none,
-      ),
-    ),
-  );
 }

@@ -6,6 +6,192 @@ import '../models/female_user.dart';
 import '../api_service/api_endpoint.dart';
 
 class ApiService {
+  // Fetch male user profile (GET /male-user/me)
+  Future<Map<String, dynamic>> fetchMaleMe() async {
+    final url = Uri.parse('$baseUrl/male-user/me');
+    final headers = await _getHeaders();
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to fetch male user profile');
+    }
+  }
+
+  // Fetch all available sports
+  Future<List<String>> fetchAllSports() async {
+    final url = Uri.parse('$baseUrl${ApiEndPoints.maleSports}');
+    final headers = await _getHeaders();
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['data'] is List) {
+        return List<String>.from(
+          (data['data'] as List).map((e) => e['name'].toString()),
+        );
+      }
+      return [];
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to fetch sports');
+    }
+  }
+
+  // Fetch all available film
+  Future<List<String>> fetchAllFilm() async {
+    final url = Uri.parse('$baseUrl${ApiEndPoints.maleFilm}');
+    final headers = await _getHeaders();
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['data'] is List) {
+        return List<String>.from(
+          (data['data'] as List).map((e) => e['name'].toString()),
+        );
+      }
+      return [];
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to fetch film');
+    }
+  }
+
+  // Fetch all available music
+  Future<List<String>> fetchAllMusic() async {
+    final url = Uri.parse('$baseUrl${ApiEndPoints.maleMusic}');
+    final headers = await _getHeaders();
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['data'] is List) {
+        return List<String>.from(
+          (data['data'] as List).map((e) => e['name'].toString()),
+        );
+      }
+      return [];
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to fetch music');
+    }
+  }
+
+  // Fetch all available travel
+  Future<List<String>> fetchAllTravel() async {
+    final url = Uri.parse('$baseUrl${ApiEndPoints.maleTravel}');
+    final headers = await _getHeaders();
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['data'] is List) {
+        return List<String>.from(
+          (data['data'] as List).map((e) => e['name'].toString()),
+        );
+      }
+      return [];
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to fetch travel');
+    }
+  }
+
+  // Upload image for male user
+  Future<Map<String, dynamic>> uploadUserImage({
+    required File imageFile,
+  }) async {
+    final url = Uri.parse('$baseUrl/male-user/upload-image');
+    final headers = await _getHeaders();
+    final request = http.MultipartRequest('POST', url);
+    request.headers.addAll(headers);
+    request.files.add(
+      await http.MultipartFile.fromPath('images', imageFile.path),
+    );
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to upload image');
+    }
+  }
+
+  // Update travel preferences for male user
+  Future<Map<String, dynamic>> updateUserTravel({
+    required List<String> travel,
+  }) async {
+    final url = Uri.parse('$baseUrl/male-user/travel');
+    final headers = await _getHeaders();
+    final request = http.MultipartRequest('PATCH', url);
+    request.headers.addAll(headers);
+    request.fields['travel'] = jsonEncode(travel);
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to update travel preferences');
+    }
+  }
+
+  // Update music preferences for male user
+  Future<Map<String, dynamic>> updateUserMusic({
+    required List<String> music,
+  }) async {
+    final url = Uri.parse('$baseUrl/male-user/music');
+    final headers = await _getHeaders();
+    final request = http.MultipartRequest('PATCH', url);
+    request.headers.addAll(headers);
+    request.fields['music'] = jsonEncode(music);
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to update music preferences');
+    }
+  }
+
+  // Update film preferences for male user
+  Future<Map<String, dynamic>> updateUserFilm({
+    required List<String> film,
+  }) async {
+    final url = Uri.parse('$baseUrl/male-user/film');
+    final headers = await _getHeaders();
+    final request = http.MultipartRequest('PATCH', url);
+    request.headers.addAll(headers);
+    request.fields['film'] = jsonEncode(film);
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to update film preferences');
+    }
+  }
+
+  // Update sports for male user
+  Future<Map<String, dynamic>> updateUserSports({
+    required List<String> sports,
+  }) async {
+    final url = Uri.parse('$baseUrl/male-user/sports');
+    final headers = await _getHeaders();
+    final request = http.MultipartRequest('PATCH', url);
+    request.headers.addAll(headers);
+    request.fields['sports'] = jsonEncode(sports);
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to update sports');
+    }
+  }
+
   // Login method (stub, implement as needed)
   Future<bool> login(String email) async {
     // TODO: Implement actual login logic (send OTP, etc.)
@@ -298,6 +484,88 @@ class ApiService {
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to fetch followed female users');
+    }
+  }
+
+  // Fetch male user profile and images
+  Future<Map<String, dynamic>> fetchMaleProfileAndImage() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl${ApiEndPoints.maleProfileAndImage}'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to fetch male profile and images');
+      }
+    } catch (e) {
+      throw Exception('Failed to fetch profile and images: $e');
+    }
+  }
+
+  // Block a female user
+  Future<Map<String, dynamic>> blockUser({required String femaleUserId}) async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiEndPoints.maleBlock}');
+      final headers = await _getHeaders();
+      final body = jsonEncode({"femaleUserId": femaleUserId});
+
+      final response = await http.post(url, headers: headers, body: body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to block user');
+      }
+    } catch (e) {
+      throw Exception('Failed to block user: $e');
+    }
+  }
+
+  // Fetch blocked users list
+  Future<Map<String, dynamic>> fetchBlockedUsersList({
+    required String femaleUserId,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl${ApiEndPoints.maleBlockList}'),
+        headers: await _getHeaders(),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to fetch blocked users list');
+      }
+    } catch (e) {
+      throw Exception('Failed to fetch blocked users list: $e');
+    }
+  }
+
+  // Unblock a female user
+  Future<Map<String, dynamic>> unblockUser({
+    required String femaleUserId,
+  }) async {
+    try {
+      final url = Uri.parse('$baseUrl${ApiEndPoints.maleUnblock}');
+      final headers = await _getHeaders();
+      final body = jsonEncode({"femaleUserId": femaleUserId});
+
+      final response = await http.post(url, headers: headers, body: body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to unblock user');
+      }
+    } catch (e) {
+      throw Exception('Failed to unblock user: $e');
     }
   }
 }
