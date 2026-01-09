@@ -27,6 +27,26 @@ class _HomeScreenState extends State<MainHome> {
   String _filter = 'All';
   final CallManager _callManager = CallManager();
 
+  // Helper method to extract image URL from profile
+  String? _getImageUrlFromProfile(Map<String, dynamic> profile) {
+    try {
+      if (profile['images'] != null &&
+          profile['images'] is List &&
+          profile['images'].isNotEmpty) {
+        final imageList = profile['images'] as List;
+        final firstImage = imageList[0];
+        if (firstImage is Map<String, dynamic> &&
+            firstImage['imageUrl'] != null) {
+          return firstImage['imageUrl'].toString();
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error extracting image URL: $e');
+      return null;
+    }
+  }
+
   // --- Followed profiles state ---
   List<Map<String, dynamic>> _followedProfiles = [];
   bool _isLoadingFollowed = false;
@@ -114,7 +134,11 @@ class _HomeScreenState extends State<MainHome> {
   Future<void> _loadProfiles() async {
     try {
       final apiController = Provider.of<ApiController>(context, listen: false);
-      await apiController.fetchBrowseFemales(page: 1, limit: 10);
+      await apiController.fetchFemaleUsersFromDashboard(
+        section: 'all',
+        page: 1,
+        limit: 10,
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -134,12 +158,14 @@ class _HomeScreenState extends State<MainHome> {
       _followedError = null;
     });
     try {
-      final apiService = Provider.of<ApiController>(
-        context,
-        listen: false,
-      ).apiService;
-      final result = await apiService.fetchFollowedFemales(page: 1, limit: 10);
-      final results = result['data']?['results'] ?? [];
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      await apiController.fetchFemaleUsersFromDashboard(
+        section: 'followed',
+        page: 1,
+        limit: 10,
+      );
+      // Get the updated profiles from the controller
+      final results = apiController.femaleProfiles;
       setState(() {
         _followedProfiles = List<Map<String, dynamic>>.from(results);
         _isLoadingFollowed = false;
@@ -159,12 +185,26 @@ class _HomeScreenState extends State<MainHome> {
 
   void _navigateToFemaleProfile(Map<String, dynamic> profile) {
     // Convert the profile map to a FemaleUser object
+    String? imageUrl;
+    if (profile['images'] != null &&
+        profile['images'] is List &&
+        profile['images'].isNotEmpty) {
+      final imageList = profile['images'] as List;
+      final firstImage = imageList[0];
+      if (firstImage is Map<String, dynamic> &&
+          firstImage['imageUrl'] != null) {
+        imageUrl = firstImage['imageUrl'].toString();
+      }
+    } else if (profile['avatarUrl'] != null) {
+      imageUrl = profile['avatarUrl']?.toString();
+    }
+
     final femaleUser = FemaleUser(
       id: profile['_id']?.toString() ?? '',
       name: profile['name']?.toString() ?? 'Unknown',
       age: int.tryParse(profile['age']?.toString() ?? '0') ?? 0,
       bio: profile['bio']?.toString() ?? '',
-      avatarUrl: profile['avatarUrl']?.toString() ?? '',
+      avatarUrl: imageUrl ?? '',
     );
 
     Navigator.push(
@@ -491,7 +531,8 @@ class _HomeScreenState extends State<MainHome> {
                 child: _FollowableProfileCard(
                   name: name,
                   badgeImagePath: 'assets/vector.png',
-                  imagePath: 'assets/img_1.png',
+                  imagePath:
+                      _getImageUrlFromProfile(profile) ?? 'assets/img_1.png',
                   language: bio.isNotEmpty ? bio : 'Bio not available',
                   age: ageStr,
                   callRate: '10/min',

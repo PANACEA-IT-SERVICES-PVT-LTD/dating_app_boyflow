@@ -486,6 +486,211 @@ class ApiController extends ChangeNotifier {
     // ...existing code...
   }
 
+  /// Fetches female profiles from the dashboard API and stores them in controller.
+  /// Returns a List<Map<String, dynamic>> on success, throws on failure.
+  Future<List<Map<String, dynamic>>> fetchFemaleUsersFromDashboard({
+    String section = 'all',
+    int page = 1,
+    int limit = 10,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    if (WidgetsBinding.instance != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+    } else {
+      notifyListeners();
+    }
+
+    try {
+      // Call service to fetch from dashboard
+      final dynamic res = await _apiService.fetchFemaleUsersFromDashboard(
+        section: section,
+        page: page,
+        limit: limit,
+      );
+
+      debugPrint("📥 fetchFemaleUsersFromDashboard raw response: $res");
+
+      List<Map<String, dynamic>> _normalizeList(dynamic input) {
+        if (input is List<Map<String, dynamic>>) return input;
+        if (input is List) {
+          return input
+              .where((e) => e != null)
+              .map((e) {
+                if (e is Map) return Map<String, dynamic>.from(e);
+                try {
+                  final jsonLike = (e as dynamic).toJson();
+                  if (jsonLike is Map)
+                    return Map<String, dynamic>.from(jsonLike);
+                } catch (_) {}
+                return <String, dynamic>{};
+              })
+              .where((m) => m.isNotEmpty)
+              .toList();
+        }
+        if (input is Map) {
+          final mapInput = Map<String, dynamic>.from(input);
+          final candidates = [
+            mapInput['items'],
+            mapInput['list'],
+            mapInput['results'],
+          ];
+          for (final c in candidates) {
+            if (c is List) {
+              return _normalizeList(c);
+            }
+          }
+        }
+        return <Map<String, dynamic>>[];
+      }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+
+      dynamic rawData;
+      if (res is Map) {
+        if (res['data'] != null) {
+          rawData = res['data'];
+          // For the dashboard API, the actual results are in data.results
+          if (rawData['results'] != null) {
+            rawData = rawData['results'];
+          }
+        } else if (res['docs'] != null) {
+          rawData = res['docs'];
+        } else if (res['items'] != null) {
+          rawData = res['items'];
+        } else if (res['list'] != null) {
+          rawData = res['list'];
+        } else if (res['results'] != null) {
+          rawData = res['results'];
+        } else {
+          rawData = res;
+        }
+      } else {
+        try {
+          final jsonForm = (res as dynamic).toJson();
+          if (jsonForm is Map) {
+            rawData =
+                jsonForm['data'] ??
+                jsonForm['docs'] ??
+                jsonForm['items'] ??
+                jsonForm['list'] ??
+                jsonForm['results'] ??
+                jsonForm;
+          } else if (jsonForm is List) {
+            rawData = jsonForm;
+          } else {
+            rawData = res;
+          }
+        } catch (_) {
+          rawData = res;
+        }
+      }
+
+      List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
+
+      if (normalizedProfiles.isEmpty) {
+        if (rawData is Map) {
+          final Map<String, dynamic> candidateMap = Map<String, dynamic>.from(
+            rawData,
+          );
+          if (candidateMap.containsKey('name') ||
+              candidateMap.containsKey('_id') ||
+              candidateMap.containsKey('avatarUrl') ||
+              candidateMap.containsKey('avatar')) {
+            normalizedProfiles = [candidateMap];
+          }
+        }
+        if (normalizedProfiles.isEmpty && res is Map) {
+          for (final v in res.values) {
+            if (v is List) {
+              normalizedProfiles = _normalizeList(v);
+              if (normalizedProfiles.isNotEmpty) break;
+            }
+          }
+        }
+        if (normalizedProfiles.isEmpty) {
+          try {
+            final jsonForm = (res as dynamic).toJson();
+            if (jsonForm is List) normalizedProfiles = _normalizeList(jsonForm);
+          } catch (_) {}
+        }
+      }
+
+      if (normalizedProfiles.isNotEmpty) {
+        _femaleProfiles = normalizedProfiles;
+        _isLoading = false;
+        _error = null;
+        if (WidgetsBinding.instance != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            notifyListeners();
+          });
+        } else {
+          notifyListeners();
+        }
+        return normalizedProfiles;
+      }
+
+      if (normalizedProfiles.isEmpty) {
+        _femaleProfiles = [];
+        _isLoading = false;
+        _error = null;
+        if (WidgetsBinding.instance != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            notifyListeners();
+          });
+        } else {
+          notifyListeners();
+        }
+        return [];
+      }
+
+      String serverMessage = 'No profiles found';
+      try {
+        if (res is Map) {
+          serverMessage =
+              (res['message'] ?? res['error'] ?? res['msg'] ?? serverMessage)
+                  .toString();
+        } else {
+          final modelMsg =
+              (res as dynamic).message ??
+              (res as dynamic).error ??
+              (res as dynamic).msg;
+          if (modelMsg != null) serverMessage = modelMsg.toString();
+        }
+      } catch (_) {}
+
+      _femaleProfiles = [];
+      _isLoading = false;
+      _error = _friendlyMessage(serverMessage);
+      if (WidgetsBinding.instance != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+      } else {
+        notifyListeners();
+      }
+      throw Exception(_error);
+    } catch (e, st) {
+      debugPrint("❌ fetchFemaleUsersFromDashboard exception: $e\n$st");
+      _femaleProfiles = [];
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      if (WidgetsBinding.instance != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+      } else {
+        notifyListeners();
+      }
+      rethrow;
+    }
+  }
+
   /// Update specific profile details
   Future<Map<String, dynamic>> updateProfileDetails({
     String? firstName,
