@@ -12,6 +12,7 @@ import 'views/screens/introduce_yourself_screen.dart';
 
 import 'controllers/api_controller.dart';
 // Removed unused import
+import 'views/screens/account_screen.dart';
 import 'views/screens/main_navigation.dart';
 
 void main() {
@@ -39,7 +40,7 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       onGenerateRoute: AppRoutes.generateRoute,
-      home: AuthCheck(),
+      home: AccountScreen(),
     );
   }
 }
@@ -71,6 +72,7 @@ class _AuthCheckState extends State<AuthCheck> {
       });
       final token = prefs.getString('token');
 
+<<<<<<< HEAD
       if (token != null && token.isNotEmpty) {
         // Check if user profile has location set
         final profileResp = await http.get(
@@ -121,6 +123,34 @@ class _AuthCheckState extends State<AuthCheck> {
                 MaterialPageRoute(builder: (context) => MainNavigationScreen()),
               );
             });
+=======
+    if (token != null && token.isNotEmpty) {
+      // Check if user profile has location set
+      final profileResp = await http.get(
+        Uri.parse('https://friend-circle-new.vercel.app/male-user/me'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+      try {
+        final body = profileResp.body.isNotEmpty
+            ? jsonDecode(profileResp.body)
+            : {};
+        final data = (body is Map && body['data'] is Map)
+            ? body['data'] as Map
+            : null;
+        final hasLocation =
+            data != null &&
+            data['latitude'] != null &&
+            data['longitude'] != null;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (hasLocation) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+            );
+>>>>>>> b359924312079c24c35afbb1a6047af8e5436feb
           }
         } else {
           // Different status codes might need different handling
