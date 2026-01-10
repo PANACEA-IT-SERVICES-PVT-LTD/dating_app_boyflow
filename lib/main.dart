@@ -1,4 +1,5 @@
 // lib/main.dart
+import 'package:Boy_flow/api_service/api_endpoint.dart';
 import 'package:Boy_flow/core/routes/app_routes.dart';
 import 'package:Boy_flow/views/screens/login_screen.dart';
 import 'package:flutter/material.dart';
@@ -49,6 +50,8 @@ class AuthCheck extends StatefulWidget {
 }
 
 class _AuthCheckState extends State<AuthCheck> {
+  bool _isCheckingAuth = false;
+
   @override
   void initState() {
     super.initState();
@@ -56,55 +59,124 @@ class _AuthCheckState extends State<AuthCheck> {
   }
 
   Future<void> checkAuthStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    if (_isCheckingAuth) {
+      return; // Prevent multiple simultaneous checks
+    }
+    _isCheckingAuth = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Reset the flag after a delay to allow UI updates
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _isCheckingAuth = false;
+      });
+      final token = prefs.getString('token');
 
-    if (token != null && token.isNotEmpty) {
-      // Check if user profile has location set
-      final profileResp = await http.get(
-        Uri.parse('https://friend-circle-new.vercel.app/male-user/me'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json',
-        },
-      );
-      try {
-        final body = profileResp.body.isNotEmpty
-            ? jsonDecode(profileResp.body)
-            : {};
-        final data = (body is Map && body['data'] is Map)
-            ? body['data'] as Map
-            : null;
-        final hasLocation =
-            data != null &&
-            data['latitude'] != null &&
-            data['longitude'] != null;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (hasLocation) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => MainNavigationScreen()),
-            );
-          } else {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => IntroduceYourselfScreen(),
-              ),
-            );
+      if (token != null && token.isNotEmpty) {
+        // Check if user profile has location set
+        final profileResp = await http.get(
+          Uri.parse('\${ApiEndPoints.baseUrls}/male-user/me'),
+          headers: {
+            'Authorization': 'Bearer \$token',
+            'Content-Type': 'application/json',
+          },
+        );
+
+        // Check if the request was successful
+        if (profileResp.statusCode == 200) {
+          try {
+            final body = profileResp.body.isNotEmpty
+                ? jsonDecode(profileResp.body)
+                : {};
+            final data = (body is Map && body['data'] is Map)
+                ? body['data'] as Map
+                : null;
+            final hasLocation =
+                data != null &&
+                data['latitude'] != null &&
+                data['longitude'] != null;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (hasLocation) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MainNavigationScreen(),
+                  ),
+                );
+              } else {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => IntroduceYourselfScreen(),
+                  ),
+                );
+              }
+            });
+          } catch (e, stackTrace) {
+            print('Error parsing profile data: \$e');
+            print('Stack trace: \$stackTrace');
+            // Fallback to main navigation if error parsing profile
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+              );
+            });
           }
-        });
-      } catch (_) {
-        // Fallback to dashboard if error parsing profile
+        } else {
+          // Different status codes might need different handling
+          if (profileResp.statusCode == 404) {
+            // User profile not found - clear the token and redirect to login
+            print(
+              'User profile not found (404) - clearing token and redirecting to login',
+            );
+            // Clear the token to force a fresh login
+            await prefs.remove('token');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+              );
+            });
+          } else if (profileResp.statusCode == 401 ||
+              profileResp.statusCode == 403) {
+            // Unauthorized - token might be expired
+            print(
+              'Unauthorized access (\${profileResp.statusCode}) - redirecting to login',
+            );
+            // Go to login for unauthorized access
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+              );
+            });
+          } else {
+            // Other error codes
+            print(
+              'API request failed with status code: \${profileResp.statusCode}',
+            );
+            // For other errors, go to login
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+              );
+            });
+          }
+        }
+      } else {
+        // User is not logged in, go to login
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+            MaterialPageRoute(builder: (context) => LoginScreen()),
           );
         });
       }
-    } else {
-      // User is not logged in, go to login
+    } catch (e, stackTrace) {
+      print('Error in auth check: \$e');
+      print('Stack trace: \$stackTrace');
+      // If there's an error, default to login screen
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacement(
           context,

@@ -391,10 +391,24 @@ class _AccountScreenState extends State<AccountScreen> {
       final resp = await http.get(
         url,
         headers: {
-          "Authorization": "Bearer $token",
+          "Authorization": "Bearer \$token",
           "Content-Type": "application/json",
         },
       );
+
+      if (resp.statusCode == 404) {
+        // User profile not found - log error and handle gracefully
+        print('Account screen: User profile not found (404)');
+        // Optionally redirect to login or show an error message
+        if (mounted) {
+          // You could show a dialog or snackbar to inform user
+          // Or redirect to login screen
+        }
+        return;
+      } else if (resp.statusCode == 401 || resp.statusCode == 403) {
+        print('Account screen: Unauthorized access (\${resp.statusCode})');
+        return;
+      }
 
       dynamic body;
       try {

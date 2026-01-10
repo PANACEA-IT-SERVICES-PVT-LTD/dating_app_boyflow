@@ -1,5 +1,5 @@
 class ApiEndPoints {
-  static const String baseUrls = "https://friend-circle-2.vercel.app";
+  static const String baseUrls = "https://friend-circle-new.vercel.app";
 
   // Male auth & profile
   static const String signupMale = "/male-user/register";
@@ -36,4 +36,11 @@ class ApiEndPoints {
   static const String maleWalletRecharge = "/male-user/payment/wallet/order";
 
   static const String maleProfileAndImage = '/male-user/profile-and-image';
+
+  // Male interests endpoints
+  static const String maleSports = '/male-user/sports';
+  static const String maleFilm = '/male-user/film';
+  static const String maleMusic = '/male-user/music';
+  static const String maleTravel = '/male-user/travel';
+  static const String dashboardEndpoint = '/male-user/dashboard';
 }

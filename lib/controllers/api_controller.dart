@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 
 import '../utils/token_helper.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiController extends ChangeNotifier {
   // Fetch male user profile (GET /male-user/me)
@@ -317,6 +318,9 @@ class ApiController extends ChangeNotifier {
   }
 
   final ApiService _apiService = ApiService();
+
+  // Public getter to access the api service
+  ApiService get apiService => _apiService;
 
   bool _isLoading = false;
   String? _error;
@@ -1029,5 +1033,14 @@ class ApiController extends ChangeNotifier {
       });
       rethrow;
     }
+  }
+
+  // Clear authentication token
+  Future<void> clearAuthToken() async {
+    _authToken = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    // Also clear any other auth-related data
+    await prefs.remove('userProfile');
   }
 }

@@ -304,7 +304,12 @@ class ApiService {
       message = 'Error: $statusCode';
     }
     if (statusCode == 404) {
-      message = 'No profiles found or resource does not exist (404).';
+      if (responseBody.toString().toLowerCase().contains('user') ||
+          responseBody.toString().toLowerCase().contains('profile')) {
+        message = 'User profile not found (404). Please log in again.';
+      } else {
+        message = 'Resource does not exist (404).';
+      }
     }
     throw Exception(message);
   }

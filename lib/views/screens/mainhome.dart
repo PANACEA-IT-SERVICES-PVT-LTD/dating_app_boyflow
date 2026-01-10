@@ -32,6 +32,25 @@ class _HomeScreenState extends State<MainHome> {
   bool _isLoadingFollowed = false;
   String? _followedError;
 
+  String? _getImageUrlFromProfile(Map<String, dynamic> profile) {
+    // Check if there are images in the profile
+    if (profile['images'] != null &&
+        profile['images'] is List &&
+        profile['images'].isNotEmpty) {
+      final imageList = profile['images'] as List;
+      final firstImage = imageList[0];
+      if (firstImage is Map<String, dynamic> &&
+          firstImage['imageUrl'] != null) {
+        return firstImage['imageUrl'].toString();
+      }
+    } else if (profile['avatarUrl'] != null) {
+      // Fallback to avatarUrl if images are not available
+      return profile['avatarUrl']?.toString();
+    }
+    // Return null if no image is found
+    return null;
+  }
+
   Future<void> rechargeWallet(int amount) async {
     try {
       final url = Uri.parse(
