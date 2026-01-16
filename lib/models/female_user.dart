@@ -14,12 +14,27 @@ class FemaleUser {
   });
 
   factory FemaleUser.fromJson(Map<String, dynamic> json) {
+    String? avatarUrl;
+
+    // Try to get avatar from avatarUrl field first
+    if (json['avatarUrl'] != null) {
+      avatarUrl = json['avatarUrl'].toString();
+    } else if (json['images'] != null &&
+        json['images'] is List &&
+        json['images'].isNotEmpty) {
+      // Get avatar from first image in images array
+      final firstImage = json['images'][0];
+      if (firstImage is Map && firstImage['imageUrl'] != null) {
+        avatarUrl = firstImage['imageUrl'].toString();
+      }
+    }
+
     return FemaleUser(
-      id: json['_id'],
-      name: json['name'] ?? 'No Name',
-      age: json['age'] ?? 0,
-      bio: json['bio'] ?? '',
-      avatarUrl: json['avatarUrl'],
+      id: json['_id']?.toString() ?? '',
+      name: json['name']?.toString() ?? 'No Name',
+      age: json['age']?.toInt() ?? 0,
+      bio: json['bio']?.toString() ?? '',
+      avatarUrl: avatarUrl,
     );
   }
 }

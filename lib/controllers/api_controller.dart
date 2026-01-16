@@ -1,15 +1,52 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 
 import 'package:Boy_flow/api_service/api_endpoint.dart';
 import 'package:Boy_flow/services/api_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
 
 import '../utils/token_helper.dart';
 import 'package:http/http.dart' as http;
 
 class ApiController extends ChangeNotifier {
+  final ApiService _apiService = ApiService();
+
+  bool _isLoading = false;
+  String? _error;
+  Map<String, dynamic>? _signupResponse;
+  String? _authToken;
+  bool _isOtpVerified = false;
+
+  // female profiles cache
+  List<Map<String, dynamic>> _femaleProfiles = [];
+
+  // Remember identity + context for OTP verify
+  String? _pendingEmail;
+  String? _pendingMobile;
+  String? _pendingSource; // "login" | "signup"
+  String? _otpRequestId; // from send-OTP
+  String? _otpChannel; // "email" | "mobile"
+
+  // Sent follow requests cache
+  List<Map<String, dynamic>> _sentFollowRequests = [];
+
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  Map<String, dynamic>? get signupResponse => _signupResponse;
+  String? get authToken => _authToken;
+  bool get isOtpVerified => _isOtpVerified;
+
+  /// Getter for female profiles cached in controller
+  List<Map<String, dynamic>> get femaleProfiles =>
+      List<Map<String, dynamic>>.unmodifiable(_femaleProfiles);
+
+  List<Map<String, dynamic>> get sentFollowRequests =>
+      List<Map<String, dynamic>>.unmodifiable(_sentFollowRequests);
+
   // Fetch all dropdown options from profile-and-image endpoint
   Future<Map<String, dynamic>> fetchProfileAndImageOptions() async {
     return await _apiService.fetchProfileAndImageOptions();
@@ -225,11 +262,6 @@ class ApiController extends ChangeNotifier {
     }
   }
 
-  // Sent follow requests cache
-  List<Map<String, dynamic>> _sentFollowRequests = [];
-  List<Map<String, dynamic>> get sentFollowRequests =>
-      List<Map<String, dynamic>>.unmodifiable(_sentFollowRequests);
-
   // Fetch sent follow requests and store in controller
   Future<List<Map<String, dynamic>>> fetchSentFollowRequests() async {
     _isLoading = true;
@@ -321,105 +353,174 @@ class ApiController extends ChangeNotifier {
     }
   }
 
-  final ApiService _apiService = ApiService();
+  // Fetch all female users for dashboard 'all' section
+  Future<List<Map<String, dynamic>>> fetchDashboardAllFemales({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    if (WidgetsBinding.instance != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+    } else {
+      notifyListeners();
+    }
 
-  bool _isLoading = false;
-  String? _error;
-  Map<String, dynamic>? _signupResponse;
-  String? _authToken;
-  bool _isOtpVerified = false;
-
-  // female profiles cache
-  List<Map<String, dynamic>> _femaleProfiles = [];
-
-  // Remember identity + context for OTP verify
-  String? _pendingEmail;
-  String? _pendingMobile;
-  String? _pendingSource; // "login" | "signup"
-  String? _otpRequestId; // from send-OTP
-  String? _otpChannel; // "email" | "mobile"
-
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-  Map<String, dynamic>? get signupResponse => _signupResponse;
-  String? get authToken => _authToken;
-  bool get isOtpVerified => _isOtpVerified;
-
-  /// Getter for female profiles cached in controller
-  List<Map<String, dynamic>> get femaleProfiles =>
-      List<Map<String, dynamic>>.unmodifiable(_femaleProfiles);
-
-  /// Verifies OTP and saves token if present.
-  Future<bool> verifyOtp(String otp, {String source = 'signup'}) async {
-    final endpoint = source == 'login'
-        ? ApiEndPoints.loginotpMale
-        : ApiEndPoints.verifyOtpMale;
-    final url = Uri.parse("${ApiEndPoints.baseUrls}$endpoint");
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"otp": otp}),
-    );
-    final body = jsonDecode(response.body);
-    final success = body['success'] == true;
-    if (success) {
-      final token = body['token'] ?? body['access_token'];
-      if (token != null && token is String && token.isNotEmpty) {
-        _authToken = token;
-        // Save to SharedPreferences for later use
-        try {
-          await saveLoginToken(token);
-        } catch (_) {}
+    try {
+      final dynamic res = await _apiService.fetchDashboardAllFemales(
+        page: page,
+        limit: limit,
+      );
+      debugPrint("📥 fetchDashboardAllFemales raw response: $res");
+      List<Map<String, dynamic>> _normalizeList(dynamic input) {
+        if (input is List<Map<String, dynamic>>) return input;
+        if (input is List) {
+          return input
+              .where((e) => e != null)
+              .map((e) {
+                if (e is Map) return Map<String, dynamic>.from(e);
+                try {
+                  if (e is String) return {'name': e};
+                  if (e is int || e is double) return {'value': e};
+                  if (e is List) return {'list': e};
+                } catch (_) {}
+                return <String, dynamic>{};
+              })
+              .where((m) => m.isNotEmpty)
+              .toList();
+        }
+        if (input is Map) {
+          final mapInput = Map<String, dynamic>.from(input);
+          final candidates = [
+            mapInput['items'],
+            mapInput['list'],
+            mapInput['results'],
+            mapInput['data'],
+            mapInput['docs'],
+          ];
+          for (final c in candidates) {
+            if (c is List) {
+              return _normalizeList(c);
+            }
+          }
+        }
+        return <Map<String, dynamic>>[];
       }
+
+      dynamic rawData;
+      if (res is Map) {
+        if (res['data'] != null && res['data']['results'] != null) {
+          // Handle new response structure: {data: {results: [...]}}
+          rawData = res['data']['results'];
+        } else if (res['data'] != null) {
+          rawData = res['data'];
+        } else if (res['docs'] != null) {
+          rawData = res['docs'];
+        } else if (res['items'] != null) {
+          rawData = res['items'];
+        } else if (res['list'] != null) {
+          rawData = res['list'];
+        } else if (res['results'] != null) {
+          rawData = res['results'];
+        } else {
+          rawData = res;
+        }
+      } else {
+        try {
+          final jsonForm = (res as dynamic).toJson();
+          if (jsonForm is Map) {
+            // Check for new structure first
+            if (jsonForm['data'] != null &&
+                jsonForm['data']['results'] != null) {
+              rawData = jsonForm['data']['results'];
+            } else {
+              rawData =
+                  jsonForm['data'] ??
+                  jsonForm['docs'] ??
+                  jsonForm['items'] ??
+                  jsonForm['list'] ??
+                  jsonForm['results'] ??
+                  jsonForm;
+            }
+          } else if (jsonForm is List) {
+            rawData = jsonForm;
+          } else {
+            rawData = res;
+          }
+        } catch (_) {
+          rawData = res;
+        }
+      }
+      List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
+      if (normalizedProfiles.isEmpty) {
+        if (rawData is Map) {
+          final Map<String, dynamic> candidateMap = Map<String, dynamic>.from(
+            rawData,
+          );
+          if (candidateMap.containsKey('name') ||
+              candidateMap.containsKey('_id') ||
+              candidateMap.containsKey('avatarUrl') ||
+              candidateMap.containsKey('avatar')) {
+            normalizedProfiles = [candidateMap];
+          }
+        }
+        if (normalizedProfiles.isEmpty && res is Map) {
+          for (final v in res.values) {
+            if (v is List) {
+              normalizedProfiles = _normalizeList(v);
+              if (normalizedProfiles.isNotEmpty) break;
+            }
+          }
+        }
+        if (normalizedProfiles.isEmpty) {
+          try {
+            final jsonForm = (res as dynamic).toJson();
+            if (jsonForm is List) normalizedProfiles = _normalizeList(jsonForm);
+          } catch (_) {}
+        }
+      }
+      _femaleProfiles = normalizedProfiles;
+      _isLoading = false;
+      _error = null;
+      if (WidgetsBinding.instance != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+      } else {
+        notifyListeners();
+      }
+      return normalizedProfiles;
+    } catch (e, st) {
+      debugPrint("❌ fetchDashboardAllFemales exception: $e\n$st");
+      _femaleProfiles = [];
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      if (WidgetsBinding.instance != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+      } else {
+        notifyListeners();
+      }
+      rethrow;
+    } catch (e, st) {
+      debugPrint("❌ fetchDashboardAllFemales exception: $e\n$st");
+      _femaleProfiles = [];
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      if (WidgetsBinding.instance != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+      } else {
+        notifyListeners();
+      }
+      rethrow;
     }
-    return success;
-  }
-
-  void setPendingIdentity({String? email, String? mobile, String? source}) {
-    if (email != null && email.isNotEmpty) _pendingEmail = email.trim();
-    if (mobile != null && mobile.isNotEmpty) _pendingMobile = mobile.trim();
-    if (source != null && source.isNotEmpty) {
-      _pendingSource = source.trim().toLowerCase();
-    }
-    _otpChannel = (email != null && email.isNotEmpty)
-        ? "email"
-        : (mobile != null && mobile.isNotEmpty)
-        ? "mobile"
-        : _otpChannel;
-  }
-
-  void _captureOtpRequestId(dynamic res) {
-    final data = (res is Map) ? res["data"] : null;
-    final List<String> candidates = [
-      if (res is Map) ...[
-        res["requestId"],
-        res["otpId"],
-        res["txnId"],
-        res["sessionId"],
-        res["id"],
-        res["otpRequestId"],
-        res["request_id"],
-        res["otp_request_id"],
-      ],
-      if (data is Map) ...[
-        data["requestId"],
-        data["otpId"],
-        data["txnId"],
-        data["sessionId"],
-        data["id"],
-        data["otpRequestId"],
-        data["request_id"],
-        data["otp_request_id"],
-      ],
-    ].where((v) => v != null).map((v) => v.toString()).toList();
-
-    _otpRequestId = candidates.isNotEmpty ? candidates.first : null;
-    debugPrint("🔖 Captured OTP request id: $_otpRequestId");
-  }
-
-  String _normalizeOtp(String raw) {
-    final digits = raw.replaceAll(RegExp(r'\D'), '');
-    return digits.isNotEmpty ? digits : raw.trim();
   }
 
   /// Fetches female profiles from the API and stores them in controller.
@@ -606,6 +707,168 @@ class ApiController extends ChangeNotifier {
       throw Exception(_error);
     } catch (e, st) {
       debugPrint("❌ fetchBrowseFemales exception: $e\n$st");
+      _femaleProfiles = [];
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      if (WidgetsBinding.instance != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+      } else {
+        notifyListeners();
+      }
+      rethrow;
+    }
+  }
+
+  /// Fetches female profiles for a specific dashboard section (e.g., 'new', 'all')
+  Future<List<Map<String, dynamic>>> fetchDashboardSectionFemales({
+    String section = 'all',
+    int page = 1,
+    int limit = 10,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    if (WidgetsBinding.instance != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+    } else {
+      notifyListeners();
+    }
+
+    try {
+      final dynamic res = await _apiService.fetchDashboardSectionFemales(
+        section: section,
+        page: page,
+        limit: limit,
+      );
+      debugPrint(
+        "📥 fetchDashboardSectionFemales ($section) raw response: $res",
+      );
+      List<Map<String, dynamic>> _normalizeList(dynamic input) {
+        if (input is List<Map<String, dynamic>>) return input;
+        if (input is List) {
+          return input
+              .where((e) => e != null)
+              .map((e) {
+                if (e is Map) return Map<String, dynamic>.from(e);
+                try {
+                  if (e is String) return {'name': e};
+                  if (e is int || e is double) return {'value': e};
+                  if (e is List) return {'list': e};
+                } catch (_) {}
+                return <String, dynamic>{};
+              })
+              .where((m) => m.isNotEmpty)
+              .toList();
+        }
+        if (input is Map) {
+          final mapInput = Map<String, dynamic>.from(input);
+          final candidates = [
+            mapInput['items'],
+            mapInput['list'],
+            mapInput['results'],
+            mapInput['data'],
+            mapInput['docs'],
+          ];
+          for (final c in candidates) {
+            if (c is List) {
+              return _normalizeList(c);
+            }
+          }
+        }
+        return <Map<String, dynamic>>[];
+      }
+
+      dynamic rawData;
+      if (res is Map) {
+        if (res['data'] != null && res['data']['results'] != null) {
+          // Handle new response structure: {data: {results: [...]}}
+          rawData = res['data']['results'];
+        } else if (res['data'] != null) {
+          rawData = res['data'];
+        } else if (res['docs'] != null) {
+          rawData = res['docs'];
+        } else if (res['items'] != null) {
+          rawData = res['items'];
+        } else if (res['list'] != null) {
+          rawData = res['list'];
+        } else if (res['results'] != null) {
+          rawData = res['results'];
+        } else {
+          rawData = res;
+        }
+      } else {
+        try {
+          final jsonForm = (res as dynamic).toJson();
+          if (jsonForm is Map) {
+            // Check for new structure first
+            if (jsonForm['data'] != null &&
+                jsonForm['data']['results'] != null) {
+              rawData = jsonForm['data']['results'];
+            } else {
+              rawData =
+                  jsonForm['data'] ??
+                  jsonForm['docs'] ??
+                  jsonForm['items'] ??
+                  jsonForm['list'] ??
+                  jsonForm['results'] ??
+                  jsonForm;
+            }
+          } else if (jsonForm is List) {
+            rawData = jsonForm;
+          } else {
+            rawData = res;
+          }
+        } catch (_) {
+          rawData = res;
+        }
+      }
+      List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
+      if (normalizedProfiles.isEmpty) {
+        if (rawData is Map) {
+          final Map<String, dynamic> candidateMap = Map<String, dynamic>.from(
+            rawData,
+          );
+          if (candidateMap.containsKey('name') ||
+              candidateMap.containsKey('_id') ||
+              candidateMap.containsKey('avatarUrl') ||
+              candidateMap.containsKey('avatar')) {
+            normalizedProfiles = [candidateMap];
+          }
+        }
+        if (normalizedProfiles.isEmpty && res is Map) {
+          for (final v in res.values) {
+            if (v is List) {
+              normalizedProfiles = _normalizeList(v);
+              if (normalizedProfiles.isNotEmpty) break;
+            }
+          }
+        }
+        if (normalizedProfiles.isEmpty) {
+          try {
+            final jsonForm = (res as dynamic).toJson();
+            if (jsonForm is List) normalizedProfiles = _normalizeList(jsonForm);
+          } catch (_) {}
+        }
+      }
+      _femaleProfiles = normalizedProfiles;
+      _isLoading = false;
+      _error = null;
+      if (WidgetsBinding.instance != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+      } else {
+        notifyListeners();
+      }
+      return normalizedProfiles;
+    } catch (e, st) {
+      debugPrint(
+        "❌ fetchDashboardSectionFemales ($section) exception: $e\n$st",
+      );
       _femaleProfiles = [];
       _isLoading = false;
       _error = e.toString();
@@ -829,5 +1092,202 @@ class ApiController extends ChangeNotifier {
       });
       rethrow;
     }
+  }
+
+  /// Verifies OTP and saves token if present.
+  Future<bool> verifyOtp(String otp, {String source = 'signup'}) async {
+    final endpoint = source == 'login'
+        ? ApiEndPoints.loginotpMale
+        : ApiEndPoints.verifyOtpMale;
+    final url = Uri.parse("${ApiEndPoints.baseUrls}$endpoint");
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"otp": otp}),
+    );
+    final body = jsonDecode(response.body);
+    final success = body['success'] == true;
+    if (success) {
+      final token = body['token'] ?? body['access_token'];
+      if (token != null && token is String && token.isNotEmpty) {
+        _authToken = token;
+        // Save to SharedPreferences for later use
+        try {
+          await saveLoginToken(token);
+        } catch (_) {}
+      }
+    }
+    return success;
+  }
+
+  /// Set static profiles for demo purposes
+  void setStaticProfiles(List<Map<String, dynamic>> profiles) {
+    _femaleProfiles = profiles;
+    _isLoading = false;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+  }
+
+  /// Fetch followed female users
+  Future<List<Map<String, dynamic>>> fetchFollowedFemales({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+
+    try {
+      final result = await _apiService.fetchFollowedFemales(
+        page: page,
+        limit: limit,
+      );
+
+      debugPrint("📥 fetchFollowedFemales raw response: $result");
+
+      List<Map<String, dynamic>> _normalizeList(dynamic input) {
+        if (input is List<Map<String, dynamic>>) return input;
+        if (input is List) {
+          return input
+              .where((e) => e != null)
+              .map((e) {
+                if (e is Map) return Map<String, dynamic>.from(e);
+                try {
+                  if (e is String) return {'name': e};
+                  if (e is int || e is double) return {'value': e};
+                  if (e is List) return {'list': e};
+                } catch (_) {}
+                return <String, dynamic>{};
+              })
+              .where((m) => m.isNotEmpty)
+              .toList();
+        }
+        if (input is Map) {
+          final mapInput = Map<String, dynamic>.from(input);
+          final candidates = [
+            mapInput['items'],
+            mapInput['list'],
+            mapInput['results'],
+            mapInput['data'],
+            mapInput['docs'],
+          ];
+          for (final c in candidates) {
+            if (c is List) {
+              return _normalizeList(c);
+            }
+          }
+        }
+        return <Map<String, dynamic>>[];
+      }
+
+      dynamic rawData;
+      if (result is Map) {
+        if (result['data'] != null && result['data']['results'] != null) {
+          // Handle new response structure: {data: {results: [...]}}
+          rawData = result['data']['results'];
+        } else if (result['data'] != null) {
+          rawData = result['data'];
+        } else if (result['docs'] != null) {
+          rawData = result['docs'];
+        } else if (result['items'] != null) {
+          rawData = result['items'];
+        } else if (result['list'] != null) {
+          rawData = result['list'];
+        } else if (result['results'] != null) {
+          rawData = result['results'];
+        } else {
+          rawData = result;
+        }
+      } else {
+        try {
+          final jsonForm = (result as dynamic).toJson();
+          if (jsonForm is Map) {
+            // Check for new structure first
+            if (jsonForm['data'] != null &&
+                jsonForm['data']['results'] != null) {
+              rawData = jsonForm['data']['results'];
+            } else {
+              rawData =
+                  jsonForm['data'] ??
+                  jsonForm['docs'] ??
+                  jsonForm['items'] ??
+                  jsonForm['list'] ??
+                  jsonForm['results'] ??
+                  jsonForm;
+            }
+          } else if (jsonForm is List) {
+            rawData = jsonForm;
+          } else {
+            rawData = result;
+          }
+        } catch (_) {
+          rawData = result;
+        }
+      }
+
+      List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
+
+      _femaleProfiles = normalizedProfiles;
+      _isLoading = false;
+      _error = null;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+
+      return normalizedProfiles;
+    } catch (e, st) {
+      debugPrint("❌ fetchFollowedFemales exception: $e\n$st");
+      _femaleProfiles = [];
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+}
+
+/// Small utility widget for gradient text (kept in case you want it later).
+class GradientText extends StatelessWidget {
+  final String text;
+  final TextStyle? style;
+  final Gradient gradient;
+  final TextAlign? textAlign;
+  final int? maxLines;
+  final TextOverflow? overflow;
+
+  const GradientText(
+    this.text, {
+    required this.gradient,
+    this.style,
+    this.textAlign,
+    this.maxLines,
+    this.overflow,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      shaderCallback: (bounds) {
+        return gradient.createShader(
+          Rect.fromLTWH(0, 0, bounds.width, bounds.height),
+        );
+      },
+      blendMode: BlendMode.srcIn,
+      child: Text(
+        text,
+        textAlign: textAlign,
+        maxLines: maxLines,
+        overflow: overflow,
+        style: (style ?? const TextStyle()).copyWith(color: Colors.white),
+      ),
+    );
   }
 }

@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/user.dart' as call_user;
@@ -24,6 +25,14 @@ class MainHome extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<MainHome> {
+  void _showDebug(String msg) {
+    // ignore: avoid_print
+    print('[DEBUG] $msg');
+  }
+
+  // UI-level loading timeout
+  bool _uiLoadingTimeout = false;
+  Timer? _loadingTimer;
   String _filter = 'All';
   final CallManager _callManager = CallManager();
 
@@ -89,9 +98,77 @@ class _HomeScreenState extends State<MainHome> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startUILoadingTimeout();
       _loadProfiles();
       _loadSentFollowRequests();
     });
+  }
+
+  void _startUILoadingTimeout() {
+    _uiLoadingTimeout = false;
+    _loadingTimer?.cancel();
+    _loadingTimer = Timer(const Duration(seconds: 12), () {
+      if (mounted && context.mounted) {
+        setState(() {
+          _uiLoadingTimeout = true;
+        });
+      }
+    });
+  }
+
+  void _navigateToFemaleProfile(Map<String, dynamic> profile) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            FemaleProfileScreen(user: FemaleUser.fromJson(profile)),
+      ),
+    );
+  }
+
+  Future<void> _startCall({
+    required bool isVideo,
+    required Map<String, dynamic> profile,
+  }) async {
+    // Create a temporary user object for the target user
+    final targetUser = call_user.User(
+      id: profile['_id'].toString(),
+      name: profile['name'].toString(),
+      avatar: profile['images'] != null && profile['images'].length > 0
+          ? profile['images'][0]['imageUrl']?.toString()
+          : null,
+      isOnline: profile['onlineStatus'] ?? false,
+    );
+
+    try {
+      // Start the call with the target user
+      final callId = await _callManager.initiateCall(
+        targetUser,
+        isVideo ? CallType.video : CallType.audio,
+      );
+
+      // Navigate to call page
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CallPage(
+            channelName: callId,
+            enableVideo: isVideo,
+            isInitiator: true,
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to start call: $e')));
+    }
+  }
+
+  @override
+  void dispose() {
+    _loadingTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadSentFollowRequests() async {
@@ -114,90 +191,221 @@ class _HomeScreenState extends State<MainHome> {
   }
 
   Future<void> _loadProfiles() async {
+    _startUILoadingTimeout();
+    try {
+      await _fetchProfilesByFilter(_filter);
+    } catch (e) {
+      print('Error loading profiles: $e');
+      _loadStaticData();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load profiles, showing demo data: $e'),
+          ),
+        );
+      }
+    }
+  }
+
+  void _loadStaticData() {
+    // Static data based on the API response structure provided
+    final staticProfiles = [
+      {
+        "_id": "696501a81b996e284c122cff",
+        "name": "Female E",
+        "gender": "female",
+        "bio": "Hi there! How are you!",
+        "images": [
+          {
+            "_id": "696519ffe95614370e8b16c8",
+            "imageUrl":
+                "https://res.cloudinary.com/dqtasamcu/image/upload/v1768233446/admin_uploads/hb3zfycdzk329tgvzkbt.jpg",
+          },
+        ],
+        "onlineStatus": true,
+        "age": 23,
+      },
+      {
+        "_id": "695f711c945b800e3a11b9a9",
+        "name": "Female D",
+        "gender": "female",
+        "bio": "Hi there! How are you!",
+        "images": [
+          {
+            "_id": "695f9de94667fdc61869359e",
+            "imageUrl":
+                "https://res.cloudinary.com/dqtasamcu/image/upload/v1767874001/admin_uploads/nt4wtrvyh9pg4k0h3ll2.jpg",
+          },
+        ],
+        "onlineStatus": true,
+        "age": 23,
+      },
+      {
+        "_id": "695b49eca40ac5f37a01913a",
+        "name": "Female C",
+        "gender": "female",
+        "bio": "Hi there!",
+        "images": [
+          {
+            "_id": "695b4a4ca40ac5f37a019140",
+            "imageUrl":
+                "https://res.cloudinary.com/dqtasamcu/image/upload/v1767590449/admin_uploads/rdri3unpbitymhlbzhqj.jpg",
+          },
+        ],
+        "onlineStatus": true,
+        "age": 23,
+      },
+    ];
+
+    // Update the controller with static data
+    final apiController = Provider.of<ApiController>(context, listen: false);
+    apiController.setStaticProfiles(staticProfiles);
+  }
+
+  List<Map<String, dynamic>> _applyFilter(List<Map<String, dynamic>> profiles) {
+    // Always return profiles; API call is handled by filter chip selection
+    return profiles;
+  }
+
+  Future<void> _fetchProfilesByFilter(String filter) async {
+    final apiController = Provider.of<ApiController>(context, listen: false);
+    String section;
+    switch (filter) {
+      case 'Follow':
+        section = 'follow';
+        break;
+      case 'New':
+        section = 'new';
+        break;
+      case 'Near By':
+        section = 'nearby';
+        break;
+      case 'All':
+      default:
+        section = 'all';
+    }
+    await apiController.fetchDashboardSectionFemales(
+      section: section,
+      page: 1,
+      limit: 10,
+    );
+  }
+
+  // Method to load followed females from API
+  Future<void> _loadFollowedFemales() async {
     try {
       final apiController = Provider.of<ApiController>(context, listen: false);
-      await apiController.fetchBrowseFemales(page: 1, limit: 10);
+
+      // Show loading state
+      _startUILoadingTimeout();
+
+      // Load followed females using the public method
+      // The fetchFollowedFemales method already updates the controller internally
+      await apiController.fetchFollowedFemales(page: 1, limit: 10);
     } catch (e) {
-      if (mounted) {
-        // Only show error if it's not a token error (handled by the controller)
-        final errorMessage = e.toString().toLowerCase();
-        if (!errorMessage.contains('no valid token') &&
-            !errorMessage.contains('please log in again') &&
-            !errorMessage.contains('invalid token')) {
+      print('Error loading followed females: $e');
+      // If it's a 404 error (section not supported), try loading all females instead
+      if (e.toString().toLowerCase().contains('404') ||
+          e.toString().toLowerCase().contains('resource not found')) {
+        print('404 detected for followed section, falling back to browse API');
+        try {
+          final fallbackApiController = Provider.of<ApiController>(
+            context,
+            listen: false,
+          );
+          await fallbackApiController.fetchBrowseFemales(page: 1, limit: 10);
+        } catch (fallbackError) {
+          print('Fallback also failed: $fallbackError');
+          if (mounted && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Failed to load followed users, showing all users: $fallbackError',
+                ),
+              ),
+            );
+          }
+        }
+      } else {
+        // For other errors, show the error message
+        if (mounted && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to load profiles: $e'),
-              action: SnackBarAction(label: 'Retry', onPressed: _loadProfiles),
-            ),
+            SnackBar(content: Text('Failed to load followed users: $e')),
           );
         }
       }
     }
   }
 
-  List<Map<String, dynamic>> _applyFilter(List<Map<String, dynamic>> profiles) {
-    // Add real filter logic if needed
-    return profiles;
-  }
-
-  void _navigateToFemaleProfile(Map<String, dynamic> profile) {
-    // Convert the profile map to a FemaleUser object
-    final femaleUser = FemaleUser(
-      id: profile['_id']?.toString() ?? '',
-      name: profile['name']?.toString() ?? 'Unknown',
-      age: int.tryParse(profile['age']?.toString() ?? '0') ?? 0,
-      bio: profile['bio']?.toString() ?? '',
-      avatarUrl: profile['avatarUrl']?.toString() ?? '',
-    );
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => FemaleProfileScreen(user: femaleUser)),
-    );
-  }
-
-  Future<void> _startCall({
-    required bool isVideo,
-    required Map<String, dynamic> profile,
-  }) async {
-    if (kIsWeb) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Calls are only available on mobile/desktop builds.'),
-        ),
-      );
-      return;
-    }
-
-    final user = call_user.User(
-      id: (profile['_id'] ?? profile['name']).toString(),
-      name: profile['name']?.toString() ?? 'Unknown',
-      isOnline: true,
-    );
-
-    final type = isVideo ? CallType.video : CallType.audio;
-
+  // Method to load new females from API
+  Future<void> _loadNewFemales() async {
     try {
-      await _callManager.initiateCall(user, type);
-      final callInfo = _callManager.currentCall;
-      if (!mounted || callInfo == null) return;
+      final apiController = Provider.of<ApiController>(context, listen: false);
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => CallPage(
-            channelName: callInfo.channelName,
-            enableVideo: callInfo.type == CallType.video,
-            isInitiator: true,
-          ),
-        ),
+      // Show loading state
+      _startUILoadingTimeout();
+
+      // Load new females using the public method
+      // The fetchDashboardSectionFemales method already updates the controller internally
+      await apiController.fetchDashboardSectionFemales(
+        section: 'new',
+        page: 1,
+        limit: 10,
       );
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to start call: $e')));
+      print('Error loading new females: $e');
+      // If it's a 404 error (section not supported), try loading all females instead
+      if (e.toString().toLowerCase().contains('404') ||
+          e.toString().toLowerCase().contains('resource not found')) {
+        print('404 detected for new section, falling back to browse API');
+        try {
+          final fallbackApiController = Provider.of<ApiController>(
+            context,
+            listen: false,
+          );
+          await fallbackApiController.fetchBrowseFemales(page: 1, limit: 10);
+        } catch (fallbackError) {
+          print('Fallback also failed: $fallbackError');
+          if (mounted && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Failed to load new users, showing all users: $fallbackError',
+                ),
+              ),
+            );
+          }
+        }
+      } else {
+        // For other errors, show the error message
+        if (mounted && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to load new users: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  // Method to load all females from browse API
+  Future<void> _loadAllFemales() async {
+    try {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+
+      // Show loading state
+      _startUILoadingTimeout();
+
+      // Load all females using the browse method
+      await apiController.fetchBrowseFemales(page: 1, limit: 10);
+    } catch (e) {
+      print('Error loading all females: $e');
+
+      // Show error message
+      if (mounted && context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load users: $e')));
+      }
     }
   }
 
@@ -280,10 +488,39 @@ class _HomeScreenState extends State<MainHome> {
   }
 
   Widget _buildHomeTab(ApiController apiController) {
-    if (apiController.isLoading) {
+    // --- INFINITE LOADING FIX ---
+    // 1. If loading and not timed out, show spinner, but set a hard timeout fallback
+    if (apiController.isLoading && !_uiLoadingTimeout) {
+      _showDebug('UI: Still loading, showing spinner.');
+      // Defensive: If loading takes too long, timeout will trigger fallback
       return const Center(child: CircularProgressIndicator());
     }
+
+    // 2. If loading timed out, show error and allow retry or fallback
+    if (_uiLoadingTimeout && apiController.isLoading) {
+      _showDebug('UI: Loading timed out, showing fallback.');
+      // Always provide a way out of loading, but do not show demo data button
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Loading is taking too long.'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                _startUILoadingTimeout();
+                _loadProfiles();
+              },
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 3. If error, show error and allow retry/fallback
     if (apiController.error != null) {
+      _showDebug('UI error: \u001b[31m${apiController.error}\u001b[0m');
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -299,9 +536,10 @@ class _HomeScreenState extends State<MainHome> {
       );
     }
 
+    // 4. If no profiles, show fallback and allow refresh/fallback
     final profiles = _applyFilter(apiController.femaleProfiles);
-
     if (profiles.isEmpty) {
+      _showDebug('UI: No profiles found after all attempts.');
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -317,6 +555,8 @@ class _HomeScreenState extends State<MainHome> {
       );
     }
 
+    // 5. Success: show main content
+    _showDebug('UI: Showing profiles (${profiles.length})');
     return SafeArea(
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -393,32 +633,36 @@ class _HomeScreenState extends State<MainHome> {
                     FilterChipWidget(
                       label: 'All',
                       selected: _filter == 'All',
-                      onSelected: (v) {
+                      onSelected: (v) async {
                         setState(() => _filter = 'All');
+                        await _fetchProfilesByFilter('All');
                       },
                     ),
                     const SizedBox(width: 10),
                     FilterChipWidget(
                       label: 'Follow',
                       selected: _filter == 'Follow',
-                      onSelected: (v) {
+                      onSelected: (v) async {
                         setState(() => _filter = 'Follow');
+                        await _fetchProfilesByFilter('Follow');
                       },
                     ),
                     const SizedBox(width: 10),
                     FilterChipWidget(
                       label: 'Near By',
                       selected: _filter == 'Near By',
-                      onSelected: (v) {
+                      onSelected: (v) async {
                         setState(() => _filter = 'Near By');
+                        await _fetchProfilesByFilter('Near By');
                       },
                     ),
                     const SizedBox(width: 10),
                     FilterChipWidget(
                       label: 'New',
                       selected: _filter == 'New',
-                      onSelected: (v) {
+                      onSelected: (v) async {
                         setState(() => _filter = 'New');
+                        await _fetchProfilesByFilter('New');
                       },
                     ),
                   ],
@@ -461,6 +705,7 @@ class _HomeScreenState extends State<MainHome> {
         ],
       ),
     );
+    // --- END INFINITE LOADING FIX ---
   }
 }
 

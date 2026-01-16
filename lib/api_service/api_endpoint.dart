@@ -1,4 +1,5 @@
 class ApiEndPoints {
+  static const String dashboardAllFemales = "/male-user/dashboard";
   // Male user options endpoints
   static const String maleSports = '/male-user/sports';
   static const String maleFilm = '/male-user/film';
@@ -18,7 +19,7 @@ class ApiEndPoints {
   static const String maleUploadImages = '/male-user/upload-images';
   static const String maleInterests = "/male-user/interests";
   static const String maleLanguages = "/male-user/languages";
-  static const String fetchfemaleusers = "male-user/browse-females";
+  static const String fetchfemaleusers = "/male-user/browse-females";
 
   // Male follow/unfollow
   static const String maleUnfollow = "/male-user/unfollow";
