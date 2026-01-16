@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 
 import '../utils/token_helper.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiController extends ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -368,6 +369,7 @@ class ApiController extends ChangeNotifier {
       notifyListeners();
     }
 
+<<<<<<< HEAD
     try {
       final dynamic res = await _apiService.fetchDashboardAllFemales(
         page: page,
@@ -407,6 +409,58 @@ class ApiController extends ChangeNotifier {
           }
         }
         return <Map<String, dynamic>>[];
+=======
+  // Public getter to access the api service
+  ApiService get apiService => _apiService;
+
+  bool _isLoading = false;
+  String? _error;
+  Map<String, dynamic>? _signupResponse;
+  String? _authToken;
+  bool _isOtpVerified = false;
+
+  // female profiles cache
+  List<Map<String, dynamic>> _femaleProfiles = [];
+
+  // Remember identity + context for OTP verify
+  String? _pendingEmail;
+  String? _pendingMobile;
+  String? _pendingSource; // "login" | "signup"
+  String? _otpRequestId; // from send-OTP
+  String? _otpChannel; // "email" | "mobile"
+
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  Map<String, dynamic>? get signupResponse => _signupResponse;
+  String? get authToken => _authToken;
+  bool get isOtpVerified => _isOtpVerified;
+
+  /// Getter for female profiles cached in controller
+  List<Map<String, dynamic>> get femaleProfiles =>
+      List<Map<String, dynamic>>.unmodifiable(_femaleProfiles);
+
+  /// Verifies OTP and saves token if present.
+  Future<bool> verifyOtp(String otp, {String source = 'signup'}) async {
+    final endpoint = source == 'login'
+        ? ApiEndPoints.loginotpMale
+        : ApiEndPoints.verifyOtpMale;
+    final url = Uri.parse("${ApiEndPoints.baseUrls}$endpoint");
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"otp": otp}),
+    );
+    final body = jsonDecode(response.body);
+    final success = body['success'] == true;
+    if (success) {
+      final token = body['token'] ?? body['access_token'];
+      if (token != null && token is String && token.isNotEmpty) {
+        _authToken = token;
+        // Save to SharedPreferences for later use
+        try {
+          await saveLoginToken(token);
+        } catch (_) {}
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
       }
 
       dynamic rawData;
@@ -722,8 +776,14 @@ class ApiController extends ChangeNotifier {
     }
   }
 
+<<<<<<< HEAD
   /// Fetches female profiles for a specific dashboard section (e.g., 'new', 'all')
   Future<List<Map<String, dynamic>>> fetchDashboardSectionFemales({
+=======
+  /// Fetches female profiles from the dashboard API and stores them in controller.
+  /// Returns a List<Map<String, dynamic>> on success, throws on failure.
+  Future<List<Map<String, dynamic>>> fetchFemaleUsersFromDashboard({
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
     String section = 'all',
     int page = 1,
     int limit = 10,
@@ -739,14 +799,25 @@ class ApiController extends ChangeNotifier {
     }
 
     try {
+<<<<<<< HEAD
       final dynamic res = await _apiService.fetchDashboardSectionFemales(
+=======
+      // Call service to fetch from dashboard
+      final dynamic res = await _apiService.fetchFemaleUsersFromDashboard(
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
         section: section,
         page: page,
         limit: limit,
       );
+<<<<<<< HEAD
       debugPrint(
         "📥 fetchDashboardSectionFemales ($section) raw response: $res",
       );
+=======
+
+      debugPrint("📥 fetchFemaleUsersFromDashboard raw response: $res");
+
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
       List<Map<String, dynamic>> _normalizeList(dynamic input) {
         if (input is List<Map<String, dynamic>>) return input;
         if (input is List) {
@@ -755,9 +826,15 @@ class ApiController extends ChangeNotifier {
               .map((e) {
                 if (e is Map) return Map<String, dynamic>.from(e);
                 try {
+<<<<<<< HEAD
                   if (e is String) return {'name': e};
                   if (e is int || e is double) return {'value': e};
                   if (e is List) return {'list': e};
+=======
+                  final jsonLike = (e as dynamic).toJson();
+                  if (jsonLike is Map)
+                    return Map<String, dynamic>.from(jsonLike);
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
                 } catch (_) {}
                 return <String, dynamic>{};
               })
@@ -770,8 +847,11 @@ class ApiController extends ChangeNotifier {
             mapInput['items'],
             mapInput['list'],
             mapInput['results'],
+<<<<<<< HEAD
             mapInput['data'],
             mapInput['docs'],
+=======
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
           ];
           for (final c in candidates) {
             if (c is List) {
@@ -782,6 +862,7 @@ class ApiController extends ChangeNotifier {
         return <Map<String, dynamic>>[];
       }
 
+<<<<<<< HEAD
       dynamic rawData;
       if (res is Map) {
         if (res['data'] != null && res['data']['results'] != null) {
@@ -789,6 +870,20 @@ class ApiController extends ChangeNotifier {
           rawData = res['data']['results'];
         } else if (res['data'] != null) {
           rawData = res['data'];
+=======
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+
+      dynamic rawData;
+      if (res is Map) {
+        if (res['data'] != null) {
+          rawData = res['data'];
+          // For the dashboard API, the actual results are in data.results
+          if (rawData['results'] != null) {
+            rawData = rawData['results'];
+          }
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
         } else if (res['docs'] != null) {
           rawData = res['docs'];
         } else if (res['items'] != null) {
@@ -804,6 +899,7 @@ class ApiController extends ChangeNotifier {
         try {
           final jsonForm = (res as dynamic).toJson();
           if (jsonForm is Map) {
+<<<<<<< HEAD
             // Check for new structure first
             if (jsonForm['data'] != null &&
                 jsonForm['data']['results'] != null) {
@@ -817,6 +913,15 @@ class ApiController extends ChangeNotifier {
                   jsonForm['results'] ??
                   jsonForm;
             }
+=======
+            rawData =
+                jsonForm['data'] ??
+                jsonForm['docs'] ??
+                jsonForm['items'] ??
+                jsonForm['list'] ??
+                jsonForm['results'] ??
+                jsonForm;
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
           } else if (jsonForm is List) {
             rawData = jsonForm;
           } else {
@@ -826,7 +931,13 @@ class ApiController extends ChangeNotifier {
           rawData = res;
         }
       }
+<<<<<<< HEAD
       List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
+=======
+
+      List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
+
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
       if (normalizedProfiles.isEmpty) {
         if (rawData is Map) {
           final Map<String, dynamic> candidateMap = Map<String, dynamic>.from(
@@ -854,9 +965,59 @@ class ApiController extends ChangeNotifier {
           } catch (_) {}
         }
       }
+<<<<<<< HEAD
       _femaleProfiles = normalizedProfiles;
       _isLoading = false;
       _error = null;
+=======
+
+      if (normalizedProfiles.isNotEmpty) {
+        _femaleProfiles = normalizedProfiles;
+        _isLoading = false;
+        _error = null;
+        if (WidgetsBinding.instance != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            notifyListeners();
+          });
+        } else {
+          notifyListeners();
+        }
+        return normalizedProfiles;
+      }
+
+      if (normalizedProfiles.isEmpty) {
+        _femaleProfiles = [];
+        _isLoading = false;
+        _error = null;
+        if (WidgetsBinding.instance != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            notifyListeners();
+          });
+        } else {
+          notifyListeners();
+        }
+        return [];
+      }
+
+      String serverMessage = 'No profiles found';
+      try {
+        if (res is Map) {
+          serverMessage =
+              (res['message'] ?? res['error'] ?? res['msg'] ?? serverMessage)
+                  .toString();
+        } else {
+          final modelMsg =
+              (res as dynamic).message ??
+              (res as dynamic).error ??
+              (res as dynamic).msg;
+          if (modelMsg != null) serverMessage = modelMsg.toString();
+        }
+      } catch (_) {}
+
+      _femaleProfiles = [];
+      _isLoading = false;
+      _error = _friendlyMessage(serverMessage);
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
       if (WidgetsBinding.instance != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           notifyListeners();
@@ -864,11 +1025,17 @@ class ApiController extends ChangeNotifier {
       } else {
         notifyListeners();
       }
+<<<<<<< HEAD
       return normalizedProfiles;
     } catch (e, st) {
       debugPrint(
         "❌ fetchDashboardSectionFemales ($section) exception: $e\n$st",
       );
+=======
+      throw Exception(_error);
+    } catch (e, st) {
+      debugPrint("❌ fetchFemaleUsersFromDashboard exception: $e\n$st");
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
       _femaleProfiles = [];
       _isLoading = false;
       _error = e.toString();
@@ -1094,6 +1261,7 @@ class ApiController extends ChangeNotifier {
     }
   }
 
+<<<<<<< HEAD
   /// Verifies OTP and saves token if present.
   Future<bool> verifyOtp(String otp, {String source = 'signup'}) async {
     final endpoint = source == 'login'
@@ -1289,5 +1457,14 @@ class GradientText extends StatelessWidget {
         style: (style ?? const TextStyle()).copyWith(color: Colors.white),
       ),
     );
+=======
+  // Clear authentication token
+  Future<void> clearAuthToken() async {
+    _authToken = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    // Also clear any other auth-related data
+    await prefs.remove('userProfile');
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
   }
 }

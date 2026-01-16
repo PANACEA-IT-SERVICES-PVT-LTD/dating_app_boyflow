@@ -373,6 +373,54 @@ class ApiService {
     }
   }
 
+<<<<<<< HEAD
+=======
+  final String baseUrl = ApiEndPoints.baseUrls;
+  String? _authToken;
+
+  // Get auth token from shared preferences
+  Future<void> _getAuthToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    _authToken = prefs.getString('token');
+  }
+
+  // Get headers with authorization
+  Future<Map<String, String>> _getHeaders() async {
+    await _getAuthToken();
+    return {
+      'Content-Type': 'application/json',
+      if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+    };
+  }
+
+  // Handle API errors
+  void _handleError(int statusCode, dynamic responseBody) {
+    String message = 'Failed to load data';
+    try {
+      if (responseBody is String) {
+        final jsonResponse = json.decode(responseBody);
+        message = jsonResponse['message'] ?? message;
+        if (message.toLowerCase().contains('user not found')) {
+          throw Exception(
+            'Your session has expired or user does not exist. Please log in again.',
+          );
+        }
+      }
+    } catch (e) {
+      message = 'Error: $statusCode';
+    }
+    if (statusCode == 404) {
+      if (responseBody.toString().toLowerCase().contains('user') ||
+          responseBody.toString().toLowerCase().contains('profile')) {
+        message = 'User profile not found (404). Please log in again.';
+      } else {
+        message = 'Resource does not exist (404).';
+      }
+    }
+    throw Exception(message);
+  }
+
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
   // Fetch female users with pagination
   Future<List<Map<String, dynamic>>> fetchFemaleUsers({
     int page = 1,
@@ -499,6 +547,61 @@ class ApiService {
       throw Exception('Connection error: Unable to connect to server');
     } catch (e) {
       throw Exception('Registration error: $e');
+    }
+  }
+
+  // Fetch female users from dashboard with section, page and limit parameters
+  Future<Map<String, dynamic>> fetchFemaleUsersFromDashboard({
+    String section = 'all',
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      final url = Uri.parse(
+        '$baseUrl${ApiEndPoints.dashboardEndpoint}?section=$section&page=$page&limit=$limit',
+      );
+      final headers = await _getHeaders();
+      print('Dashboard URL: $url');
+      print('Headers: $headers');
+      print('Token: $_authToken');
+
+      final response = await http.get(url, headers: headers);
+      print('Dashboard API Response Status: ${response.statusCode}');
+      print('Dashboard API Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        // Validate the response structure matches expected format
+        if (decoded is Map) {
+          final typedDecoded = Map<String, dynamic>.from(decoded);
+          if (typedDecoded.containsKey('success')) {
+            return typedDecoded;
+          } else {
+            print(
+              'Warning: Unexpected response format from dashboard API: $typedDecoded',
+            );
+            return typedDecoded;
+          }
+        } else {
+          print(
+            'Error: Expected Map response from dashboard API, got ${decoded.runtimeType}',
+          );
+          throw Exception('Invalid response format from dashboard API');
+        }
+      } else {
+        print('Dashboard Error: ${response.statusCode} - ${response.body}');
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to load female users from dashboard');
+      }
+    } on SocketException catch (e) {
+      print('SocketException: $e');
+      throw Exception('Network error: $e');
+    } on http.ClientException catch (e) {
+      print('ClientException: $e');
+      throw Exception('Connection error: $e');
+    } catch (e, st) {
+      print('General Exception in fetchFemaleUsersFromDashboard: $e\n$st');
+      throw Exception('Network error: $e');
     }
   }
 

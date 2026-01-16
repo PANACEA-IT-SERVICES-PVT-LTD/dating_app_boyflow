@@ -3,9 +3,11 @@ import 'package:Boy_flow/views/screens/female_profile_screen.dart';
 import 'package:Boy_flow/models/female_user.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:Boy_flow/api_service/api_endpoint.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({Key? key}) : super(key: key);
@@ -15,17 +17,109 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  bool locationSet = false;
+  Future<void> setUserLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        await Geolocator.openLocationSettings();
+        return;
+      }
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return;
+        }
+      }
+      if (permission == LocationPermission.deniedForever) {
+        return;
+      }
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      // Get token from SharedPreferences
+      String? token;
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        token = prefs.getString('token');
+      } catch (e) {
+        print('Error getting token: $e');
+      }
+
+      final response = await http.post(
+        Uri.parse('https://friend-circle-new.vercel.app/male-user/location'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+        }),
+      );
+      if (response.statusCode == 200) {
+        setState(() {
+          locationSet = true;
+        });
+      } else {
+        print(
+          'Location update failed: ${response.statusCode} ${response.body}',
+        );
+      }
+    } catch (e) {
+      print('Location error: $e');
+    }
+  }
+
   int walletAmount = 1000; // Example initial amount
-  final List<FemaleUser> users = [
-    FemaleUser(
-      id: '1',
-      name: 'Sophie92',
-      age: 22,
-      bio:
-          'Family and parenting, Society and politics. Cooking, Writing. Cricket.',
-      avatarUrl: 'https://i.pravatar.cc/150?img=5',
-    ),
-  ];
+  List<FemaleUser> users = [];
+  bool isLoading = true;
+  String? error;
+
+  @override
+  void initState() {
+    super.initState();
+    initLocationAndFetch();
+  }
+
+  Future<void> initLocationAndFetch() async {
+    await setUserLocation();
+    await fetchDashboard();
+  }
+
+  Future<void> fetchDashboard() async {
+    setState(() {
+      isLoading = true;
+      error = null;
+    });
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'https://friend-circle-new.vercel.app/male-user/dashboard?section=all&page=1&limit=10',
+        ),
+      );
+      final data = json.decode(response.body);
+      if (data['success'] == true) {
+        final results = data['data']['results'] as List;
+        setState(() {
+          users = results.map((u) => FemaleUser.fromJson(u)).toList();
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          error = 'Failed to load data';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        error = e.toString();
+        isLoading = false;
+      });
+    }
+  }
 
   Future<void> rechargeWallet(int amount) async {
     print('[Recharge] Function entered with amount: $amount');
@@ -236,71 +330,79 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: users.length,
-        itemBuilder: (context, index) {
-          final user = users[index];
-          return GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => FemaleProfileScreen(user: user),
-                ),
-              );
-            },
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 20),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : error != null
+          ? Center(child: Text('Error:\n$error'))
+          : ListView.builder(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.pinkAccent.withOpacity(0.15),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundImage:
-                        user.avatarUrl != null && user.avatarUrl!.isNotEmpty
-                        ? NetworkImage(user.avatarUrl!)
-                        : null,
-                    child: user.avatarUrl == null || user.avatarUrl!.isEmpty
-                        ? const Icon(Icons.person, size: 28)
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user.name,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
+              itemCount: users.length,
+              itemBuilder: (context, index) {
+                final user = users[index];
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => FemaleProfileScreen(user: user),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.pinkAccent.withOpacity(0.15),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
                         ),
-                        Text('Age: ${user.age}'),
-                        Text(
-                          user.bio,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundImage:
+                              user.avatarUrl != null &&
+                                  user.avatarUrl!.isNotEmpty
+                              ? NetworkImage(user.avatarUrl!)
+                              : null,
+                          child:
+                              user.avatarUrl == null || user.avatarUrl!.isEmpty
+                              ? const Icon(Icons.person, size: 28)
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text('Age:  24{user.age}'),
+                              Text(
+                                user.bio,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
+                );
+              },
             ),
-          );
-        },
-      ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,

@@ -36,6 +36,30 @@ class _HomeScreenState extends State<MainHome> {
   String _filter = 'All';
   final CallManager _callManager = CallManager();
 
+  // --- Followed profiles state ---
+  List<Map<String, dynamic>> _followedProfiles = [];
+  bool _isLoadingFollowed = false;
+  String? _followedError;
+
+  String? _getImageUrlFromProfile(Map<String, dynamic> profile) {
+    // Check if there are images in the profile
+    if (profile['images'] != null &&
+        profile['images'] is List &&
+        profile['images'].isNotEmpty) {
+      final imageList = profile['images'] as List;
+      final firstImage = imageList[0];
+      if (firstImage is Map<String, dynamic> &&
+          firstImage['imageUrl'] != null) {
+        return firstImage['imageUrl'].toString();
+      }
+    } else if (profile['avatarUrl'] != null) {
+      // Fallback to avatarUrl if images are not available
+      return profile['avatarUrl']?.toString();
+    }
+    // Return null if no image is found
+    return null;
+  }
+
   Future<void> rechargeWallet(int amount) async {
     try {
       final url = Uri.parse(
@@ -295,6 +319,7 @@ class _HomeScreenState extends State<MainHome> {
   Future<void> _loadFollowedFemales() async {
     try {
       final apiController = Provider.of<ApiController>(context, listen: false);
+<<<<<<< HEAD
 
       // Show loading state
       _startUILoadingTimeout();
@@ -333,12 +358,112 @@ class _HomeScreenState extends State<MainHome> {
             SnackBar(content: Text('Failed to load followed users: $e')),
           );
         }
+=======
+      await apiController.fetchFemaleUsersFromDashboard(
+        section: 'all',
+        page: 1,
+        limit: 10,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load profiles: $e'),
+            action: SnackBarAction(label: 'Retry', onPressed: _loadProfiles),
+          ),
+        );
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
       }
     }
   }
 
+<<<<<<< HEAD
   // Method to load new females from API
   Future<void> _loadNewFemales() async {
+=======
+  // --- Followed profiles fetch method ---
+  Future<void> _loadFollowedProfiles() async {
+    setState(() {
+      _isLoadingFollowed = true;
+      _followedError = null;
+    });
+    try {
+      final apiService = Provider.of<ApiController>(
+        context,
+        listen: false,
+      ).apiService;
+      final result = await apiService.fetchFollowedFemales(page: 1, limit: 10);
+      final results = result['data']?['results'] ?? [];
+      setState(() {
+        _followedProfiles = List<Map<String, dynamic>>.from(results);
+        _isLoadingFollowed = false;
+      });
+    } catch (e) {
+      setState(() {
+        _followedError = e.toString();
+        _isLoadingFollowed = false;
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> _applyFilter(List<Map<String, dynamic>> profiles) {
+    // Add real filter logic if needed
+    return profiles;
+  }
+
+  void _navigateToFemaleProfile(Map<String, dynamic> profile) {
+    // Convert the profile map to a FemaleUser object
+    String? imageUrl;
+    if (profile['images'] != null &&
+        profile['images'] is List &&
+        profile['images'].isNotEmpty) {
+      final imageList = profile['images'] as List;
+      final firstImage = imageList[0];
+      if (firstImage is Map<String, dynamic> &&
+          firstImage['imageUrl'] != null) {
+        imageUrl = firstImage['imageUrl'].toString();
+      }
+    } else if (profile['avatarUrl'] != null) {
+      imageUrl = profile['avatarUrl']?.toString();
+    }
+
+    final femaleUser = FemaleUser(
+      id: profile['_id']?.toString() ?? '',
+      name: profile['name']?.toString() ?? 'Unknown',
+      age: int.tryParse(profile['age']?.toString() ?? '0') ?? 0,
+      bio: profile['bio']?.toString() ?? '',
+      avatarUrl: imageUrl ?? '',
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => FemaleProfileScreen(user: femaleUser)),
+    );
+  }
+
+  Future<void> _startCall({
+    required bool isVideo,
+    required Map<String, dynamic> profile,
+  }) async {
+    if (kIsWeb) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Calls are only available on mobile/desktop builds.'),
+        ),
+      );
+      return;
+    }
+
+    final user = call_user.User(
+      id: (profile['_id'] ?? profile['name']).toString(),
+      name: profile['name']?.toString() ?? 'Unknown',
+      isOnline: true,
+    );
+
+    final type = isVideo ? CallType.video : CallType.audio;
+
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
     try {
       final apiController = Provider.of<ApiController>(context, listen: false);
 
@@ -684,7 +809,8 @@ class _HomeScreenState extends State<MainHome> {
                 child: _BlockableProfileCard(
                   name: name,
                   badgeImagePath: 'assets/vector.png',
-                  imagePath: 'assets/img_1.png',
+                  imagePath:
+                      _getImageUrlFromProfile(profile) ?? 'assets/img_1.png',
                   language: bio.isNotEmpty ? bio : 'Bio not available',
                   age: ageStr,
                   callRate: '10/min',

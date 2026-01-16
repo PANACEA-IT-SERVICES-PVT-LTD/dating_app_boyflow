@@ -1,4 +1,5 @@
 class ApiEndPoints {
+<<<<<<< HEAD
   static const String dashboardAllFemales = "/male-user/dashboard";
   // Male user options endpoints
   static const String maleSports = '/male-user/sports';
@@ -6,6 +7,9 @@ class ApiEndPoints {
   static const String maleMusic = '/male-user/music';
   static const String maleTravel = '/male-user/travel';
   static const String baseUrls = "https://friend-circle-nine.vercel.app";
+=======
+  static const String baseUrls = "https://friend-circle-new.vercel.app";
+>>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
 
   // Male auth & profile
   static const String signupMale = "/male-user/register";
@@ -42,4 +46,11 @@ class ApiEndPoints {
   static const String maleWalletRecharge = "/male-user/payment/wallet/order";
 
   static const String maleProfileAndImage = '/male-user/profile-and-image';
+
+  // Male interests endpoints
+  static const String maleSports = '/male-user/sports';
+  static const String maleFilm = '/male-user/film';
+  static const String maleMusic = '/male-user/music';
+  static const String maleTravel = '/male-user/travel';
+  static const String dashboardEndpoint = '/male-user/dashboard';
 }
