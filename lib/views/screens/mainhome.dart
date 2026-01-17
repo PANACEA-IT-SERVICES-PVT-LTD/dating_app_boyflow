@@ -293,177 +293,41 @@ class _HomeScreenState extends State<MainHome> {
 
   Future<void> _fetchProfilesByFilter(String filter) async {
     final apiController = Provider.of<ApiController>(context, listen: false);
-    String section;
     switch (filter) {
       case 'Follow':
-        section = 'follow';
+        await apiController.fetchDashboardSectionFemales(
+          section: 'follow',
+          page: 1,
+          limit: 10,
+        );
         break;
       case 'New':
-        section = 'new';
+        await apiController.fetchDashboardSectionFemales(
+          section: 'new',
+          page: 1,
+          limit: 10,
+        );
         break;
       case 'Near By':
-        section = 'nearby';
+        await apiController.fetchDashboardSectionFemales(
+          section: 'nearby',
+          page: 1,
+          limit: 10,
+        );
         break;
       case 'All':
       default:
-        section = 'all';
-    }
-    await apiController.fetchDashboardSectionFemales(
-      section: section,
-      page: 1,
-      limit: 10,
-    );
-  }
-
-  // Method to load followed females from API
-  Future<void> _loadFollowedFemales() async {
-    try {
-      final apiController = Provider.of<ApiController>(context, listen: false);
-<<<<<<< HEAD
-
-      // Show loading state
-      _startUILoadingTimeout();
-
-      // Load followed females using the public method
-      // The fetchFollowedFemales method already updates the controller internally
-      await apiController.fetchFollowedFemales(page: 1, limit: 10);
-    } catch (e) {
-      print('Error loading followed females: $e');
-      // If it's a 404 error (section not supported), try loading all females instead
-      if (e.toString().toLowerCase().contains('404') ||
-          e.toString().toLowerCase().contains('resource not found')) {
-        print('404 detected for followed section, falling back to browse API');
-        try {
-          final fallbackApiController = Provider.of<ApiController>(
-            context,
-            listen: false,
-          );
-          await fallbackApiController.fetchBrowseFemales(page: 1, limit: 10);
-        } catch (fallbackError) {
-          print('Fallback also failed: $fallbackError');
-          if (mounted && context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Failed to load followed users, showing all users: $fallbackError',
-                ),
-              ),
-            );
-          }
-        }
-      } else {
-        // For other errors, show the error message
-        if (mounted && context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to load followed users: $e')),
-          );
-        }
-=======
-      await apiController.fetchFemaleUsersFromDashboard(
-        section: 'all',
-        page: 1,
-        limit: 10,
-      );
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load profiles: $e'),
-            action: SnackBarAction(label: 'Retry', onPressed: _loadProfiles),
-          ),
+        await apiController.fetchDashboardSectionFemales(
+          section: 'all',
+          page: 1,
+          limit: 10,
         );
->>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
-      }
+        break;
     }
   }
 
-<<<<<<< HEAD
   // Method to load new females from API
   Future<void> _loadNewFemales() async {
-=======
-  // --- Followed profiles fetch method ---
-  Future<void> _loadFollowedProfiles() async {
-    setState(() {
-      _isLoadingFollowed = true;
-      _followedError = null;
-    });
-    try {
-      final apiService = Provider.of<ApiController>(
-        context,
-        listen: false,
-      ).apiService;
-      final result = await apiService.fetchFollowedFemales(page: 1, limit: 10);
-      final results = result['data']?['results'] ?? [];
-      setState(() {
-        _followedProfiles = List<Map<String, dynamic>>.from(results);
-        _isLoadingFollowed = false;
-      });
-    } catch (e) {
-      setState(() {
-        _followedError = e.toString();
-        _isLoadingFollowed = false;
-      });
-    }
-  }
-
-  List<Map<String, dynamic>> _applyFilter(List<Map<String, dynamic>> profiles) {
-    // Add real filter logic if needed
-    return profiles;
-  }
-
-  void _navigateToFemaleProfile(Map<String, dynamic> profile) {
-    // Convert the profile map to a FemaleUser object
-    String? imageUrl;
-    if (profile['images'] != null &&
-        profile['images'] is List &&
-        profile['images'].isNotEmpty) {
-      final imageList = profile['images'] as List;
-      final firstImage = imageList[0];
-      if (firstImage is Map<String, dynamic> &&
-          firstImage['imageUrl'] != null) {
-        imageUrl = firstImage['imageUrl'].toString();
-      }
-    } else if (profile['avatarUrl'] != null) {
-      imageUrl = profile['avatarUrl']?.toString();
-    }
-
-    final femaleUser = FemaleUser(
-      id: profile['_id']?.toString() ?? '',
-      name: profile['name']?.toString() ?? 'Unknown',
-      age: int.tryParse(profile['age']?.toString() ?? '0') ?? 0,
-      bio: profile['bio']?.toString() ?? '',
-      avatarUrl: imageUrl ?? '',
-    );
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => FemaleProfileScreen(user: femaleUser)),
-    );
-  }
-
-  Future<void> _startCall({
-    required bool isVideo,
-    required Map<String, dynamic> profile,
-  }) async {
-    if (kIsWeb) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Calls are only available on mobile/desktop builds.'),
-        ),
-      );
-      return;
-    }
-
-    final user = call_user.User(
-      id: (profile['_id'] ?? profile['name']).toString(),
-      name: profile['name']?.toString() ?? 'Unknown',
-      isOnline: true,
-    );
-
-    final type = isVideo ? CallType.video : CallType.audio;
-
->>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
     try {
       final apiController = Provider.of<ApiController>(context, listen: false);
 
@@ -509,6 +373,30 @@ class _HomeScreenState extends State<MainHome> {
           );
         }
       }
+    }
+  }
+
+  // --- Followed profiles fetch method ---
+  Future<void> _loadFollowedProfiles() async {
+    setState(() {
+      _isLoadingFollowed = true;
+      _followedError = null;
+    });
+    try {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      final results = await apiController.fetchFollowedFemales(
+        page: 1,
+        limit: 10,
+      );
+      setState(() {
+        _followedProfiles = results;
+        _isLoadingFollowed = false;
+      });
+    } catch (e) {
+      setState(() {
+        _followedError = e.toString();
+        _isLoadingFollowed = false;
+      });
     }
   }
 
@@ -613,6 +501,9 @@ class _HomeScreenState extends State<MainHome> {
   }
 
   Widget _buildHomeTab(ApiController apiController) {
+    debugPrint(
+      '[UI DEBUG] Current filter: [33m$_filter[0m, femaleProfiles.length: [36m${apiController.femaleProfiles.length}[0m, isLoading: [35m${apiController.isLoading}[0m',
+    );
     // --- INFINITE LOADING FIX ---
     // 1. If loading and not timed out, show spinner, but set a hard timeout fallback
     if (apiController.isLoading && !_uiLoadingTimeout) {
@@ -766,10 +657,10 @@ class _HomeScreenState extends State<MainHome> {
                     const SizedBox(width: 10),
                     FilterChipWidget(
                       label: 'Follow',
-                      selected: _filter == 'Follow',
+                      selected: _filter == 'follow',
                       onSelected: (v) async {
-                        setState(() => _filter = 'Follow');
-                        await _fetchProfilesByFilter('Follow');
+                        setState(() => _filter = 'follow');
+                        await _fetchProfilesByFilter('follow');
                       },
                     ),
                     const SizedBox(width: 10),
@@ -784,10 +675,10 @@ class _HomeScreenState extends State<MainHome> {
                     const SizedBox(width: 10),
                     FilterChipWidget(
                       label: 'New',
-                      selected: _filter == 'New',
+                      selected: _filter == 'new',
                       onSelected: (v) async {
-                        setState(() => _filter = 'New');
-                        await _fetchProfilesByFilter('New');
+                        setState(() => _filter = 'new');
+                        await _fetchProfilesByFilter('new');
                       },
                     ),
                   ],
@@ -895,96 +786,68 @@ class _PromoCoinsCard extends StatelessWidget {
           ),
         ],
       ),
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            "Limited Time Offer",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset("assets/coins.png", width: 26, height: 26),
-              const SizedBox(width: 8),
-              const Text(
-                "FLAT 80% Off",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22,
-                  letterSpacing: 1.1,
-                ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const Text(
+              "250 Coins",
+              style: TextStyle(
+                color: Colors.purple,
+                fontWeight: FontWeight.w700,
+                fontSize: 20,
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Image.asset("assets/coins.png", width: 60, height: 60),
-          const SizedBox(height: 8),
-          const Text(
-            "250 Coins",
-            style: TextStyle(
-              color: Colors.purple,
-              fontWeight: FontWeight.w700,
-              fontSize: 20,
             ),
-          ),
-          const SizedBox(height: 4),
-          Text.rich(
-            TextSpan(
-              children: [
-                const TextSpan(
-                  text: "@ Rs.200 ",
-                  style: TextStyle(
-                    color: Colors.white70,
-                    decoration: TextDecoration.lineThrough,
-                    fontSize: 14,
+            const SizedBox(height: 4),
+            Text.rich(
+              TextSpan(
+                children: [
+                  const TextSpan(
+                    text: "@ Rs.200 ",
+                    style: TextStyle(
+                      color: Colors.white70,
+                      decoration: TextDecoration.lineThrough,
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-                TextSpan(
-                  text: "Rs 50",
-                  style: TextStyle(
-                    color: Colors.pinkAccent,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                  TextSpan(
+                    text: "Rs 50",
+                    style: TextStyle(
+                      color: Colors.pinkAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: ElevatedButton(
-                onPressed: onPressed,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.pinkAccent,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: ElevatedButton(
+                  onPressed: onPressed,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.pinkAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Add 250 Coins',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                  child: const Text(
+                    'Add 250 Coins',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1098,7 +961,16 @@ class ProfileCardWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           child: Stack(
             children: [
-              Positioned.fill(child: Image.asset(imagePath, fit: BoxFit.cover)),
+              Positioned.fill(
+                child: imagePath.startsWith('http')
+                    ? Image.network(
+                        imagePath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            Container(color: Colors.grey[300]),
+                      )
+                    : Image.asset(imagePath, fit: BoxFit.cover),
+              ),
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -1409,6 +1281,7 @@ class _BlockableProfileCard extends StatefulWidget {
   final String femaleName;
 
   const _BlockableProfileCard({
+    Key? key,
     required this.name,
     required this.language,
     required this.age,
@@ -1421,7 +1294,6 @@ class _BlockableProfileCard extends StatefulWidget {
     this.onVideoCallTap,
     required this.femaleUserId,
     required this.femaleName,
-    Key? key,
   }) : super(key: key);
 
   @override

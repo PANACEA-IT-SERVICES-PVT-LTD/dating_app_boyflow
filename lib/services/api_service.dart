@@ -8,6 +8,7 @@ import '../api_service/api_endpoint.dart';
 
 class ApiService {
   String? _authToken;
+  final String baseUrl = ApiEndPoints.baseUrls;
 
   // Get auth token from shared preferences
   Future<void> _getAuthToken() async {
@@ -41,7 +42,12 @@ class ApiService {
       message = 'Error: $statusCode';
     }
     if (statusCode == 404) {
-      message = 'Resource not found (404). This section may not be available.';
+      if (responseBody.toString().toLowerCase().contains('user') ||
+          responseBody.toString().toLowerCase().contains('profile')) {
+        message = 'User profile not found (404). Please log in again.';
+      } else {
+        message = 'Resource does not exist (404).';
+      }
     }
     throw Exception(message);
   }
@@ -53,7 +59,7 @@ class ApiService {
     int limit = 10,
   }) async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardAllFemales}',
+      '${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardEndpoint}',
     );
     final headers = await _getHeaders();
     final body = json.encode({
@@ -74,6 +80,7 @@ class ApiService {
     print('Token: $_authToken');
     print('Body: $body');
     if (response.statusCode == 200) {
+      print('API raw response body: ${response.body}');
       final result = json.decode(response.body);
       // Return the full response, the controller will handle parsing
       return result;
@@ -373,54 +380,6 @@ class ApiService {
     }
   }
 
-<<<<<<< HEAD
-=======
-  final String baseUrl = ApiEndPoints.baseUrls;
-  String? _authToken;
-
-  // Get auth token from shared preferences
-  Future<void> _getAuthToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    _authToken = prefs.getString('token');
-  }
-
-  // Get headers with authorization
-  Future<Map<String, String>> _getHeaders() async {
-    await _getAuthToken();
-    return {
-      'Content-Type': 'application/json',
-      if (_authToken != null) 'Authorization': 'Bearer $_authToken',
-    };
-  }
-
-  // Handle API errors
-  void _handleError(int statusCode, dynamic responseBody) {
-    String message = 'Failed to load data';
-    try {
-      if (responseBody is String) {
-        final jsonResponse = json.decode(responseBody);
-        message = jsonResponse['message'] ?? message;
-        if (message.toLowerCase().contains('user not found')) {
-          throw Exception(
-            'Your session has expired or user does not exist. Please log in again.',
-          );
-        }
-      }
-    } catch (e) {
-      message = 'Error: $statusCode';
-    }
-    if (statusCode == 404) {
-      if (responseBody.toString().toLowerCase().contains('user') ||
-          responseBody.toString().toLowerCase().contains('profile')) {
-        message = 'User profile not found (404). Please log in again.';
-      } else {
-        message = 'Resource does not exist (404).';
-      }
-    }
-    throw Exception(message);
-  }
-
->>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
   // Fetch female users with pagination
   Future<List<Map<String, dynamic>>> fetchFemaleUsers({
     int page = 1,
@@ -630,7 +589,7 @@ class ApiService {
     int limit = 10,
   }) async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardAllFemales}',
+      '${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardEndpoint}',
     );
     final headers = await _getHeaders();
     final body = json.encode({

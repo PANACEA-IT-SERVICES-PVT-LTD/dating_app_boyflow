@@ -14,54 +14,30 @@ class FemaleUser {
   });
 
   factory FemaleUser.fromJson(Map<String, dynamic> json) {
-<<<<<<< HEAD
     String? avatarUrl;
-
-    // Try to get avatar from avatarUrl field first
-    if (json['avatarUrl'] != null) {
-      avatarUrl = json['avatarUrl'].toString();
-    } else if (json['images'] != null &&
-        json['images'] is List &&
-        json['images'].isNotEmpty) {
-      // Get avatar from first image in images array
-      final firstImage = json['images'][0];
-      if (firstImage is Map && firstImage['imageUrl'] != null) {
-        avatarUrl = firstImage['imageUrl'].toString();
-      }
-=======
-    String? imageUrl;
-
-    // Handle the image structure from the API response
+    // Prefer images[0].imageUrl, fallback to avatarUrl
     if (json['images'] != null &&
         json['images'] is List &&
-        json['images'].isNotEmpty) {
+        (json['images'] as List).isNotEmpty) {
       final imageList = json['images'] as List;
       final firstImage = imageList[0];
       if (firstImage is Map<String, dynamic> &&
           firstImage['imageUrl'] != null) {
-        imageUrl = firstImage['imageUrl'].toString();
+        avatarUrl = firstImage['imageUrl'].toString();
       }
     } else if (json['avatarUrl'] != null) {
-      imageUrl = json['avatarUrl'].toString();
->>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
+      avatarUrl = json['avatarUrl'].toString();
     }
-
     return FemaleUser(
       id: json['_id']?.toString() ?? '',
       name: json['name']?.toString() ?? 'No Name',
-<<<<<<< HEAD
-      age: json['age']?.toInt() ?? 0,
-      bio: json['bio']?.toString() ?? '',
-      avatarUrl: avatarUrl,
-=======
       age: json['age'] is int
           ? json['age']
           : (json['age']?.toString() != null
                 ? int.tryParse(json['age'].toString()) ?? 0
                 : 0),
       bio: json['bio']?.toString() ?? '',
-      avatarUrl: imageUrl,
->>>>>>> d7c53f9d8b8d3e58746e504614b209626b4667de
+      avatarUrl: avatarUrl,
     );
   }
 }
@@ -87,11 +63,11 @@ class FemaleUserResponse {
       page: json['page'] ?? 1,
       limit: json['limit'] ?? 10,
       total: json['total'] ?? 0,
-      users: (json['data'] as List)
-          .map((user) => FemaleUser.fromJson(user))
-          .toList(),
+      users: (json['data'] is List)
+          ? (json['data'] as List)
+                .map((user) => FemaleUser.fromJson(user))
+                .toList()
+          : [],
     );
   }
-
-  void operator [](String other) {}
 }
