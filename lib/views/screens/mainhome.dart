@@ -12,6 +12,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../../models/user.dart' as call_user;
 import '../../models/call_state.dart';
@@ -217,7 +218,24 @@ class _HomeScreenState extends State<MainHome> {
   Future<void> _loadProfiles() async {
     _startUILoadingTimeout();
     try {
-      await _fetchProfilesByFilter(_filter);
+      if (_filter == 'nearby') {
+        LocationPermission permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Location permission is required for Nearby'),
+            ),
+          );
+          return;
+        }
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+        await _fetchProfilesByFilter('nearby');
+      } else {
+        await _fetchProfilesByFilter(_filter);
+      }
     } catch (e) {
       print('Error loading profiles: $e');
       _loadStaticData();
@@ -291,7 +309,7 @@ class _HomeScreenState extends State<MainHome> {
     return profiles;
   }
 
-  Future<void> _fetchProfilesByFilter(String filter) async {
+  Future<void> _fetchProfilesByFilter(String filter, [double? lat, double? lng]) async {
     final apiController = Provider.of<ApiController>(context, listen: false);
     switch (filter) {
       case 'Follow':
@@ -313,6 +331,8 @@ class _HomeScreenState extends State<MainHome> {
           section: 'nearby',
           page: 1,
           limit: 10,
+          latitude: lat,
+          longitude: lng,
         );
         break;
       case 'All':
@@ -669,7 +689,17 @@ class _HomeScreenState extends State<MainHome> {
                       selected: _filter == 'Near By',
                       onSelected: (v) async {
                         setState(() => _filter = 'Near By');
-                        await _fetchProfilesByFilter('Near By');
+                        LocationPermission permission = await Geolocator.requestPermission();
+                        if (permission == LocationPermission.denied ||
+                            permission == LocationPermission.deniedForever) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Location permission is required for Nearby')),
+                          );
+                          return;
+                        }
+                        Position position = await Geolocator.getCurrentPosition(
+                            desiredAccuracy: LocationAccuracy.high);
+                        await _fetchProfilesByFilter('Near By', position.latitude, position.longitude);
                       },
                     ),
                     const SizedBox(width: 10),

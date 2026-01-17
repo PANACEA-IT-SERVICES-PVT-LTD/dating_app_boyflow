@@ -586,6 +586,8 @@ class ApiController extends ChangeNotifier {
     String section = 'all',
     int page = 1,
     int limit = 10,
+    double? latitude,
+    double? longitude,
   }) async {
     _isLoading = true;
     _error = null;
@@ -602,6 +604,8 @@ class ApiController extends ChangeNotifier {
         section: section,
         page: page,
         limit: limit,
+        latitude: latitude,
+        longitude: longitude,
       );
       debugPrint(
         "📥 fetchDashboardSectionFemales ($section) raw response: $res",

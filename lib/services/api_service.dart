@@ -57,16 +57,18 @@ class ApiService {
     String section = 'all',
     int page = 1,
     int limit = 10,
+    double? latitude,
+    double? longitude,
   }) async {
     final url = Uri.parse(
       '${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardEndpoint}',
     );
     final headers = await _getHeaders();
-    final body = json.encode({
-      'section': section,
-      'page': page,
-      'limit': limit,
-    });
+    final bodyMap = {'section': section, 'page': page, 'limit': limit};
+    if (latitude != null && longitude != null) {
+      bodyMap['location'] = {'latitude': latitude, 'longitude': longitude};
+    }
+    final body = json.encode(bodyMap);
     final response = await http
         .post(url, headers: headers, body: body)
         .timeout(
