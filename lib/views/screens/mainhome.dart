@@ -151,42 +151,134 @@ class _HomeScreenState extends State<MainHome> {
     );
   }
 
+  bool _isCallLoading = false;
+  bool _hasActiveCall = false;
   Future<void> _startCall({
     required bool isVideo,
     required Map<String, dynamic> profile,
   }) async {
-    // Create a temporary user object for the target user
-    final targetUser = call_user.User(
-      id: profile['_id'].toString(),
-      name: profile['name'].toString(),
-      avatar: profile['images'] != null && profile['images'].length > 0
-          ? profile['images'][0]['imageUrl']?.toString()
-          : null,
-      isOnline: profile['onlineStatus'] ?? false,
-    );
-
+    if (_isCallLoading || _hasActiveCall) return;
+    setState(() {
+      _isCallLoading = true;
+      _hasActiveCall = true;
+    });
+    final apiController = Provider.of<ApiController>(context, listen: false);
     try {
-      // Start the call with the target user
-      final callId = await _callManager.initiateCall(
-        targetUser,
-        isVideo ? CallType.video : CallType.audio,
+      final response = await apiController.startCall(
+        receiverId: profile['_id'].toString(),
+        callType: isVideo ? 'video' : 'audio',
       );
-
-      // Navigate to call page
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CallPage(
-            channelName: callId,
-            enableVideo: isVideo,
-            isInitiator: true,
+      if (response['success'] == true) {
+        final data = response['data'];
+        // Await the result of the call page. When it pops, clear active call state.
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CallPage(
+              channelName: data['callId'],
+              enableVideo: isVideo,
+              isInitiator: true,
+            ),
           ),
-        ),
-      );
+        );
+        setState(() => _hasActiveCall = false);
+      } else if (response['message'] ==
+          'You already have an active call session') {
+        final data = response['data'];
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Active Call Detected'),
+            content: const Text(
+              'You already have an active call session. Would you like to resume it or force end it?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(ctx).pop();
+                  // Resume: open call page with existing callId
+                  if (data != null && data['callId'] != null) {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CallPage(
+                          channelName: data['callId'],
+                          enableVideo: data['callType'] == 'video',
+                          isInitiator: true,
+                        ),
+                      ),
+                    );
+                    setState(() => _hasActiveCall = false);
+                  }
+                },
+                child: const Text('Resume Call'),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(ctx).pop();
+                  // Force end: call endCall API with duration 0
+                  try {
+                    await apiController.endCall(
+                      receiverId: data != null && data['receiverId'] != null
+                          ? data['receiverId'].toString()
+                          : profile['_id'].toString(),
+                      duration: 0,
+                      callType: data != null && data['callType'] != null
+                          ? data['callType']
+                          : (isVideo ? 'video' : 'audio'),
+                      callId: data != null && data['callId'] != null
+                          ? data['callId']
+                          : '',
+                    );
+                    setState(() => _hasActiveCall = false);
+                    // Optionally, show a message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Previous call forcibly ended. You can now start a new call.',
+                        ),
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to force end call: $e')),
+                    );
+                  }
+                },
+                child: const Text('Force End Call'),
+              ),
+            ],
+          ),
+        );
+      } else if (response['message']?.toLowerCase().contains('insufficient') ??
+          false) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Insufficient coins to start call.')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['message'] ?? 'Failed to start call'),
+          ),
+        );
+      }
     } catch (e) {
+      String errorMsg = 'Error: $e';
+      // Try to extract backend message if possible
+      final match = RegExp(r'message":"([^"]+)"').firstMatch(errorMsg);
+      if (match != null) {
+        errorMsg = match.group(1)!;
+      }
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Failed to start call: $e')));
+      ).showSnackBar(SnackBar(content: Text(errorMsg)));
+    } finally {
+      if (mounted) setState(() => _isCallLoading = false);
+      // If call was not started, clear active call state
+      if (!Navigator.canPop(context)) {
+        setState(() => _hasActiveCall = false);
+      }
     }
   }
 
@@ -218,7 +310,7 @@ class _HomeScreenState extends State<MainHome> {
   Future<void> _loadProfiles() async {
     _startUILoadingTimeout();
     try {
-      if (_filter == 'nearby') {
+      if (_filter == 'Near By') {
         LocationPermission permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied ||
             permission == LocationPermission.deniedForever) {
@@ -232,19 +324,20 @@ class _HomeScreenState extends State<MainHome> {
         Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
         );
-        await _fetchProfilesByFilter('nearby');
+        await _fetchProfilesByFilter(
+          'Near By',
+          position.latitude,
+          position.longitude,
+        );
       } else {
         await _fetchProfilesByFilter(_filter);
       }
     } catch (e) {
       print('Error loading profiles: $e');
-      _loadStaticData();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load profiles, showing demo data: $e'),
-          ),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load profiles: $e')));
       }
     }
   }
@@ -309,58 +402,43 @@ class _HomeScreenState extends State<MainHome> {
     return profiles;
   }
 
-  Future<void> _fetchProfilesByFilter(String filter, [double? lat, double? lng]) async {
+  Future<void> _fetchProfilesByFilter(
+    String filter, [
+    double? lat,
+    double? lng,
+  ]) async {
     final apiController = Provider.of<ApiController>(context, listen: false);
-    switch (filter) {
-      case 'Follow':
-        await apiController.fetchDashboardSectionFemales(
-          section: 'follow',
-          page: 1,
-          limit: 10,
-        );
-        break;
-      case 'New':
-        await apiController.fetchDashboardSectionFemales(
-          section: 'new',
-          page: 1,
-          limit: 10,
-        );
-        break;
-      case 'Near By':
-        await apiController.fetchDashboardSectionFemales(
-          section: 'nearby',
-          page: 1,
-          limit: 10,
-          latitude: lat,
-          longitude: lng,
-        );
-        break;
-      case 'All':
-      default:
-        await apiController.fetchDashboardSectionFemales(
-          section: 'all',
-          page: 1,
-          limit: 10,
-        );
-        break;
-    }
-  }
-
-  // Method to load new females from API
-  Future<void> _loadNewFemales() async {
     try {
-      final apiController = Provider.of<ApiController>(context, listen: false);
-
-      // Show loading state
-      _startUILoadingTimeout();
-
-      // Load new females using the public method
-      // The fetchDashboardSectionFemales method already updates the controller internally
-      await apiController.fetchDashboardSectionFemales(
-        section: 'new',
-        page: 1,
-        limit: 10,
-      );
+      switch (filter) {
+        case 'Follow':
+          await apiController.fetchDashboardSectionFemales(
+            section: 'follow',
+            page: 1,
+            limit: 10,
+          );
+          break;
+        case 'New':
+          await apiController.fetchDashboardSectionFemales(
+            section: 'new',
+            page: 1,
+            limit: 10,
+          );
+          break;
+        case 'Near By':
+          await apiController.fetchDashboardSectionFemales(
+            section: 'nearby',
+            page: 1,
+            limit: 10,
+            latitude: lat,
+            longitude: lng,
+          );
+          break;
+        case 'All':
+          await apiController.fetchBrowseFemales(page: 1, limit: 10);
+          break;
+        default:
+          await apiController.fetchBrowseFemales(page: 1, limit: 10);
+      }
     } catch (e) {
       print('Error loading new females: $e');
       // If it's a 404 error (section not supported), try loading all females instead
@@ -528,7 +606,6 @@ class _HomeScreenState extends State<MainHome> {
     // 1. If loading and not timed out, show spinner, but set a hard timeout fallback
     if (apiController.isLoading && !_uiLoadingTimeout) {
       _showDebug('UI: Still loading, showing spinner.');
-      // Defensive: If loading takes too long, timeout will trigger fallback
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -669,18 +746,22 @@ class _HomeScreenState extends State<MainHome> {
                     FilterChipWidget(
                       label: 'All',
                       selected: _filter == 'All',
-                      onSelected: (v) async {
-                        setState(() => _filter = 'All');
-                        await _fetchProfilesByFilter('All');
+                      onSelected: (v) {
+                        if (_filter != 'All') {
+                          setState(() => _filter = 'All');
+                          _loadProfiles();
+                        }
                       },
                     ),
                     const SizedBox(width: 10),
                     FilterChipWidget(
                       label: 'Follow',
-                      selected: _filter == 'follow',
-                      onSelected: (v) async {
-                        setState(() => _filter = 'follow');
-                        await _fetchProfilesByFilter('follow');
+                      selected: _filter == 'Follow',
+                      onSelected: (v) {
+                        if (_filter != 'Follow') {
+                          setState(() => _filter = 'Follow');
+                          _loadProfiles();
+                        }
                       },
                     ),
                     const SizedBox(width: 10),
@@ -688,27 +769,53 @@ class _HomeScreenState extends State<MainHome> {
                       label: 'Near By',
                       selected: _filter == 'Near By',
                       onSelected: (v) async {
-                        setState(() => _filter = 'Near By');
-                        LocationPermission permission = await Geolocator.requestPermission();
-                        if (permission == LocationPermission.denied ||
-                            permission == LocationPermission.deniedForever) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Location permission is required for Nearby')),
+                        if (_filter != 'Near By') {
+                          setState(() => _filter = 'Near By');
+                          LocationPermission permission =
+                              await Geolocator.requestPermission();
+                          if (permission == LocationPermission.denied ||
+                              permission == LocationPermission.deniedForever) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Location permission is required for Nearby',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          Position position =
+                              await Geolocator.getCurrentPosition(
+                                desiredAccuracy: LocationAccuracy.high,
+                              );
+                          await showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Current Location'),
+                              content: Text(
+                                'Latitude:  ${position.latitude}\nLongitude:  ${position.longitude}',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            ),
                           );
-                          return;
+                          _loadProfiles();
                         }
-                        Position position = await Geolocator.getCurrentPosition(
-                            desiredAccuracy: LocationAccuracy.high);
-                        await _fetchProfilesByFilter('Near By', position.latitude, position.longitude);
                       },
                     ),
                     const SizedBox(width: 10),
                     FilterChipWidget(
                       label: 'New',
-                      selected: _filter == 'new',
-                      onSelected: (v) async {
-                        setState(() => _filter = 'new');
-                        await _fetchProfilesByFilter('new');
+                      selected: _filter == 'New',
+                      onSelected: (v) {
+                        if (_filter != 'New') {
+                          setState(() => _filter = 'New');
+                          _loadProfiles();
+                        }
                       },
                     ),
                   ],
@@ -737,10 +844,12 @@ class _HomeScreenState extends State<MainHome> {
                   callRate: '10/min',
                   videoRate: '20/min',
                   onCardTap: () => _navigateToFemaleProfile(profile),
-                  onAudioCallTap: () =>
-                      _startCall(isVideo: false, profile: profile),
-                  onVideoCallTap: () =>
-                      _startCall(isVideo: true, profile: profile),
+                  onAudioCallTap: _isCallLoading
+                      ? null
+                      : () => _startCall(isVideo: false, profile: profile),
+                  onVideoCallTap: _isCallLoading
+                      ? null
+                      : () => _startCall(isVideo: true, profile: profile),
                   femaleUserId: profile['_id']?.toString() ?? '',
                   femaleName: name,
                 ),
@@ -766,117 +875,79 @@ class _QuickActionsBottomSheet extends StatelessWidget {
     return FractionallySizedBox(
       heightFactor: 0.4,
       child: Container(
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 10,
+              offset: Offset(0, -5),
+            ),
+          ],
         ),
-        child: SafeArea(
-          top: true,
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
           child: Column(
             children: [
-              Container(
-                width: 40,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.black26,
-                  borderRadius: BorderRadius.circular(3),
+              const Text(
+                "250 Coins",
+                style: TextStyle(
+                  color: Colors.purple,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 20,
                 ),
               ),
-              Expanded(
-                child: ListView(
-                  children: [_PromoCoinsCard(onPressed: onRechargePressed)],
+              const SizedBox(height: 4),
+              Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(
+                      text: "@ Rs.200 ",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        decoration: TextDecoration.lineThrough,
+                        fontSize: 14,
+                      ),
+                    ),
+                    TextSpan(
+                      text: "Rs 50",
+                      style: TextStyle(
+                        color: Colors.pinkAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: ElevatedButton(
+                    onPressed: onRechargePressed,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.pinkAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                    child: const Text(
+                      'Add 250 Coins',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PromoCoinsCard extends StatelessWidget {
-  final VoidCallback onPressed;
-  const _PromoCoinsCard({required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFF875B6), Color(0xFFFFC6E5)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            const Text(
-              "250 Coins",
-              style: TextStyle(
-                color: Colors.purple,
-                fontWeight: FontWeight.w700,
-                fontSize: 20,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text.rich(
-              TextSpan(
-                children: [
-                  const TextSpan(
-                    text: "@ Rs.200 ",
-                    style: TextStyle(
-                      color: Colors.white70,
-                      decoration: TextDecoration.lineThrough,
-                      fontSize: 14,
-                    ),
-                  ),
-                  TextSpan(
-                    text: "Rs 50",
-                    style: TextStyle(
-                      color: Colors.pinkAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
-            SizedBox(
-              width: double.infinity,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: ElevatedButton(
-                  onPressed: onPressed,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pinkAccent,
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  child: const Text(
-                    'Add 250 Coins',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

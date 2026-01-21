@@ -7,6 +7,64 @@ import '../models/female_user.dart';
 import '../api_service/api_endpoint.dart';
 
 class ApiService {
+  // Fetch male user's wallet transactions
+  Future<Map<String, dynamic>> fetchMaleWalletTransactions() async {
+    final url = Uri.parse(
+      '${ApiEndPoints.baseUrls}/male-user/me/transactions?operationType=wallet',
+    );
+    final headers = await _getHeaders();
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized. Please log in again.');
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to fetch wallet transactions');
+    }
+  }
+
+  // Fetch male user's coin transactions
+  Future<Map<String, dynamic>> fetchMaleCoinTransactions() async {
+    final url = Uri.parse(
+      '${ApiEndPoints.baseUrls}/male-user/me/transactions?operationType=coin',
+    );
+    final headers = await _getHeaders();
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else if (response.statusCode == 401) {
+      throw Exception('Unauthorized. Please log in again.');
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to fetch transactions');
+    }
+  }
+
+  /// End an active call (audio or video)
+  Future<Map<String, dynamic>> endCall({
+    required String receiverId,
+    required int duration,
+    required String callType, // "audio" or "video"
+    required String callId,
+  }) async {
+    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.endCall}');
+    final headers = await _getHeaders();
+    final body = json.encode({
+      'receiverId': receiverId,
+      'duration': duration,
+      'callType': callType,
+      'callId': callId,
+    });
+    final response = await http.post(url, headers: headers, body: body);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to end call: ${response.body}');
+    }
+  }
+
   String? _authToken;
   final String baseUrl = ApiEndPoints.baseUrls;
 
@@ -23,6 +81,23 @@ class ApiService {
       'Content-Type': 'application/json',
       if (_authToken != null) 'Authorization': 'Bearer $_authToken',
     };
+  }
+
+  // Start a call (audio or video)
+  Future<Map<String, dynamic>> startCall({
+    required String receiverId,
+    required String callType, // "audio" or "video"
+  }) async {
+    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/calls/start');
+    final headers = await _getHeaders();
+    final body = json.encode({'receiverId': receiverId, 'callType': callType});
+
+    final response = await http.post(url, headers: headers, body: body);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to start call: ${response.body}');
+    }
   }
 
   // Handle API errors

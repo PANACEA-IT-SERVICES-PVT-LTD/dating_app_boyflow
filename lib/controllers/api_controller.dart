@@ -5,15 +5,119 @@ import 'package:Boy_flow/api_service/api_endpoint.dart';
 import 'package:Boy_flow/services/api_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 
 import '../utils/token_helper.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiController extends ChangeNotifier {
+  // Wallet transaction history state
+  bool _isWalletTransactionLoading = false;
+  String? _walletTransactionError;
+  List<Map<String, dynamic>> _walletTransactions = [];
+
+  bool get isWalletTransactionLoading => _isWalletTransactionLoading;
+  String? get walletTransactionError => _walletTransactionError;
+  List<Map<String, dynamic>> get walletTransactions =>
+      List.unmodifiable(_walletTransactions);
+
+  /// Fetch male user's wallet transactions (sorted by createdAt desc)
+  Future<void> fetchMaleWalletTransactions() async {
+    if (_isWalletTransactionLoading) return; // Prevent duplicate calls
+    _isWalletTransactionLoading = true;
+    _walletTransactionError = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) => notifyListeners());
+    try {
+      final result = await _apiService.fetchMaleWalletTransactions();
+      if (result['success'] == true && result['data'] is List) {
+        final List<dynamic> data = result['data'];
+        // Sort by createdAt descending
+        data.sort(
+          (a, b) => (b['createdAt'] ?? '').compareTo(a['createdAt'] ?? ''),
+        );
+        _walletTransactions = data
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      } else {
+        _walletTransactions = [];
+        _walletTransactionError = 'No wallet transactions found.';
+      }
+    } catch (e) {
+      _walletTransactions = [];
+      _walletTransactionError = e.toString();
+    } finally {
+      _isWalletTransactionLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) => notifyListeners());
+    }
+  }
+
+  // Transaction history state
+  bool _isTransactionLoading = false;
+  String? _transactionError;
+  List<Map<String, dynamic>> _coinTransactions = [];
+
+  bool get isTransactionLoading => _isTransactionLoading;
+  String? get transactionError => _transactionError;
+  List<Map<String, dynamic>> get coinTransactions =>
+      List.unmodifiable(_coinTransactions);
+
+  /// Fetch male user's coin transactions (sorted by createdAt desc)
+  Future<void> fetchMaleCoinTransactions() async {
+    if (_isTransactionLoading) return; // Prevent duplicate calls
+    _isTransactionLoading = true;
+    _transactionError = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) => notifyListeners());
+    try {
+      final result = await _apiService.fetchMaleCoinTransactions();
+      if (result['success'] == true && result['data'] is List) {
+        final List<dynamic> data = result['data'];
+        // Sort by createdAt descending
+        data.sort(
+          (a, b) => (b['createdAt'] ?? '').compareTo(a['createdAt'] ?? ''),
+        );
+        _coinTransactions = data
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+      } else {
+        _coinTransactions = [];
+        _transactionError = 'No transactions found.';
+      }
+    } catch (e) {
+      _coinTransactions = [];
+      _transactionError = e.toString();
+    } finally {
+      _isTransactionLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) => notifyListeners());
+    }
+  }
+
+  /// End an active call (audio or video)
+  Future<Map<String, dynamic>> endCall({
+    required String receiverId,
+    required int duration,
+    required String callType,
+    required String callId,
+  }) async {
+    return await _apiService.endCall(
+      receiverId: receiverId,
+      duration: duration,
+      callType: callType,
+      callId: callId,
+    );
+  }
+
   final ApiService _apiService = ApiService();
+
+  // Start a call (audio or video)
+  Future<Map<String, dynamic>> startCall({
+    required String receiverId,
+    required String callType,
+  }) async {
+    return await _apiService.startCall(
+      receiverId: receiverId,
+      callType: callType,
+    );
+  }
 
   // Public getter to access the ApiService instance
   ApiService get apiService => _apiService;
@@ -28,11 +132,11 @@ class ApiController extends ChangeNotifier {
   List<Map<String, dynamic>> _femaleProfiles = [];
 
   // Remember identity + context for OTP verify
-  String? _pendingEmail;
-  String? _pendingMobile;
-  String? _pendingSource; // "login" | "signup"
-  String? _otpRequestId; // from send-OTP
-  String? _otpChannel; // "email" | "mobile"
+  // ...existing code...
+  // ...existing code...
+  // ...existing code...
+  // ...existing code...
+  // ...existing code...
 
   // Sent follow requests cache
   List<Map<String, dynamic>> _sentFollowRequests = [];
@@ -364,13 +468,9 @@ class ApiController extends ChangeNotifier {
   }) async {
     _isLoading = true;
     _error = null;
-    if (WidgetsBinding.instance != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
-    } else {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       notifyListeners();
-    }
+    });
 
     try {
       // Call service (expected to return a typed model or Map/List)
@@ -708,44 +808,7 @@ class ApiController extends ChangeNotifier {
       }
       List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
       // Inject fallback demo profiles for 'follow' and 'new' if API returns empty
-      if (normalizedProfiles.isEmpty &&
-          (section == 'follow' || section == 'new')) {
-        debugPrint(
-          '[DEBUG] Injecting fallback demo profiles for section: $section',
-        );
-        normalizedProfiles = [
-          {
-            "_id": "demo-follow-1",
-            "name": "Demo Follow User",
-            "gender": "female",
-            "bio": "This is a demo follow profile.",
-            "images": [
-              {
-                "_id": "demo-img-1",
-                "imageUrl":
-                    "https://res.cloudinary.com/dqtasamcu/image/upload/v1767874001/admin_uploads/nt4wtrvyh9pg4k0h3ll2.jpg",
-              },
-            ],
-            "onlineStatus": true,
-            "age": 25,
-          },
-          {
-            "_id": "demo-follow-2",
-            "name": "Demo New User",
-            "gender": "female",
-            "bio": "This is a demo new profile.",
-            "images": [
-              {
-                "_id": "demo-img-2",
-                "imageUrl":
-                    "https://res.cloudinary.com/dqtasamcu/image/upload/v1768233446/admin_uploads/hb3zfycdzk329tgvzkbt.jpg",
-              },
-            ],
-            "onlineStatus": false,
-            "age": 22,
-          },
-        ];
-      }
+      // ...existing code...
       _femaleProfiles = normalizedProfiles;
       debugPrint('[DEBUG] _femaleProfiles set:');
       for (final p in _femaleProfiles) {
@@ -1065,18 +1128,33 @@ class ApiController extends ChangeNotifier {
         if (res['data'] != null && res['data']['results'] != null) {
           // Handle new response structure: {data: {results: [...]}}
           rawData = res['data']['results'];
-        } else if (res['data'] != null) {
+        } else if (res['data'] != null && res['data'] is List) {
           rawData = res['data'];
-        } else if (res['docs'] != null) {
-          rawData = res['docs'];
-        } else if (res['items'] != null) {
-          rawData = res['items'];
-        } else if (res['list'] != null) {
-          rawData = res['list'];
-        } else if (res['results'] != null) {
+        } else if (res['results'] != null && res['results'] is List) {
           rawData = res['results'];
+        } else if (res['data'] != null &&
+            res['data'] is Map &&
+            res['data']['results'] is List) {
+          rawData = res['data']['results'];
+        } else if (res['data'] != null &&
+            res['data'] is Map &&
+            res['data']['results'] == null &&
+            res['data'].isNotEmpty) {
+          // If data exists but no results, try to find any list in data
+          final dataMap = res['data'] as Map;
+          final listInData = dataMap.values.firstWhere(
+            (v) => v is List,
+            orElse: () => null,
+          );
+          rawData = listInData ?? [];
+        } else if (res['docs'] != null && res['docs'] is List) {
+          rawData = res['docs'];
+        } else if (res['items'] != null && res['items'] is List) {
+          rawData = res['items'];
+        } else if (res['list'] != null && res['list'] is List) {
+          rawData = res['list'];
         } else {
-          rawData = res;
+          rawData = [];
         }
       } else {
         try {

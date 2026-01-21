@@ -1,6 +1,7 @@
 import 'package:Boy_flow/views/screens/BlockListScreen1.dart';
 import 'package:Boy_flow/views/screens/ReportAProblemPage.dart';
 import 'package:Boy_flow/views/screens/TransactionsScreen.dart';
+import 'package:Boy_flow/views/screens/WalletTransactionsScreen.dart';
 import 'package:Boy_flow/views/screens/introduce_yourself_screen.dart';
 // Removed unused import
 import 'package:flutter/material.dart';
@@ -17,6 +18,8 @@ import '../screens/followers_screen.dart';
 import '../screens/support_service_screen.dart';
 import '../screens/settings_screen.dart';
 import '../../api_service/api_endpoint.dart';
+
+// Global variables
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -307,6 +310,8 @@ class _AccountScreenState extends State<AccountScreen> {
 
   bool isOnline = false;
   bool isFollowing = false; // <-- added
+  String? _email;
+  String? _status;
 
   String? _firstName;
   String? _lastName;
@@ -315,8 +320,6 @@ class _AccountScreenState extends State<AccountScreen> {
   bool _loadingProfile = false;
   String? _profileImageUrl;
   String? _gender;
-  String? _email;
-  String? _status;
   int? _walletBalance;
 
   // Interests (IDs from /male-user/me) + titles from /male-user/interests
@@ -369,6 +372,11 @@ class _AccountScreenState extends State<AccountScreen> {
       'label': 'Settings',
       'screen': SettingsScreen(),
     },
+    {
+      'iconPath': 'assets/wallet.png',
+      'label': 'Wallet Transactions',
+      'screen': WalletTransactionsScreen(),
+    },
   ];
 
   @override
@@ -391,7 +399,7 @@ class _AccountScreenState extends State<AccountScreen> {
       final resp = await http.get(
         url,
         headers: {
-          "Authorization": "Bearer \$token",
+          "Authorization": "Bearer $token",
           "Content-Type": "application/json",
         },
       );
@@ -495,7 +503,6 @@ class _AccountScreenState extends State<AccountScreen> {
     }
   }
 
-  // ...existing code...
   // (No stray widget code here. All widget code should be inside the build method.)
 }
 

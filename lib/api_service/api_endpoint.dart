@@ -1,4 +1,5 @@
 class ApiEndPoints {
+  static const String endCall = '/male-user/calls/end';
   static const String baseUrls = "https://friend-circle-new.vercel.app";
   static const String dashboardEndpoint = '/male-user/dashboard';
 

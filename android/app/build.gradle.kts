@@ -6,6 +6,13 @@ plugins {
 }
 
 android {
+        // Enable ABI splits to reduce APK size per architecture
+        // ABI splits disabled: only a single universal APK will be built
+        splits {
+            abi {
+                isEnable = false
+            }
+        }
     namespace = "com.example.Boy_flow"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"  // Ensure this matches the NDK version required

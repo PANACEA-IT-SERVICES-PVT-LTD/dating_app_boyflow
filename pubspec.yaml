@@ -25,7 +25,7 @@ dependencies:
   agora_rtc_engine: ^6.3.2
   flutter_callkit_incoming: ^3.0.0
   geolocator: ^14.0.2
- 
+  fluttertoast: ^8.2.8
 
 dev_dependencies:
   flutter_test:

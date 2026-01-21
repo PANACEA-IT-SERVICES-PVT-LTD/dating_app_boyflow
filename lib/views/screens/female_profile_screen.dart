@@ -1,25 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:Boy_flow/models/female_user.dart';
+import 'package:Boy_flow/utils/colors.dart';
 
 class FemaleProfileScreen extends StatelessWidget {
   final FemaleUser user;
   const FemaleProfileScreen({Key? key, required this.user}) : super(key: key);
 
+  LinearGradient get _mainGradient => const LinearGradient(
+    colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
-      /// ================= APP BAR =================
-      appBar: AppBar(
-        backgroundColor: Colors.pinkAccent,
-        elevation: 0,
-        leading: const BackButton(color: Colors.white),
-        title: const Text("My Profile", style: TextStyle(color: Colors.white)),
-        actions: const [Icon(Icons.more_vert, color: Colors.white)],
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: Container(
+          decoration: BoxDecoration(gradient: _mainGradient),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: const BackButton(color: Colors.white),
+            title: const Text(
+              "My Profile",
+              style: TextStyle(color: Colors.white),
+            ),
+            actions: const [Icon(Icons.more_vert, color: Colors.white)],
+          ),
+        ),
       ),
-
-      /// ================= BODY =================
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -68,9 +80,9 @@ class FemaleProfileScreen extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                const Icon(
+                                Icon(
                                   Icons.verified,
-                                  color: Colors.purple,
+                                  color: AppColors.outlinePink,
                                   size: 18,
                                 ),
                               ],
@@ -94,15 +106,33 @@ class FemaleProfileScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.pinkAccent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: _mainGradient,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          onPressed: () {},
+                          child: ShaderMask(
+                            shaderCallback: (rect) =>
+                                _mainGradient.createShader(rect),
+                            child: const Text(
+                              "Follow",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
-                        onPressed: () {},
-                        child: const Text("Follow"),
                       ),
                     ],
                   ),
@@ -144,33 +174,51 @@ class FemaleProfileScreen extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.chat, color: Colors.pinkAccent),
-                      label: const Text(
-                        "Say Hi",
-                        style: TextStyle(color: Colors.pinkAccent),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: _mainGradient,
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.pinkAccent),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                      child: OutlinedButton.icon(
+                        icon: Icon(Icons.chat, color: Colors.white),
+                        label: const Text(
+                          "Say Hi",
+                          style: TextStyle(color: Colors.white),
                         ),
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: Colors.transparent),
+                          backgroundColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        onPressed: () {},
                       ),
-                      onPressed: () {},
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton.icon(
-                      icon: const Icon(Icons.call, color: Colors.white),
-                      label: const Text("Call"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.pinkAccent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: _mainGradient,
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      onPressed: () {},
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.call, color: Colors.white),
+                        label: const Text(
+                          "Call",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        onPressed: () {},
+                      ),
                     ),
                   ),
                 ],
@@ -201,7 +249,7 @@ class FemaleProfileScreen extends StatelessWidget {
                 .map(
                   (e) => Chip(
                     label: Text(e),
-                    backgroundColor: Colors.pinkAccent.withOpacity(0.1),
+                    backgroundColor: const Color(0xFFFFE3F6),
                     labelStyle: const TextStyle(
                       fontSize: 12,
                       color: Colors.black87,

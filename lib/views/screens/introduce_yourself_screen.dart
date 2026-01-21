@@ -1,18 +1,18 @@
 // ignore_for_file: sort_child_properties_last
 
 import 'dart:io' show File;
-import 'dart:convert';
+// ...existing code...
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+// ...existing code...
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
+// ...existing code...
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../widgets/gradient_button.dart';
-import '../../api_service/api_endpoint.dart';
+// ...existing code...
 import '../../controllers/api_controller.dart';
 
 // Helper to save token after login
@@ -34,8 +34,8 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
   List<String> _availableFilm = [];
   List<String> _availableMusic = [];
   List<String> _availableTravel = [];
-  File? _photo;
-  VideoPlayerController? _videoController;
+  // ...existing code...
+  // ...existing code...
   String? _uploadedPhotoUrl;
 
   final _formKey = GlobalKey<FormState>();
@@ -44,7 +44,7 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _heightController = TextEditingController();
-  final _religionController = TextEditingController();
+  // ...existing code...
 
   // 🔹 ADDED (missing from UI image)
   final _mobileController = TextEditingController();
@@ -65,16 +65,18 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
   List<String> _selectedFilm = [];
   List<String> _selectedMusic = [];
   List<String> _selectedTravel = [];
+  String? _selectedReligionId;
   final _latitudeController = TextEditingController();
   final _longitudeController = TextEditingController();
 
-  String _gender = 'Male';
-  String? _selectedReligionId;
+  // ...existing code...
+  // ...existing code...
 
   // State variables for profile data
   List<Map<String, dynamic>> _images = [];
   bool _isLoading = true;
 
+  // ...existing code...
   final List<Map<String, String>> _religions = [
     {'id': '694f63d08389fc82a4345083', 'name': 'Hindu'},
     {'id': '694f63d08389fc82a4345084', 'name': 'Muslim'},
@@ -378,6 +380,46 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                 controller: _hobbiesController,
                 hint: 'Hobbies (comma separated)',
               ),
+              // Religion Selection Dropdown
+              Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Religion',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF9E6F5),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        underline: Container(),
+                        value: _selectedReligionId,
+                        hint: const Text('Select Religion'),
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedReligionId = newValue;
+                          });
+                        },
+                        items: _religions.map<DropdownMenuItem<String>>((
+                          religion,
+                        ) {
+                          return DropdownMenuItem<String>(
+                            value: religion['id'],
+                            child: Text(religion['name']!),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               _buildMultiSelectChips(
                 title: 'Sports',
                 options: _availableSports,
@@ -492,6 +534,13 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                     final travelResult = await apiController.updateUserTravel(
                       travel: travelList,
                     );
+                    // Update religion if selected
+                    dynamic religionResult;
+                    if (_selectedReligionId != null) {
+                      religionResult = await apiController.updateProfileDetails(
+                        religion: _selectedReligionId!,
+                      );
+                    }
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -499,7 +548,8 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                           '${sportsResult['message'] ?? 'Sports updated successfully'}\n'
                           '${filmResult['message'] ?? 'Film preferences updated successfully'}\n'
                           '${musicResult['message'] ?? 'Music preferences updated successfully'}\n'
-                          '${travelResult['message'] ?? 'Travel preferences updated successfully'}',
+                          '${travelResult['message'] ?? 'Travel preferences updated successfully'}\n'
+                          '${religionResult != null ? (religionResult['message'] ?? 'Religion updated successfully') : 'No religion changes'}',
                         ),
                       ),
                     );

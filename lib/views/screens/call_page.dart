@@ -1,3 +1,5 @@
+import 'package:provider/provider.dart';
+import '../../controllers/api_controller.dart';
 import 'dart:async';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
@@ -13,6 +15,12 @@ const String kAgoraAppId = String.fromEnvironment(
 );
 
 class CallPage extends StatefulWidget {
+  // Add these fields for call context
+  // You may want to pass these from the call start logic
+  // For now, assume channelName == callId, and receiverId/callType are available via widget or arguments
+  // You can adjust as needed for your app's call flow
+  // final String receiverId;
+  // final String callType;
   const CallPage({
     super.key,
     required this.channelName,
@@ -29,6 +37,17 @@ class CallPage extends StatefulWidget {
 }
 
 class _CallPageState extends State<CallPage> {
+  Timer? _callTimer;
+  int _callDuration = 0;
+  bool _endingCall = false;
+  DateTime? _callStartTime;
+
+  // These should be set from call context (e.g., via widget or arguments)
+  // For demo, we use dummy values. Replace with real values in your integration.
+  String get _receiverId =>
+      widget.channelName.split('_').last; // Example extraction
+  String get _callType => widget.enableVideo ? 'video' : 'audio';
+  String get _callId => widget.channelName;
   RtcEngine? _engine;
   int? _remoteUid;
   bool _joined = false;
@@ -41,6 +60,12 @@ class _CallPageState extends State<CallPage> {
     super.initState();
     _videoEnabled = widget.enableVideo;
     _init();
+
+    // Start call timer
+    _callStartTime = DateTime.now();
+    _callTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() => _callDuration++);
+    });
   }
 
   Future<void> _init() async {
@@ -81,6 +106,10 @@ class _CallPageState extends State<CallPage> {
               UserOfflineReasonType reason,
             ) {
               setState(() => _remoteUid = null);
+              // If remote user leaves (e.g., due to balance depletion), end the call session
+              if (mounted) {
+                _endCallSession();
+              }
             },
         onError: (ErrorCodeType err, String msg) {
           if (mounted) {
@@ -147,7 +176,11 @@ class _CallPageState extends State<CallPage> {
   @override
   void dispose() {
     _engineEventSub?.cancel();
-    _leave();
+    _callTimer?.cancel();
+    _callTimer = null;
+    _endCallSession(
+      auto: true,
+    ); // Ensure cleanup and API call if not already done
     _engine = null;
     super.dispose();
   }
@@ -168,6 +201,105 @@ class _CallPageState extends State<CallPage> {
       }
     } finally {
       if (mounted) setState(() => _joined = false);
+    }
+  }
+
+  /// End call session: stop timer, stop Agora, call backend, cleanup UI/state
+  Future<void> _endCallSession({bool auto = false}) async {
+    if (_endingCall) return; // Prevent duplicate requests
+    _endingCall = true;
+    _callTimer?.cancel();
+    _callTimer = null;
+    final duration = _callDuration;
+    await _leave(); // Stop Agora/WebRTC
+
+    try {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      // Log parameters before API call
+      print(
+        '[DEBUG] Calling endCall API with: receiverId=$_receiverId, duration=$duration, callType=$_callType, callId=$_callId',
+      );
+
+      // Add retry mechanism for the API call
+      Map<String, dynamic>? response;
+      int attempts = 0;
+      int maxAttempts = 3;
+
+      while (attempts < maxAttempts) {
+        try {
+          response = await apiController.endCall(
+            receiverId: _receiverId,
+            duration: duration,
+            callType: _callType,
+            callId: _callId,
+          );
+          break; // Success, exit retry loop
+        } catch (e) {
+          attempts++;
+          print('[DEBUG] endCall attempt $attempts failed: $e');
+          if (attempts >= maxAttempts) {
+            rethrow; // Re-throw if all attempts failed
+          }
+          // Wait before retrying
+          await Future.delayed(Duration(seconds: 1 * attempts));
+        }
+      }
+
+      // Log full response
+      print('[DEBUG] endCall API response: $response');
+      if (response != null && response['success'] == true) {
+        final data = response['data'] ?? {};
+        // Show call summary (coins, duration, etc.)
+        if (mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => AlertDialog(
+              title: const Text('Call Ended'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Duration: ${data['duration'] ?? duration} seconds'),
+                  Text('Coins Deducted: ${data['coinsDeducted'] ?? '-'}'),
+                  Text(
+                    'Your Balance: ${data['callerRemainingBalance'] ?? data['remainingBalance'] ?? '-'}',
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).maybePop(); // Back to dashboard
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      } else {
+        final msg = response?['message'] ?? 'Failed to end call';
+        print('[DEBUG] endCall API error: $msg');
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(msg)));
+          Navigator.of(context).maybePop(); // Navigate back anyway
+        }
+      }
+    } catch (e, stack) {
+      print('[DEBUG] Exception in endCall: $e\n$stack');
+      // Even if API fails, still navigate back to prevent stuck call screen
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Call ended (API error: $e)')));
+        Navigator.of(context).maybePop(); // Navigate back even on API error
+      }
+    } finally {
+      _endingCall = false;
     }
   }
 
@@ -285,9 +417,9 @@ class _CallPageState extends State<CallPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                     ),
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: _endingCall ? null : () => _endCallSession(),
                     icon: const Icon(Icons.call_end),
-                    label: const Text('Leave'),
+                    label: const Text('End Call'),
                   ),
                 ],
               ),

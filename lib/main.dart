@@ -12,7 +12,7 @@ import 'views/screens/introduce_yourself_screen.dart';
 
 import 'controllers/api_controller.dart';
 // Removed unused import
-import 'views/screens/account_screen.dart';
+// ...existing code...
 import 'views/screens/main_navigation.dart';
 
 void main() {
