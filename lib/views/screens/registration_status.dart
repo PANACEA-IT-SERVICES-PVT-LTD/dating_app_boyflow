@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/routes/app_routes.dart';
-import '../../utils/colors.dart';
 
 class RegistrationStatusScreen extends StatelessWidget {
   const RegistrationStatusScreen({super.key});
@@ -8,9 +7,9 @@ class RegistrationStatusScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: const Color(0xFFF9F5FF),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -62,7 +61,7 @@ class RegistrationStatusScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: AppColors.black87,
+                color: Colors.pink,
               ),
             ),
             const SizedBox(height: 10),
@@ -78,7 +77,7 @@ class RegistrationStatusScreen extends StatelessWidget {
                     text: "22 Hrs 22 Min 22 Sec",
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.redAccent,
+                      color: Colors.pink,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -97,7 +96,7 @@ class RegistrationStatusScreen extends StatelessWidget {
                   Navigator.pushReplacementNamed(context, AppRoutes.homepage);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE8B7F2), // light purple
+                  backgroundColor: Colors.pink,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),

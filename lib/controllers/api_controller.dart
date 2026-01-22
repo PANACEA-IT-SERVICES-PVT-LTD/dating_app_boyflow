@@ -119,6 +119,15 @@ class ApiController extends ChangeNotifier {
     );
   }
 
+  // Check call status
+  Future<Map<String, dynamic>> checkCallStatus({
+    required String callId,
+  }) async {
+    return await _apiService.checkCallStatus(
+      callId: callId,
+    );
+  }
+
   // Public getter to access the ApiService instance
   ApiService get apiService => _apiService;
 
@@ -1352,6 +1361,64 @@ class ApiController extends ChangeNotifier {
     } catch (e, st) {
       debugPrint("❌ fetchFollowedFemales exception: $e\n$st");
       _femaleProfiles = [];
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+
+  // Fetch call history
+  Future<Map<String, dynamic>> fetchCallHistory({
+    int limit = 10,
+    int skip = 0,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+
+    try {
+      final result = await _apiService.fetchCallHistory(
+        limit: limit,
+        skip: skip,
+      );
+      _isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      rethrow;
+    }
+  }
+
+  // Fetch call statistics
+  Future<Map<String, dynamic>> fetchCallStats() async {
+    _isLoading = true;
+    _error = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      notifyListeners();
+    });
+
+    try {
+      final result = await _apiService.fetchCallStats();
+      _isLoading = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+      return result;
+    } catch (e) {
       _isLoading = false;
       _error = e.toString();
       _handleTokenError(e);

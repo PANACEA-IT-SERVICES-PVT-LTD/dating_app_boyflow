@@ -8,6 +8,275 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../services/token_service.dart';
 
+// Call History Item Model
+class CallHistoryItem {
+  final String userId;
+  final String name;
+  final String profileImage;
+  final String callType;
+  final String status;
+  final int duration;
+  final int billableDuration;
+  final DateTime createdAt;
+  final String callId;
+
+  CallHistoryItem({
+    required this.userId,
+    required this.name,
+    required this.profileImage,
+    required this.callType,
+    required this.status,
+    required this.duration,
+    required this.billableDuration,
+    required this.createdAt,
+    required this.callId,
+  });
+
+  factory CallHistoryItem.fromJson(Map<String, dynamic> json) {
+    return CallHistoryItem(
+      userId: json['userId'] ?? '',
+      name: json['name'] ?? 'Unknown',
+      profileImage: json['profileImage'] ?? '',
+      callType: json['callType'] ?? 'audio',
+      status: json['status'] ?? 'unknown',
+      duration: json['duration'] ?? 0,
+      billableDuration: json['billableDuration'] ?? 0,
+      createdAt: DateTime.parse(
+        json['createdAt'] ?? DateTime.now().toIso8601String(),
+      ),
+      callId: json['callId'] ?? '',
+    );
+  }
+}
+
+// Call History Widget
+class CallHistoryWidget extends StatefulWidget {
+  const CallHistoryWidget({super.key});
+
+  @override
+  State<CallHistoryWidget> createState() => _CallHistoryWidgetState();
+}
+
+class _CallHistoryWidgetState extends State<CallHistoryWidget> {
+  List<CallHistoryItem> _callHistory = [];
+  bool _isLoading = false;
+  String? _error;
+  int _currentPage = 0;
+  bool _hasMore = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCallHistory();
+  }
+
+  Future<void> _loadCallHistory({bool loadMore = false}) async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+      if (!loadMore) {
+        _error = null;
+        _currentPage = 0;
+        _callHistory.clear();
+      }
+    });
+
+    try {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      final result = await apiController.fetchCallHistory(
+        limit: 10,
+        skip: _currentPage * 10,
+      );
+
+      if (result['success'] == true && result['data'] is List) {
+        final List<dynamic> data = result['data'];
+        final List<CallHistoryItem> newItems = data
+            .map((item) => CallHistoryItem.fromJson(item))
+            .toList();
+
+        setState(() {
+          if (loadMore) {
+            _callHistory.addAll(newItems);
+          } else {
+            _callHistory = newItems;
+          }
+          _hasMore = newItems.length == 10; // Assume more if we got full page
+          _currentPage++;
+        });
+      } else {
+        setState(() {
+          _error = result['message'] ?? 'Failed to load call history';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _formatDuration(int seconds) {
+    final minutes = seconds ~/ 60;
+    final secs = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays == 0) {
+      return 'Today';
+    } else if (difference.inDays == 1) {
+      return 'Yesterday';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Call History'), centerTitle: true),
+      body: RefreshIndicator(
+        onRefresh: () => _loadCallHistory(),
+        child: _error != null
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      _error!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => _loadCallHistory(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              )
+            : ListView.builder(
+                itemCount: _callHistory.length + (_hasMore ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index == _callHistory.length) {
+                    // Load more indicator
+                    return _isLoading
+                        ? const Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Center(child: CircularProgressIndicator()),
+                          )
+                        : ListTile(
+                            title: const Text('Load More'),
+                            onTap: () => _loadCallHistory(loadMore: true),
+                            trailing: const Icon(Icons.arrow_downward),
+                          );
+                  }
+
+                  final call = _callHistory[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: call.profileImage.isNotEmpty
+                            ? NetworkImage(call.profileImage)
+                            : null,
+                        child: call.profileImage.isEmpty
+                            ? Text(call.name.substring(0, 1))
+                            : null,
+                      ),
+                      title: Text(call.name),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                call.callType == 'video'
+                                    ? Icons.videocam
+                                    : Icons.phone,
+                                size: 16,
+                                color: call.callType == 'video'
+                                    ? Colors.blue
+                                    : Colors.green,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${call.callType.capitalize()} call',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: call.status == 'completed'
+                                      ? Colors.green
+                                      : Colors.grey,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  call.status,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Duration: ${_formatDuration(call.duration)}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _formatDate(call.createdAt),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: Text(
+                        _formatDuration(call.billableDuration),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+}
+
+extension on String {
+  String capitalize() {
+    return isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
+  }
+}
+
 const String kDefaultAgoraAppId = '3b2d066ea4da4c84ad4492ea72780653';
 const String kAgoraAppId = String.fromEnvironment(
   'AGORA_APP_ID',
@@ -413,6 +682,19 @@ class _CallPageState extends State<CallPage> {
                       onPressed: _switchCamera,
                       icon: const Icon(Icons.cameraswitch),
                     ),
+                  IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CallHistoryWidget(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.history),
+                    color: Colors.blue,
+                    tooltip: 'Call History',
+                  ),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,

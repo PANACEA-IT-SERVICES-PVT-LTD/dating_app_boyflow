@@ -66,14 +66,10 @@ class _AuthCheckState extends State<AuthCheck> {
     _isCheckingAuth = true;
     try {
       final prefs = await SharedPreferences.getInstance();
-      // Reset the flag after a delay to allow UI updates
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _isCheckingAuth = false;
-      });
       final token = prefs.getString('token');
-
+  
       if (token != null && token.isNotEmpty) {
-        // Check if user profile has location set
+        // Fetch user profile to check completion and approval status
         final profileResp = await http.get(
           Uri.parse('${ApiEndPoints.baseUrls}/male-user/me'),
           headers: {
@@ -81,45 +77,71 @@ class _AuthCheckState extends State<AuthCheck> {
             'Content-Type': 'application/json',
           },
         );
-
-        // Check if the request was successful
+  
         if (profileResp.statusCode == 200) {
           try {
             final body = profileResp.body.isNotEmpty
                 ? jsonDecode(profileResp.body)
                 : {};
             final data = (body is Map && body['data'] is Map)
-                ? body['data'] as Map
+                ? body['data'] as Map<String, dynamic>
                 : null;
-            final hasLocation =
-                data != null &&
-                data['latitude'] != null &&
-                data['longitude'] != null;
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (hasLocation) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MainNavigationScreen(),
-                  ),
-                );
-              } else {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => IntroduceYourselfScreen(),
-                  ),
-                );
+                  
+            if (data != null) {
+              // Check profile completion first
+              final profileCompleted = data['profileCompleted'] as bool? ?? false;
+                
+              if (!profileCompleted) {
+                // If profile is not completed, navigate to profile completion
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => IntroduceYourselfScreen()),
+                  );
+                });
+                return; // Exit to prevent further checks
               }
-            });
+                
+              // If profile is completed, check admin approval status
+              final adminApprovalStatus = data['reviewStatus']?.toString() ?? 'PENDING';
+                
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                switch (adminApprovalStatus.toUpperCase()) {
+                  case 'APPROVED':
+                    // Navigate to homepage if approved
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+                    );
+                    break;
+                  case 'REJECTED':
+                    // Navigate to rejected status screen
+                    Navigator.pushReplacementNamed(context, '/registrationStatus');
+                    break;
+                  case 'PENDING':
+                  default:
+                    // Navigate to under review status screen
+                    Navigator.pushReplacementNamed(context, '/registrationStatus');
+                    break;
+                }
+              });
+            } else {
+              // If no data found, redirect to login
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              });
+            }
           } catch (e, stackTrace) {
             print('Error parsing profile data: $e');
             print('Stack trace: $stackTrace');
-            // Fallback to main navigation if error parsing profile
+            // On error, redirect to login
             WidgetsBinding.instance.addPostFrameCallback((_) {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+                MaterialPageRoute(builder: (context) => LoginScreen()),
               );
             });
           }
@@ -182,7 +204,12 @@ class _AuthCheckState extends State<AuthCheck> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => LoginScreen()),
-        );
+        });
+      });
+    } finally {
+      // Always reset the flag in the finally block
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _isCheckingAuth = false;
       });
     }
   }

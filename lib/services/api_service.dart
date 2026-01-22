@@ -88,15 +88,30 @@ class ApiService {
     required String receiverId,
     required String callType, // "audio" or "video"
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/calls/start');
+    final url = Uri.parse('\${ApiEndPoints.baseUrls}\${ApiEndPoints.startCall}');
     final headers = await _getHeaders();
     final body = json.encode({'receiverId': receiverId, 'callType': callType});
-
+  
     final response = await http.post(url, headers: headers, body: body);
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to start call: ${response.body}');
+      throw Exception('Failed to start call: \${response.body}');
+    }
+  }
+  
+  // Check call status
+  Future<Map<String, dynamic>> checkCallStatus({
+    required String callId,
+  }) async {
+    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.checkCallStatus}/$callId/status');
+    final headers = await _getHeaders();
+  
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else {
+      throw Exception('Failed to check call status: \${response.body}');
     }
   }
 
@@ -779,6 +794,65 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Failed to unblock user: $e');
+    }
+  }
+
+  // Fetch call history
+  Future<Map<String, dynamic>> fetchCallHistory({
+    int limit = 10,
+    int skip = 0,
+  }) async {
+    try {
+      final url = Uri.parse(
+        '${ApiEndPoints.baseUrls}${ApiEndPoints.callHistory}?limit=$limit&skip=$skip',
+      );
+      final headers = await _getHeaders();
+
+      print('Fetching call history from: $url');
+      print('Headers: $headers');
+
+      final response = await http.get(url, headers: headers);
+
+      print('Call history response status: ${response.statusCode}');
+      print('Call history response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to fetch call history');
+      }
+    } catch (e) {
+      print('Error fetching call history: $e');
+      throw Exception('Failed to fetch call history: $e');
+    }
+  }
+
+  // Fetch call statistics
+  Future<Map<String, dynamic>> fetchCallStats() async {
+    try {
+      final url = Uri.parse(
+        '${ApiEndPoints.baseUrls}${ApiEndPoints.callStats}',
+      );
+      final headers = await _getHeaders();
+
+      print('Fetching call stats from: $url');
+      print('Headers: $headers');
+
+      final response = await http.get(url, headers: headers);
+
+      print('Call stats response status: ${response.statusCode}');
+      print('Call stats response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to fetch call stats');
+      }
+    } catch (e) {
+      print('Error fetching call stats: $e');
+      throw Exception('Failed to fetch call stats: $e');
     }
   }
 }

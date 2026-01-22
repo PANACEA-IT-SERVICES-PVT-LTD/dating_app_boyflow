@@ -71,7 +71,8 @@ class _SignupVerificationScreenState extends State<SignupVerificationScreen> {
 
       if (mounted) {
         if (success) {
-          Navigator.pushReplacementNamed(context, AppRoutes.login);
+          // After successful signup OTP, navigate to profile completion
+          Navigator.pushReplacementNamed(context, AppRoutes.introduceYourself);
         } else {
           setState(() => _errorMessage = 'Invalid OTP. Please try again.');
         }

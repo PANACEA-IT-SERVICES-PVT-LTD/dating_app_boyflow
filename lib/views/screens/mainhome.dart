@@ -2,6 +2,7 @@
 import 'package:Boy_flow/api_service/api_endpoint.dart';
 import 'package:Boy_flow/controllers/api_controller.dart';
 import 'package:Boy_flow/views/screens/call_page.dart';
+import 'package:Boy_flow/views/screens/outgoing_call_screen.dart';
 import 'package:Boy_flow/models/female_user.dart';
 import 'package:Boy_flow/views/screens/female_profile_screen.dart';
 import 'package:flutter/foundation.dart';
@@ -170,14 +171,17 @@ class _HomeScreenState extends State<MainHome> {
       );
       if (response['success'] == true) {
         final data = response['data'];
-        // Await the result of the call page. When it pops, clear active call state.
+        
+        // Navigate to outgoing call screen first
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => CallPage(
-              channelName: data['callId'],
-              enableVideo: isVideo,
-              isInitiator: true,
+            builder: (_) => OutgoingCallScreen(
+              receiverId: profile['_id'].toString(),
+              receiverName: profile['name']?.toString() ?? 'Unknown',
+              channelName: data['channelName'] ?? data['callId'],
+              callType: isVideo ? 'video' : 'audio',
+              callId: data['callId'],
             ),
           ),
         );
