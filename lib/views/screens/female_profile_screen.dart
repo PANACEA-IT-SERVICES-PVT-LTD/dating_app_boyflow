@@ -1,10 +1,117 @@
 import 'package:flutter/material.dart';
 import 'package:Boy_flow/models/female_user.dart';
 import 'package:Boy_flow/utils/colors.dart';
+import 'package:provider/provider.dart';
+import 'package:Boy_flow/controllers/api_controller.dart';
+import 'package:Boy_flow/views/screens/outgoing_call_screen.dart';
 
-class FemaleProfileScreen extends StatelessWidget {
+class FemaleProfileScreen extends StatefulWidget {
   final FemaleUser user;
   const FemaleProfileScreen({Key? key, required this.user}) : super(key: key);
+
+  @override
+  State<FemaleProfileScreen> createState() => _FemaleProfileScreenState();
+}
+
+class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
+  bool _isCallLoading = false;
+
+  Future<void> _startCall(bool isVideo) async {
+    if (_isCallLoading) return;
+    
+    setState(() {
+      _isCallLoading = true;
+    });
+
+    try {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      
+      // Convert FemaleUser to the format expected by the API
+      final profileData = {
+        '_id': widget.user.id,
+        'name': widget.user.name,
+      };
+
+      final response = await apiController.startCall(
+        receiverId: widget.user.id,
+        callType: isVideo ? 'video' : 'audio',
+      );
+
+      if (response['success'] == true) {
+        final data = response['data'];
+        
+        // Navigate to outgoing call screen
+        if (mounted) {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OutgoingCallScreen(
+                receiverId: widget.user.id,
+                receiverName: widget.user.name,
+                channelName: data['channelName'] ?? data['callId'],
+                callType: isVideo ? 'video' : 'audio',
+                callId: data['callId'],
+              ),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['message'] ?? 'Failed to start call'),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error starting call: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCallLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _showCallOptions() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Choose Call Type'),
+          content: const Text('Select the type of call you want to make'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _startCall(false); // Audio call
+              },
+              child: const Text('Audio Call'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _startCall(true); // Video call
+              },
+              child: const Text('Video Call'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   LinearGradient get _mainGradient => const LinearGradient(
     colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
@@ -25,7 +132,7 @@ class FemaleProfileScreen extends StatelessWidget {
             elevation: 0,
             leading: const BackButton(color: Colors.white),
             title: const Text(
-              "My Profile",
+              "Profile",
               style: TextStyle(color: Colors.white),
             ),
             actions: const [Icon(Icons.more_vert, color: Colors.white)],
@@ -58,10 +165,10 @@ class FemaleProfileScreen extends StatelessWidget {
                       CircleAvatar(
                         radius: 36,
                         backgroundImage:
-                            user.avatarUrl != null && user.avatarUrl!.isNotEmpty
-                            ? NetworkImage(user.avatarUrl!)
+                            widget.user.avatarUrl != null && widget.user.avatarUrl!.isNotEmpty
+                            ? NetworkImage(widget.user.avatarUrl!)
                             : null,
-                        child: user.avatarUrl == null || user.avatarUrl!.isEmpty
+                        child: widget.user.avatarUrl == null || widget.user.avatarUrl!.isEmpty
                             ? const Icon(Icons.person, size: 36)
                             : null,
                       ),
@@ -73,7 +180,7 @@ class FemaleProfileScreen extends StatelessWidget {
                             Row(
                               children: [
                                 Text(
-                                  user.name,
+                                  widget.user.name,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -89,7 +196,7 @@ class FemaleProfileScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              "Age: ${user.age} years",
+                              "Age: ${widget.user.age} years",
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: Colors.black54,
@@ -204,10 +311,19 @@ class FemaleProfileScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: ElevatedButton.icon(
-                        icon: const Icon(Icons.call, color: Colors.white),
-                        label: const Text(
-                          "Call",
-                          style: TextStyle(color: Colors.white),
+                        icon: _isCallLoading 
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Icon(Icons.call, color: Colors.white),
+                        label: Text(
+                          _isCallLoading ? "Calling..." : "Call",
+                          style: const TextStyle(color: Colors.white),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
@@ -217,7 +333,7 @@ class FemaleProfileScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: _isCallLoading ? null : _showCallOptions,
                       ),
                     ),
                   ),

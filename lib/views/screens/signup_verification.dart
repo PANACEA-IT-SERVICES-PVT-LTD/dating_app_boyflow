@@ -6,6 +6,7 @@ import '../../utils/colors.dart';
 import '../../widgets/gradient_button.dart';
 import '../../widgets/otp_input_fields.dart';
 import '../../utils/token_helper.dart';
+import '../screens/main_navigation.dart';
 
 class SignupVerificationScreen extends StatefulWidget {
   final String? email;
@@ -71,8 +72,11 @@ class _SignupVerificationScreenState extends State<SignupVerificationScreen> {
 
       if (mounted) {
         if (success) {
-          // After successful signup OTP, navigate to profile completion
-          Navigator.pushReplacementNamed(context, AppRoutes.introduceYourself);
+          // After successful signup OTP, navigate directly to dashboard
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+          );
         } else {
           setState(() => _errorMessage = 'Invalid OTP. Please try again.');
         }

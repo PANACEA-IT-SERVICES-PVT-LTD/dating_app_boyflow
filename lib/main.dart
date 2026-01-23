@@ -12,8 +12,6 @@ import 'views/screens/introduce_yourself_screen.dart';
 
 import 'controllers/api_controller.dart';
 // Removed unused import
-// ...existing code...
-import 'views/screens/main_navigation.dart';
 
 void main() {
   runApp(
@@ -67,7 +65,7 @@ class _AuthCheckState extends State<AuthCheck> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
-  
+
       if (token != null && token.isNotEmpty) {
         // Fetch user profile to check completion and approval status
         final profileResp = await http.get(
@@ -77,7 +75,7 @@ class _AuthCheckState extends State<AuthCheck> {
             'Content-Type': 'application/json',
           },
         );
-  
+
         if (profileResp.statusCode == 200) {
           try {
             final body = profileResp.body.isNotEmpty
@@ -86,42 +84,54 @@ class _AuthCheckState extends State<AuthCheck> {
             final data = (body is Map && body['data'] is Map)
                 ? body['data'] as Map<String, dynamic>
                 : null;
-                  
+
             if (data != null) {
               // Check profile completion first
-              final profileCompleted = data['profileCompleted'] as bool? ?? false;
-                
+              final profileCompleted =
+                  data['profileCompleted'] as bool? ?? false;
+
               if (!profileCompleted) {
                 // If profile is not completed, navigate to profile completion
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => IntroduceYourselfScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => IntroduceYourselfScreen(),
+                    ),
                   );
                 });
                 return; // Exit to prevent further checks
               }
-                
+
               // If profile is completed, check admin approval status
-              final adminApprovalStatus = data['reviewStatus']?.toString() ?? 'PENDING';
-                
+              final adminApprovalStatus =
+                  data['reviewStatus']?.toString() ?? 'PENDING';
+
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 switch (adminApprovalStatus.toUpperCase()) {
                   case 'APPROVED':
                     // Navigate to homepage if approved
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => MainNavigationScreen(),
+                      ),
                     );
                     break;
                   case 'REJECTED':
                     // Navigate to rejected status screen
-                    Navigator.pushReplacementNamed(context, '/registrationStatus');
+                    Navigator.pushReplacementNamed(
+                      context,
+                      '/registrationStatus',
+                    );
                     break;
                   case 'PENDING':
                   default:
                     // Navigate to under review status screen
-                    Navigator.pushReplacementNamed(context, '/registrationStatus');
+                    Navigator.pushReplacementNamed(
+                      context,
+                      '/registrationStatus',
+                    );
                     break;
                 }
               });
@@ -204,7 +214,7 @@ class _AuthCheckState extends State<AuthCheck> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => LoginScreen()),
-        });
+        );
       });
     } finally {
       // Always reset the flag in the finally block

@@ -345,6 +345,10 @@ class _CallPageState extends State<CallPage> {
           content: Text('Missing AGORA_APP_ID. Pass with --dart-define.'),
         ),
       );
+      // Close the call page if Agora app ID is missing
+      if (mounted) {
+        Navigator.of(context).maybePop();
+      }
       return;
     }
 
@@ -353,6 +357,10 @@ class _CallPageState extends State<CallPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Camera/Microphone permission denied.')),
       );
+      // Close the call page if permissions are denied
+      if (mounted) {
+        Navigator.of(context).maybePop();
+      }
       return;
     }
 
@@ -364,9 +372,11 @@ class _CallPageState extends State<CallPage> {
       RtcEngineEventHandler(
         onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
           setState(() => _joined = true);
+          print('[DEBUG] Successfully joined channel: ${connection.channelId}');
         },
         onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
           setState(() => _remoteUid = remoteUid);
+          print('[DEBUG] Remote user joined: $remoteUid');
         },
         onUserOffline:
             (
@@ -375,16 +385,27 @@ class _CallPageState extends State<CallPage> {
               UserOfflineReasonType reason,
             ) {
               setState(() => _remoteUid = null);
+              print('[DEBUG] Remote user left: $remoteUid, reason: $reason');
               // If remote user leaves (e.g., due to balance depletion), end the call session
               if (mounted) {
                 _endCallSession();
               }
             },
         onError: (ErrorCodeType err, String msg) {
-          if (mounted) {
+          print('[DEBUG] Agora error: ${err.index}, message: $msg');
+          if (mounted && context.mounted) {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text('Call Error: $msg')));
+            // If there's a critical error, end the call session
+            // Error code -102 is CONNECTION_REJECTED which can mean various connection issues
+            if (err.index == -102 || err.index == 102) {
+              // Handle both positive and negative indices
+              print(
+                '[DEBUG] Critical Agora error detected, ending call session',
+              );
+              _endCallSession();
+            }
           }
         },
       ),
@@ -420,6 +441,8 @@ class _CallPageState extends State<CallPage> {
       uid: 0,
     );
 
+    print('[DEBUG] Attempting to join channel: ${widget.channelName}');
+
     await engine.joinChannel(
       token: token,
       channelId: widget.channelName,
@@ -447,9 +470,12 @@ class _CallPageState extends State<CallPage> {
     _engineEventSub?.cancel();
     _callTimer?.cancel();
     _callTimer = null;
-    _endCallSession(
-      auto: true,
-    ); // Ensure cleanup and API call if not already done
+    // Only trigger endCall if the call was actually initiated
+    if (!_endingCall && _callDuration > 0) {
+      _endCallSession(
+        auto: true,
+      ); // Ensure cleanup and API call if not already done
+    }
     _engine = null;
     super.dispose();
   }
@@ -480,6 +506,19 @@ class _CallPageState extends State<CallPage> {
     _callTimer?.cancel();
     _callTimer = null;
     final duration = _callDuration;
+
+    // Don't make API call if the call was never properly established
+    // For example, if Agora connection failed immediately
+    if (!_joined && duration == 0 && !auto) {
+      print('[DEBUG] Call was never established, skipping API call');
+      await _leave(); // Still clean up Agora resources
+      if (mounted && context.mounted) {
+        Navigator.of(context).maybePop(); // Return to previous screen
+      }
+      _endingCall = false;
+      return;
+    }
+
     await _leave(); // Stop Agora/WebRTC
 
     try {
@@ -519,7 +558,7 @@ class _CallPageState extends State<CallPage> {
       if (response != null && response['success'] == true) {
         final data = response['data'] ?? {};
         // Show call summary (coins, duration, etc.)
-        if (mounted) {
+        if (mounted && context.mounted) {
           showDialog(
             context: context,
             barrierDismissible: false,
@@ -551,7 +590,7 @@ class _CallPageState extends State<CallPage> {
       } else {
         final msg = response?['message'] ?? 'Failed to end call';
         print('[DEBUG] endCall API error: $msg');
-        if (mounted) {
+        if (mounted && context.mounted) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(msg)));
@@ -561,11 +600,14 @@ class _CallPageState extends State<CallPage> {
     } catch (e, stack) {
       print('[DEBUG] Exception in endCall: $e\n$stack');
       // Even if API fails, still navigate back to prevent stuck call screen
-      if (mounted) {
+      if (mounted && context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Call ended (API error: $e)')));
         Navigator.of(context).maybePop(); // Navigate back even on API error
+      } else {
+        // If widget is unmounted, just log the error and return
+        print('[DEBUG] Widget unmounted during endCall, skipping UI updates');
       }
     } finally {
       _endingCall = false;
