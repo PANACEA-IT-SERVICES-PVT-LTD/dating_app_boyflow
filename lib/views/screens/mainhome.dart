@@ -65,7 +65,7 @@ class _HomeScreenState extends State<MainHome> {
   Future<void> rechargeWallet(int amount) async {
     try {
       final url = Uri.parse(
-        ApiEndPoints.baseUrls + ApiEndPoints.maleWalletRecharge,
+        ApiEndPoints.baseUrl + ApiEndPoints.maleWalletRecharge,
       );
 
       // Get auth token from shared preferences
@@ -153,25 +153,81 @@ class _HomeScreenState extends State<MainHome> {
   }
 
   bool _isCallLoading = false;
-  bool _hasActiveCall = false;
+
   Future<void> _startCall({
     required bool isVideo,
     required Map<String, dynamic> profile,
   }) async {
-    if (_isCallLoading || _hasActiveCall) return;
+    if (_isCallLoading) return;
+
+    // Pre-call validation
+    final requiredCoins = isVideo
+        ? 20
+        : 10; // Assuming 20 coins for video, 10 for audio
+
+    // Get user profile to check balance
+    final apiControllerValidation = Provider.of<ApiController>(
+      context,
+      listen: false,
+    );
+    try {
+      final userProfile = await apiControllerValidation.fetchMaleMe();
+      final currentBalance = userProfile['data']['balance'] ?? 0;
+
+      // Check if user has sufficient balance
+      if (currentBalance < requiredCoins) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Insufficient balance to start call.')),
+        );
+        return;
+      }
+    } catch (e) {
+      // If we can't get balance, show error and continue with assumption of sufficient funds
+      print('Could not fetch balance: $e');
+      // We could choose to block the call here, but for now we'll proceed
+      // Or alternatively, show an error and return
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error checking balance: $e')));
+      return;
+    }
+
+    // Check if selected user is online (assuming online status is in profile)
+    final isOnline =
+        profile['isOnline'] ?? true; // Default to true if not specified
+    if (!isOnline) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('The selected user is currently offline.'),
+        ),
+      );
+      return;
+    }
+
+    // Check if there's already an active call
+    if (_hasActiveCall) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You already have an active call session.'),
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isCallLoading = true;
-      _hasActiveCall = true;
     });
+
     final apiController = Provider.of<ApiController>(context, listen: false);
     try {
       final response = await apiController.startCall(
         receiverId: profile['_id'].toString(),
         callType: isVideo ? 'video' : 'audio',
       );
+
       if (response['success'] == true) {
         final data = response['data'];
-        
+
         // Navigate to outgoing call screen first
         await Navigator.push(
           context,
@@ -185,7 +241,6 @@ class _HomeScreenState extends State<MainHome> {
             ),
           ),
         );
-        setState(() => _hasActiveCall = false);
       } else if (response['message'] ==
           'You already have an active call session') {
         final data = response['data'];
@@ -213,7 +268,6 @@ class _HomeScreenState extends State<MainHome> {
                         ),
                       ),
                     );
-                    setState(() => _hasActiveCall = false);
                   }
                 },
                 child: const Text('Resume Call'),
@@ -235,8 +289,7 @@ class _HomeScreenState extends State<MainHome> {
                           ? data['callId']
                           : '',
                     );
-                    setState(() => _hasActiveCall = false);
-                    // Optionally, show a message
+                    // Show success message
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text(
@@ -279,11 +332,15 @@ class _HomeScreenState extends State<MainHome> {
       ).showSnackBar(SnackBar(content: Text(errorMsg)));
     } finally {
       if (mounted) setState(() => _isCallLoading = false);
-      // If call was not started, clear active call state
-      if (!Navigator.canPop(context)) {
-        setState(() => _hasActiveCall = false);
-      }
     }
+  }
+
+  // Placeholder for centralized call state management
+  // In a real implementation, this would integrate with a shared call state model
+  bool get _hasActiveCall {
+    // Check if there's an active call using the CallManager
+    final callManager = CallManager();
+    return callManager.hasActiveCall;
   }
 
   @override

@@ -120,12 +120,8 @@ class ApiController extends ChangeNotifier {
   }
 
   // Check call status
-  Future<Map<String, dynamic>> checkCallStatus({
-    required String callId,
-  }) async {
-    return await _apiService.checkCallStatus(
-      callId: callId,
-    );
+  Future<Map<String, dynamic>> checkCallStatus({required String callId}) async {
+    return await _apiService.checkCallStatus(callId: callId);
   }
 
   // Public getter to access the ApiService instance
@@ -669,7 +665,7 @@ class ApiController extends ChangeNotifier {
     final endpoint = source == 'login'
         ? ApiEndPoints.loginotpMale
         : ApiEndPoints.verifyOtpMale;
-    final url = Uri.parse("${ApiEndPoints.baseUrls}$endpoint");
+    final url = Uri.parse("${ApiEndPoints.baseUrl}$endpoint");
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},

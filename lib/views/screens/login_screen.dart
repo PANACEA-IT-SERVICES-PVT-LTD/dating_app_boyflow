@@ -49,9 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _submitting = true);
     try {
-      final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.loginMale}",
-      );
+      final url = Uri.parse("${ApiEndPoints.baseUrl}${ApiEndPoints.loginMale}");
       final resp = await http.post(
         url,
         headers: {"Content-Type": "application/json"},

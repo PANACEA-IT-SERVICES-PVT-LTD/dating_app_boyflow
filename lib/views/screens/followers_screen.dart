@@ -51,7 +51,7 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
 
     try {
       final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleFollowers}",
+        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleFollowers}",
       );
       final resp = await http.get(url);
 
@@ -112,7 +112,7 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
 
   Future<void> _fetchFavourites() async {
     try {
-      final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.maleMe}");
+      final url = Uri.parse("${ApiEndPoints.baseUrl}${ApiEndPoints.maleMe}");
       final resp = await http.get(url);
 
       dynamic body;
@@ -151,7 +151,7 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
     if (userId.isEmpty) return;
     try {
       final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleAddFavourite}",
+        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleAddFavourite}",
       );
       await http.post(
         url,
@@ -172,7 +172,7 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
     if (userId.isEmpty) return;
     try {
       final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleRemoveFavourite}",
+        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleRemoveFavourite}",
       );
       await http.delete(
         url,
@@ -197,7 +197,7 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
 
     try {
       final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleFollowing}",
+        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleFollowing}",
       );
       final resp = await http.get(url);
 

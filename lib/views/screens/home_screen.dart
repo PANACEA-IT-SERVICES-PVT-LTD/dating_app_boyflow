@@ -125,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
     print('[Recharge] Function entered with amount: $amount');
     try {
       final url = Uri.parse(
-        ApiEndPoints.baseUrls + ApiEndPoints.maleWalletRecharge,
+        ApiEndPoints.baseUrl + ApiEndPoints.maleWalletRecharge,
       );
       print('[Recharge] Calling: ' + url.toString());
       final response = await http.post(

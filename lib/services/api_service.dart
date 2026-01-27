@@ -10,7 +10,7 @@ class ApiService {
   // Fetch male user's wallet transactions
   Future<Map<String, dynamic>> fetchMaleWalletTransactions() async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}/male-user/me/transactions?operationType=wallet',
+      '${ApiEndPoints.baseUrl}/male-user/me/transactions?operationType=wallet',
     );
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
@@ -27,7 +27,7 @@ class ApiService {
   // Fetch male user's coin transactions
   Future<Map<String, dynamic>> fetchMaleCoinTransactions() async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}/male-user/me/transactions?operationType=coin',
+      '${ApiEndPoints.baseUrl}/male-user/me/transactions?operationType=coin',
     );
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
@@ -48,7 +48,7 @@ class ApiService {
     required String callType, // "audio" or "video"
     required String callId,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.endCall}');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.endCall}');
     final headers = await _getHeaders();
     final body = json.encode({
       'receiverId': receiverId,
@@ -66,7 +66,7 @@ class ApiService {
   }
 
   String? _authToken;
-  final String baseUrl = ApiEndPoints.baseUrls;
+  final String baseUrl = ApiEndPoints.baseUrl;
 
   // Get auth token from shared preferences
   Future<void> _getAuthToken() async {
@@ -88,30 +88,39 @@ class ApiService {
     required String receiverId,
     required String callType, // "audio" or "video"
   }) async {
-    final url = Uri.parse('\${ApiEndPoints.baseUrls}\${ApiEndPoints.startCall}');
+    final callUrl = ApiEndPoints.baseUrl + ApiEndPoints.startCall;
+    print('CALL API URL => $callUrl');
+
     final headers = await _getHeaders();
     final body = json.encode({'receiverId': receiverId, 'callType': callType});
-  
-    final response = await http.post(url, headers: headers, body: body);
+
+    final response = await http.post(
+      Uri.parse(callUrl),
+      headers: headers,
+      body: body,
+    );
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to start call: \${response.body}');
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to start call: ${response.body}');
     }
   }
-  
+
   // Check call status
-  Future<Map<String, dynamic>> checkCallStatus({
-    required String callId,
-  }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.checkCallStatus}/$callId/status');
+  Future<Map<String, dynamic>> checkCallStatus({required String callId}) async {
+    final statusUrl =
+        ApiEndPoints.baseUrl + ApiEndPoints.checkCallStatus + '/$callId/status';
+    print('CHECK CALL STATUS URL => $statusUrl');
+
     final headers = await _getHeaders();
-  
-    final response = await http.get(url, headers: headers);
+
+    final response = await http.get(Uri.parse(statusUrl), headers: headers);
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
-      throw Exception('Failed to check call status: \${response.body}');
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to check call status: ${response.body}');
     }
   }
 
@@ -151,7 +160,7 @@ class ApiService {
     double? longitude,
   }) async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardEndpoint}',
+      '${ApiEndPoints.baseUrl}${ApiEndPoints.dashboardEndpoint}',
     );
     final headers = await _getHeaders();
     final bodyMap = {'section': section, 'page': page, 'limit': limit};
@@ -197,7 +206,7 @@ class ApiService {
   // Fetch all dropdown options from profile-and-image endpoint
   Future<Map<String, dynamic>> fetchProfileAndImageOptions() async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}${ApiEndPoints.maleProfileAndImage}',
+      '${ApiEndPoints.baseUrl}${ApiEndPoints.maleProfileAndImage}',
     );
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
@@ -211,7 +220,7 @@ class ApiService {
 
   // Fetch male user profile (GET /male-user/me)
   Future<Map<String, dynamic>> fetchMaleMe() async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/me');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/me');
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
@@ -224,7 +233,7 @@ class ApiService {
 
   // Fetch all available sports
   Future<List<String>> fetchAllSports() async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.maleSports}');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleSports}');
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
@@ -243,7 +252,7 @@ class ApiService {
 
   // Fetch all available film
   Future<List<String>> fetchAllFilm() async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.maleFilm}');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleFilm}');
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
@@ -262,7 +271,7 @@ class ApiService {
 
   // Fetch all available music
   Future<List<String>> fetchAllMusic() async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.maleMusic}');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleMusic}');
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
@@ -281,7 +290,7 @@ class ApiService {
 
   // Fetch all available travel
   Future<List<String>> fetchAllTravel() async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.maleTravel}');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleTravel}');
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
@@ -302,7 +311,7 @@ class ApiService {
   Future<Map<String, dynamic>> uploadUserImage({
     required File imageFile,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/upload-image');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/upload-image');
     final headers = await _getHeaders();
     final request = http.MultipartRequest('POST', url);
     request.headers.addAll(headers);
@@ -323,7 +332,7 @@ class ApiService {
   Future<Map<String, dynamic>> updateUserTravel({
     required List<String> travel,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/travel');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/travel');
     final headers = await _getHeaders();
     final request = http.MultipartRequest('PATCH', url);
     request.headers.addAll(headers);
@@ -342,7 +351,7 @@ class ApiService {
   Future<Map<String, dynamic>> updateUserMusic({
     required List<String> music,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/music');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/music');
     final headers = await _getHeaders();
     final request = http.MultipartRequest('PATCH', url);
     request.headers.addAll(headers);
@@ -361,7 +370,7 @@ class ApiService {
   Future<Map<String, dynamic>> updateUserFilm({
     required List<String> film,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/film');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/film');
     final headers = await _getHeaders();
     final request = http.MultipartRequest('PATCH', url);
     request.headers.addAll(headers);
@@ -380,7 +389,7 @@ class ApiService {
   Future<Map<String, dynamic>> updateUserSports({
     required List<String> sports,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/sports');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/sports');
     final headers = await _getHeaders();
     final request = http.MultipartRequest('PATCH', url);
     request.headers.addAll(headers);
@@ -432,7 +441,7 @@ class ApiService {
   // Fetch sent follow requests
   Future<List<Map<String, dynamic>>> fetchSentFollowRequests() async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}/male-user/follow-requests/sent',
+      '${ApiEndPoints.baseUrl}/male-user/follow-requests/sent',
     );
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
@@ -457,7 +466,7 @@ class ApiService {
     required String femaleUserId,
   }) async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}/male-user/follow-request/send',
+      '${ApiEndPoints.baseUrl}/male-user/follow-request/send',
     );
     final headers = await _getHeaders();
     final body = jsonEncode({"femaleUserId": femaleUserId});
@@ -479,7 +488,7 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse(
-        '${ApiEndPoints.baseUrls}${ApiEndPoints.fetchfemaleusers}?page=$page&limit=$limit',
+        '${ApiEndPoints.baseUrl}${ApiEndPoints.fetchfemaleusers}?page=$page&limit=$limit',
       );
       final headers = await _getHeaders();
       print('URL: $url');
@@ -572,7 +581,7 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse(
-        '${ApiEndPoints.baseUrls}${ApiEndPoints.signupMale}',
+        '${ApiEndPoints.baseUrl}${ApiEndPoints.signupMale}',
       );
       final response = await http.post(
         url,
@@ -660,7 +669,7 @@ class ApiService {
   Future<Map<String, dynamic>> fetchUserProfile() async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiEndPoints.baseUrls}/api/user/profile'),
+        Uri.parse('${ApiEndPoints.baseUrl}/api/user/profile'),
         headers: await _getHeaders(),
       );
 
@@ -681,7 +690,7 @@ class ApiService {
     int limit = 10,
   }) async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardEndpoint}',
+      '${ApiEndPoints.baseUrl}${ApiEndPoints.dashboardEndpoint}',
     );
     final headers = await _getHeaders();
     final body = json.encode({
@@ -713,9 +722,7 @@ class ApiService {
   Future<Map<String, dynamic>> fetchMaleProfileAndImage() async {
     try {
       final response = await http.get(
-        Uri.parse(
-          '${ApiEndPoints.baseUrls}${ApiEndPoints.maleProfileAndImage}',
-        ),
+        Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleProfileAndImage}'),
         headers: await _getHeaders(),
       );
 
@@ -733,9 +740,7 @@ class ApiService {
   // Block a female user
   Future<Map<String, dynamic>> blockUser({required String femaleUserId}) async {
     try {
-      final url = Uri.parse(
-        '${ApiEndPoints.baseUrls}${ApiEndPoints.maleBlock}',
-      );
+      final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleBlock}');
       final headers = await _getHeaders();
       final body = jsonEncode({"femaleUserId": femaleUserId});
 
@@ -758,7 +763,7 @@ class ApiService {
   }) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.maleBlockList}'),
+        Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleBlockList}'),
         headers: await _getHeaders(),
       );
 
@@ -779,7 +784,7 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse(
-        '${ApiEndPoints.baseUrls}${ApiEndPoints.maleUnblock}',
+        '${ApiEndPoints.baseUrl}${ApiEndPoints.maleUnblock}',
       );
       final headers = await _getHeaders();
       final body = jsonEncode({"femaleUserId": femaleUserId});
@@ -804,7 +809,7 @@ class ApiService {
   }) async {
     try {
       final url = Uri.parse(
-        '${ApiEndPoints.baseUrls}${ApiEndPoints.callHistory}?limit=$limit&skip=$skip',
+        '${ApiEndPoints.baseUrl}${ApiEndPoints.callHistory}?limit=$limit&skip=$skip',
       );
       final headers = await _getHeaders();
 
@@ -831,9 +836,7 @@ class ApiService {
   // Fetch call statistics
   Future<Map<String, dynamic>> fetchCallStats() async {
     try {
-      final url = Uri.parse(
-        '${ApiEndPoints.baseUrls}${ApiEndPoints.callStats}',
-      );
+      final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.callStats}');
       final headers = await _getHeaders();
 
       print('Fetching call stats from: $url');

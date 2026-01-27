@@ -391,7 +391,7 @@ class _AccountScreenState extends State<AccountScreen> {
     });
 
     try {
-      final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.maleMe}");
+      final url = Uri.parse("${ApiEndPoints.baseUrl}${ApiEndPoints.maleMe}");
 
       final prefs = await SharedPreferences.getInstance();
       String? token =
@@ -470,7 +470,7 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _fetchMaleInterests() async {
     try {
       final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleInterests}",
+        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleInterests}",
       );
       final prefs = await SharedPreferences.getInstance();
       String? token =

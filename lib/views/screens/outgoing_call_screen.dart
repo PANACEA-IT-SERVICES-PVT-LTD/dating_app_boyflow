@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/api_controller.dart';
+import '../../models/call_state.dart';
+import '../../services/call_manager.dart';
 import '../screens/call_page.dart';
 
 class OutgoingCallScreen extends StatefulWidget {
@@ -26,13 +28,19 @@ class OutgoingCallScreen extends StatefulWidget {
 
 class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
   Timer? _callTimer;
+  Timer? _timeoutTimer;
   int _elapsedSeconds = 0;
   bool _callEnded = false;
-  String _callStatus = 'calling'; // 'calling', 'connected', 'rejected', 'missed', 'ended'
+  bool _isCallCanceled = false;
+  String _callStatus =
+      'calling'; // 'calling', 'connected', 'rejected', 'missed', 'ended'
 
   @override
   void initState() {
     super.initState();
+    // Set call state to outgoing when screen initializes
+    final callManager = CallManager();
+    callManager.setState(CallState.outgoing, callId: widget.callId);
     _startCallTimer();
     _listenForCallUpdates();
   }
@@ -48,57 +56,71 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
   }
 
   void _listenForCallUpdates() {
-    // For now, we'll simulate the call acceptance/rejection
-    // In a real implementation, you'd poll the backend or use WebSocket to get actual status updates
-    _simulateCallAcceptanceOrRejection();
+    // Start polling for call status updates
+    _pollCallStatus();
+
+    // Set up timeout timer (30 seconds)
+    _setupTimeout();
   }
 
-  void _simulateCallAcceptanceOrRejection() {
-    // Simulate call acceptance or rejection after some time
-    Future.delayed(const Duration(seconds: 5), () {
-      if (_callEnded || !mounted) return;
-      
-      // For demo purposes, simulate a random outcome
-      // In real app, this would be determined by actual backend response
-      setState(() {
-        _callStatus = 'accepted'; // Simulate acceptance for demo
-      });
-      
-      // Navigate to actual call screen after acceptance
-      Future.delayed(const Duration(milliseconds: 500), () {
+  void _setupTimeout() {
+    _timeoutTimer = Timer(const Duration(seconds: 30), () {
+      if (!_callEnded && !_isCallCanceled && _callStatus == 'calling') {
+        _handleTimeout();
+      }
+    });
+  }
+
+  void _handleTimeout() {
+    if (_callEnded || _isCallCanceled) return;
+
+    // End the call session on timeout
+    _endCallSession();
+
+    // Update UI
+    setState(() {
+      _callStatus = 'missed';
+    });
+
+    // Show timeout message
+    if (mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No response, call ended')));
+
+      // Navigate back after a delay
+      Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => CallPage(
-                  channelName: widget.channelName,
-                  enableVideo: widget.callType == 'video',
-                  isInitiator: true,
-              ),
-            ),
-          );
+          Navigator.pop(context);
         }
       });
-    });
+    }
   }
 
   void _pollCallStatus() async {
     while (!_callEnded && _callStatus == 'calling') {
       await Future.delayed(const Duration(seconds: 2)); // Poll every 2 seconds
-      
+
       if (_callEnded) break;
-      
+
       try {
-        final apiController = Provider.of<ApiController>(context, listen: false);
-        final response = await apiController.checkCallStatus(callId: widget.callId);
-        
+        final apiController = Provider.of<ApiController>(
+          context,
+          listen: false,
+        );
+        final response = await apiController.checkCallStatus(
+          callId: widget.callId,
+        );
+
         if (response['success'] == true && response['data'] != null) {
           final status = response['data']['status']?.toString() ?? 'unknown';
-          
+
           if (status == 'accepted') {
             _handleCallAccepted(response['data']);
             break;
-          } else if (status == 'rejected' || status == 'missed' || status == 'cancelled') {
+          } else if (status == 'rejected' ||
+              status == 'missed' ||
+              status == 'cancelled') {
             _handleCallRejected(status);
             break;
           } else if (status == 'ongoing') {
@@ -115,10 +137,14 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
   }
 
   void _handleCallAccepted(Map<String, dynamic> data) {
+    // Update call manager state
+    final callManager = CallManager();
+    callManager.setState(CallState.connected, callId: widget.callId);
+
     setState(() {
       _callStatus = 'connected';
     });
-    
+
     // Navigate to actual call screen after acceptance
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
@@ -126,9 +152,9 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
           context,
           MaterialPageRoute(
             builder: (_) => CallPage(
-                channelName: widget.channelName,
-                enableVideo: widget.callType == 'video',
-                isInitiator: true,
+              channelName: widget.channelName,
+              enableVideo: widget.callType == 'video',
+              isInitiator: true,
             ),
           ),
         );
@@ -137,10 +163,14 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
   }
 
   void _handleCallRejected(String status) {
+    // Update call manager state
+    final callManager = CallManager();
+    callManager.setState(CallState.ended, callId: widget.callId);
+
     setState(() {
       _callStatus = status;
     });
-    
+
     // Show message and return to previous screen after delay
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
@@ -150,12 +180,29 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
   }
 
   void _endCall() {
-    if (_callEnded) return;
+    if (_callEnded || _isCallCanceled) return;
+    _isCallCanceled = true;
     _callEnded = true;
     _callTimer?.cancel();
-    
-    // In real implementation, notify backend about call end
-    _navigateBack();
+    _timeoutTimer?.cancel();
+
+    // End the call session
+    _endCallSession();
+  }
+
+  void _endCallSession() async {
+    // In real implementation, call /calls/end API
+    try {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      await apiController.endCall(
+        receiverId: widget.receiverId,
+        duration: _elapsedSeconds,
+        callType: widget.callType,
+        callId: widget.callId,
+      );
+    } catch (e) {
+      print('Error ending call: $e');
+    }
   }
 
   void _navigateBack() {
@@ -180,10 +227,7 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF667eea),
-                Color(0xFF764ba2),
-              ],
+              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
             ),
           ),
           child: Column(
@@ -197,8 +241,8 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
                   radius: 55,
                   backgroundColor: Colors.grey[300],
                   child: Icon(
-                    widget.callType == 'video' 
-                        ? Icons.videocam 
+                    widget.callType == 'video'
+                        ? Icons.videocam
                         : Icons.phone_callback,
                     size: 40,
                     color: Colors.white,
@@ -206,7 +250,7 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
                 ),
               ),
               const SizedBox(height: 30),
-              
+
               // Receiver name
               Text(
                 widget.receiverName,
@@ -217,17 +261,14 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              
+
               // Call status
               Text(
                 _getStatusText(),
-                style: const TextStyle(
-                  fontSize: 18,
-                  color: Colors.white70,
-                ),
+                style: const TextStyle(fontSize: 18, color: Colors.white70),
               ),
               const SizedBox(height: 10),
-              
+
               // Elapsed time
               Text(
                 _formatTime(_elapsedSeconds),
@@ -237,7 +278,7 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
                 ),
               ),
               const SizedBox(height: 50),
-              
+
               // Action buttons
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -262,15 +303,12 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
                 ],
               ),
               const SizedBox(height: 30),
-              
+
               // Hint text
               if (_callStatus == 'calling')
                 const Text(
                   'Waiting for response...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.white30,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.white30),
                 ),
             ],
           ),
@@ -299,6 +337,12 @@ class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
   @override
   void dispose() {
     _callTimer?.cancel();
+    _timeoutTimer?.cancel();
+    // Reset call manager state if the call wasn't connected
+    if (!_callEnded && _callStatus != 'connected') {
+      final callManager = CallManager();
+      callManager.reset();
+    }
     super.dispose();
   }
 }

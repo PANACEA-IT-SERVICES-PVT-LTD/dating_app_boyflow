@@ -1,10 +1,11 @@
 class ApiEndPoints {
   static const String startCall = '/male-user/calls/start';
-  static const String checkCallStatus = '/male-user/calls'; // Will append /:callId/status
+  static const String checkCallStatus =
+      '/male-user/calls'; // Will append /:callId/status
   static const String endCall = '/male-user/calls/end';
   static const String callHistory = '/male-user/calls/history';
   static const String callStats = '/male-user/calls/stats';
-  static const String baseUrls = "https://friend-circle-new.vercel.app";
+  static const String baseUrl = "https://friend-circle-new.vercel.app";
   static const String dashboardEndpoint = '/male-user/dashboard';
 
   // Male auth & profile

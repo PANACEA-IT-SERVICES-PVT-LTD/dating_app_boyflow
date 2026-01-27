@@ -1,17 +1,6 @@
-enum CallState {
-  idle,
-  outgoing,
-  incoming,
-  connected,
-  ended,
-}
+enum CallState { idle, outgoing, incoming, connected, ended }
 
-
-enum CallType {
-  audio,
-  video,
-}
-
+enum CallType { audio, video }
 
 class CallInfo {
   final String id;
@@ -23,7 +12,6 @@ class CallInfo {
   final CallState state;
   final DateTime timestamp;
 
-
   const CallInfo({
     required this.id,
     required this.channelName,
@@ -34,7 +22,6 @@ class CallInfo {
     required this.state,
     required this.timestamp,
   });
-
 
   CallInfo copyWith({
     String? id,
@@ -56,5 +43,28 @@ class CallInfo {
       state: state ?? this.state,
       timestamp: timestamp ?? this.timestamp,
     );
+  }
+}
+
+class CallStateModel {
+  CallState _state = CallState.idle;
+  String? _activeCallId;
+
+  CallState get state => _state;
+  String? get activeCallId => _activeCallId;
+
+  void setState(CallState newState, {String? callId}) {
+    _state = newState;
+    _activeCallId = callId;
+  }
+
+  bool get isActiveCall =>
+      _state == CallState.outgoing ||
+      _state == CallState.incoming ||
+      _state == CallState.connected;
+
+  void reset() {
+    _state = CallState.idle;
+    _activeCallId = null;
   }
 }
