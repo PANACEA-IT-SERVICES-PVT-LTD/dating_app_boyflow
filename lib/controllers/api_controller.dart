@@ -9,42 +9,55 @@ import 'package:flutter/material.dart';
 
 import '../utils/token_helper.dart';
 import 'package:http/http.dart' as http;
+import '../models/wallet_transaction.dart';
 
 class ApiController extends ChangeNotifier {
   // Wallet transaction history state
   bool _isWalletTransactionLoading = false;
   String? _walletTransactionError;
-  List<Map<String, dynamic>> _walletTransactions = [];
+  List<WalletTransaction> _walletTransactions = [];
 
   bool get isWalletTransactionLoading => _isWalletTransactionLoading;
   String? get walletTransactionError => _walletTransactionError;
-  List<Map<String, dynamic>> get walletTransactions =>
+  List<WalletTransaction> get walletTransactions =>
       List.unmodifiable(_walletTransactions);
 
-  /// Fetch male user's wallet transactions (sorted by createdAt desc)
-  Future<void> fetchMaleWalletTransactions() async {
+  /// Fetch male user's wallet transactions with proper error handling
+  Future<void> fetchWalletTransactions() async {
     if (_isWalletTransactionLoading) return; // Prevent duplicate calls
     _isWalletTransactionLoading = true;
     _walletTransactionError = null;
     WidgetsBinding.instance.addPostFrameCallback((_) => notifyListeners());
+
     try {
-      final result = await _apiService.fetchMaleWalletTransactions();
-      if (result['success'] == true && result['data'] is List) {
-        final List<dynamic> data = result['data'];
-        // Sort by createdAt descending
-        data.sort(
-          (a, b) => (b['createdAt'] ?? '').compareTo(a['createdAt'] ?? ''),
-        );
-        _walletTransactions = data
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      } else {
-        _walletTransactions = [];
-        _walletTransactionError = 'No wallet transactions found.';
-      }
-    } catch (e) {
+      print('[WALLET TRANSACTIONS] Starting fetch...');
+      final apiService = ApiService();
+      final transactionData = await apiService.fetchWalletTransactions();
+
+      print(
+        '[WALLET TRANSACTIONS] Received ${transactionData.length} transactions',
+      );
+
+      _walletTransactions =
+          transactionData
+              .map((json) => WalletTransaction.fromJson(json))
+              .toList()
+            ..sort(
+              (a, b) => b.createdAt.compareTo(a.createdAt),
+            ); // Sort by createdAt descending
+
+      _walletTransactionError = null;
+      print(
+        '[WALLET TRANSACTIONS] Successfully loaded ${_walletTransactions.length} transactions',
+      );
+    } on Exception catch (e) {
+      print('[WALLET TRANSACTIONS] Error: $e');
       _walletTransactions = [];
       _walletTransactionError = e.toString();
+    } catch (e) {
+      print('[WALLET TRANSACTIONS] Unexpected error: $e');
+      _walletTransactions = [];
+      _walletTransactionError = 'An unexpected error occurred: $e';
     } finally {
       _isWalletTransactionLoading = false;
       WidgetsBinding.instance.addPostFrameCallback((_) => notifyListeners());
@@ -108,7 +121,7 @@ class ApiController extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // Start a call (audio or video)
+  // Start a call (audio or video) - Returns CallCredentials model
   Future<Map<String, dynamic>> startCall({
     required String receiverId,
     required String callType,
@@ -137,11 +150,8 @@ class ApiController extends ChangeNotifier {
   List<Map<String, dynamic>> _femaleProfiles = [];
 
   // Remember identity + context for OTP verify
-  // ...existing code...
-  // ...existing code...
-  // ...existing code...
-  // ...existing code...
-  // ...existing code...
+  String? _otpIdentity;
+  String? _otpContext;
 
   // Sent follow requests cache
   List<Map<String, dynamic>> _sentFollowRequests = [];

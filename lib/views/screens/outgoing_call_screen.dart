@@ -1,348 +1,319 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../controllers/api_controller.dart';
-import '../../models/call_state.dart';
-import '../../services/call_manager.dart';
-import '../screens/call_page.dart';
+import 'package:Boy_flow/controllers/call_controller.dart';
+import 'package:Boy_flow/services/agora_service.dart';
+import 'package:Boy_flow/views/screens/incall_screen.dart';
 
 class OutgoingCallScreen extends StatefulWidget {
-  final String receiverId;
   final String receiverName;
-  final String channelName;
+  final String receiverImage;
   final String callType; // 'audio' or 'video'
-  final String callId;
+  final CallCredentials credentials;
 
   const OutgoingCallScreen({
-    super.key,
-    required this.receiverId,
+    Key? key,
     required this.receiverName,
-    required this.channelName,
+    required this.receiverImage,
     required this.callType,
-    required this.callId,
-  });
+    required this.credentials,
+  }) : super(key: key);
 
   @override
   State<OutgoingCallScreen> createState() => _OutgoingCallScreenState();
 }
 
 class _OutgoingCallScreenState extends State<OutgoingCallScreen> {
-  Timer? _callTimer;
-  Timer? _timeoutTimer;
-  int _elapsedSeconds = 0;
-  bool _callEnded = false;
-  bool _isCallCanceled = false;
-  String _callStatus =
-      'calling'; // 'calling', 'connected', 'rejected', 'missed', 'ended'
+  late CallController _callController;
+  late AgoraService _agoraService;
+  bool _isConnecting = true;
 
   @override
   void initState() {
     super.initState();
-    // Set call state to outgoing when screen initializes
-    final callManager = CallManager();
-    callManager.setState(CallState.outgoing, callId: widget.callId);
-    _startCallTimer();
-    _listenForCallUpdates();
+    _callController = Provider.of<CallController>(context, listen: false);
+    _agoraService = AgoraService();
+
+    _initializeCall();
   }
 
-  void _startCallTimer() {
-    _callTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!_callEnded) {
+  Future<void> _initializeCall() async {
+    try {
+      // Start the outgoing call in controller
+      _callController.startOutgoingCall(widget.credentials);
+
+      // Initialize Agora service
+      await _agoraService.initialize();
+
+      // Set up Agora callbacks
+      _agoraService.onJoinChannelSuccess = () {
         setState(() {
-          _elapsedSeconds++;
+          _isConnecting = false;
         });
-      }
-    });
-  }
+      };
 
-  void _listenForCallUpdates() {
-    // Start polling for call status updates
-    _pollCallStatus();
-
-    // Set up timeout timer (30 seconds)
-    _setupTimeout();
-  }
-
-  void _setupTimeout() {
-    _timeoutTimer = Timer(const Duration(seconds: 30), () {
-      if (!_callEnded && !_isCallCanceled && _callStatus == 'calling') {
-        _handleTimeout();
-      }
-    });
-  }
-
-  void _handleTimeout() {
-    if (_callEnded || _isCallCanceled) return;
-
-    // End the call session on timeout
-    _endCallSession();
-
-    // Update UI
-    setState(() {
-      _callStatus = 'missed';
-    });
-
-    // Show timeout message
-    if (mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('No response, call ended')));
-
-      // Navigate back after a delay
-      Future.delayed(const Duration(seconds: 2), () {
+      _agoraService.onError = (error) {
         if (mounted) {
-          Navigator.pop(context);
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Call error: $error')));
+          _endCall();
         }
-      });
-    }
-  }
+      };
 
-  void _pollCallStatus() async {
-    while (!_callEnded && _callStatus == 'calling') {
-      await Future.delayed(const Duration(seconds: 2)); // Poll every 2 seconds
-
-      if (_callEnded) break;
-
-      try {
-        final apiController = Provider.of<ApiController>(
-          context,
-          listen: false,
-        );
-        final response = await apiController.checkCallStatus(
-          callId: widget.callId,
-        );
-
-        if (response['success'] == true && response['data'] != null) {
-          final status = response['data']['status']?.toString() ?? 'unknown';
-
-          if (status == 'accepted') {
-            _handleCallAccepted(response['data']);
-            break;
-          } else if (status == 'rejected' ||
-              status == 'missed' ||
-              status == 'cancelled') {
-            _handleCallRejected(status);
-            break;
-          } else if (status == 'ongoing') {
-            // Continue waiting
-            continue;
-          }
+      _agoraService.onUserJoined = (uid) {
+        // Remote user joined, navigate to in-call screen
+        if (mounted) {
+          _navigateToInCallScreen();
         }
-      } catch (e) {
-        // Handle error - could be network issue
-        print('Error polling call status: $e');
-        // Continue polling
+      };
+
+      // Start preview for video calls
+      if (widget.callType == 'video') {
+        await _agoraService.startPreview();
+      }
+
+      // Join Agora channel
+      await _agoraService.joinChannel(
+        channelName: widget.credentials.channelName,
+        token: widget.credentials.agoraToken,
+        uid: 0, // Local user ID
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to initialize call: $e')),
+        );
+        _endCall();
       }
     }
   }
 
-  void _handleCallAccepted(Map<String, dynamic> data) {
-    // Update call manager state
-    final callManager = CallManager();
-    callManager.setState(CallState.connected, callId: widget.callId);
-
-    setState(() {
-      _callStatus = 'connected';
-    });
-
-    // Navigate to actual call screen after acceptance
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => CallPage(
-              channelName: widget.channelName,
-              enableVideo: widget.callType == 'video',
-              isInitiator: true,
-            ),
-          ),
-        );
-      }
-    });
+  void _navigateToInCallScreen() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => InCallScreen(
+          receiverName: widget.receiverName,
+          receiverImage: widget.receiverImage,
+          callType: widget.callType,
+          credentials: widget.credentials,
+        ),
+      ),
+    );
   }
 
-  void _handleCallRejected(String status) {
-    // Update call manager state
-    final callManager = CallManager();
-    callManager.setState(CallState.ended, callId: widget.callId);
-
-    setState(() {
-      _callStatus = status;
-    });
-
-    // Show message and return to previous screen after delay
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        Navigator.pop(context);
-      }
-    });
+  void _cancelCall() {
+    _endCall();
+    Navigator.pop(context);
   }
 
   void _endCall() {
-    if (_callEnded || _isCallCanceled) return;
-    _isCallCanceled = true;
-    _callEnded = true;
-    _callTimer?.cancel();
-    _timeoutTimer?.cancel();
-
-    // End the call session
-    _endCallSession();
+    _callController.endCall();
+    _agoraService.dispose();
   }
 
-  void _endCallSession() async {
-    // In real implementation, call /calls/end API
-    try {
-      final apiController = Provider.of<ApiController>(context, listen: false);
-      await apiController.endCall(
-        receiverId: widget.receiverId,
-        duration: _elapsedSeconds,
-        callType: widget.callType,
-        callId: widget.callId,
-      );
-    } catch (e) {
-      print('Error ending call: $e');
-    }
-  }
-
-  void _navigateBack() {
-    if (mounted) {
-      Navigator.pop(context);
-    }
-  }
-
-  String _formatTime(int seconds) {
-    final minutes = (seconds / 60).floor();
-    final secs = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  @override
+  void dispose() {
+    _endCall();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      body: Consumer<CallController>(
+        builder: (context, callController, child) {
+          return Stack(
             children: [
-              // Receiver profile image/avatar
-              CircleAvatar(
-                radius: 60,
-                backgroundColor: Colors.white.withOpacity(0.2),
-                child: CircleAvatar(
-                  radius: 55,
-                  backgroundColor: Colors.grey[300],
-                  child: Icon(
-                    widget.callType == 'video'
-                        ? Icons.videocam
-                        : Icons.phone_callback,
-                    size: 40,
-                    color: Colors.white,
+              // Background with blur effect
+              Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: widget.receiverImage.startsWith('http')
+                        ? NetworkImage(widget.receiverImage)
+                        : AssetImage(widget.receiverImage) as ImageProvider,
+                    fit: BoxFit.cover,
+                    colorFilter: ColorFilter.mode(
+                      Colors.black.withOpacity(0.6),
+                      BlendMode.darken,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
 
-              // Receiver name
-              Text(
-                widget.receiverName,
-                style: const TextStyle(
-                  fontSize: 24,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+              // Main content
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Profile image
+                    Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 4,
+                        ),
+                        image: DecorationImage(
+                          image: widget.receiverImage.startsWith('http')
+                              ? NetworkImage(widget.receiverImage)
+                              : AssetImage(widget.receiverImage)
+                                    as ImageProvider,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      child: _isConnecting
+                          ? const CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            )
+                          : null,
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    // Receiver name
+                    Text(
+                      widget.receiverName,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Call status
+                    Text(
+                      _getStatusText(callController.state),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.white70,
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Call type indicator
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            widget.callType == 'video'
+                                ? Icons.videocam
+                                : Icons.call,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            widget.callType == 'video'
+                                ? 'Video Call'
+                                : 'Audio Call',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 40),
+
+                    // Call timer
+                    if (callController.callDuration > 0)
+                      Text(
+                        _formatDuration(callController.callDuration),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 10),
 
-              // Call status
-              Text(
-                _getStatusText(),
-                style: const TextStyle(fontSize: 18, color: Colors.white70),
-              ),
-              const SizedBox(height: 10),
-
-              // Elapsed time
-              Text(
-                _formatTime(_elapsedSeconds),
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white.withOpacity(0.5),
-                ),
-              ),
-              const SizedBox(height: 50),
-
-              // Action buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // End call button
-                  GestureDetector(
-                    onTap: _endCall,
-                    child: Container(
+              // Bottom controls
+              Positioned(
+                bottom: 50,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Cancel call button
+                    Container(
                       width: 70,
                       height: 70,
                       decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
                         color: Colors.red,
+                        shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        Icons.call_end,
-                        color: Colors.white,
-                        size: 30,
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.call_end,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                        onPressed: _cancelCall,
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 30),
 
-              // Hint text
-              if (_callStatus == 'calling')
-                const Text(
-                  'Waiting for response...',
-                  style: TextStyle(fontSize: 14, color: Colors.white30),
+              // Connection status indicator
+              if (_isConnecting)
+                const Positioned(
+                  top: 50,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Text(
+                      'Connecting...',
+                      style: TextStyle(color: Colors.white70, fontSize: 16),
+                    ),
+                  ),
                 ),
             ],
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 
-  String _getStatusText() {
-    switch (_callStatus) {
-      case 'calling':
+  String _getStatusText(CallState state) {
+    switch (state) {
+      case CallState.calling:
         return 'Calling...';
-      case 'connected':
+      case CallState.connected:
         return 'Connected';
-      case 'rejected':
-        return 'Rejected';
-      case 'missed':
-        return 'Missed';
-      case 'ended':
+      case CallState.ended:
         return 'Call Ended';
-      default:
-        return 'Calling...';
+      case CallState.idle:
+        return '';
     }
   }
 
-  @override
-  void dispose() {
-    _callTimer?.cancel();
-    _timeoutTimer?.cancel();
-    // Reset call manager state if the call wasn't connected
-    if (!_callEnded && _callStatus != 'connected') {
-      final callManager = CallManager();
-      callManager.reset();
-    }
-    super.dispose();
+  String _formatDuration(int seconds) {
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 }

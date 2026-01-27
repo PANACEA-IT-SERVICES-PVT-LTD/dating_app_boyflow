@@ -25,7 +25,11 @@ dependencies:
   agora_rtc_engine: ^6.3.2
   flutter_callkit_incoming: ^3.0.0
   geolocator: ^14.0.2
-  fluttertoast: ^8.2.8
+  fluttertoast: ^9.0.0
+  web_socket_channel: ^3.0.3
+  dio: ^5.9.0
+  firebase_core: ^2.27.0
+  firebase_messaging: ^14.7.0
 
 dev_dependencies:
   flutter_test:

@@ -1,19 +1,16 @@
 // ignore_for_file: sort_child_properties_last
 
 import 'dart:io' show File;
-// ...existing code...
-
-// ...existing code...
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
-// ...existing code...
 import 'package:provider/provider.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../widgets/gradient_button.dart';
-// ...existing code...
 import '../../controllers/api_controller.dart';
+import '../../controllers/profile_controller.dart';
+import '../../models/profile_model.dart';
 
 // Helper to save token after login
 Future<void> saveLoginToken(String token) async {
@@ -34,17 +31,13 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
   List<String> _availableFilm = [];
   List<String> _availableMusic = [];
   List<String> _availableTravel = [];
-  // ...existing code...
-  // ...existing code...
   String? _uploadedPhotoUrl;
 
   final _formKey = GlobalKey<FormState>();
 
-  // EXISTING
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _heightController = TextEditingController();
-  // ...existing code...
 
   // 🔹 ADDED (missing from UI image)
   final _mobileController = TextEditingController();
@@ -69,14 +62,10 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
   final _latitudeController = TextEditingController();
   final _longitudeController = TextEditingController();
 
-  // ...existing code...
-  // ...existing code...
-
   // State variables for profile data
   List<Map<String, dynamic>> _images = [];
   bool _isLoading = true;
 
-  // ...existing code...
   final List<Map<String, String>> _religions = [
     {'id': '694f63d08389fc82a4345083', 'name': 'Hindu'},
     {'id': '694f63d08389fc82a4345084', 'name': 'Muslim'},
@@ -158,7 +147,10 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
   Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      final apiController = Provider.of<ApiController>(context, listen: false);
+      final apiController = Provider.of<ApiController>(
+        context,
+        listen: false,
+      ); // Use existing controller for image upload
       try {
         final result = await apiController.uploadUserImage(
           imageFile: File(picked.path),
@@ -188,15 +180,51 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _loadProfile();
-    _fetchAvailableOptions();
+  // NEW METHOD - Load profile using new API
+  Future<void> _loadProfileWithNewAPI() async {
+    try {
+      // Using the new ProfileController to fetch profile data
+      final profileController = Provider.of<ProfileController>(
+        context,
+        listen: false,
+      );
+      await profileController.fetchProfile();
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+        if (profileController.profileData != null) {
+          final profile = profileController.profileData!;
+          _firstNameController.text = profile.firstName;
+          _lastNameController.text = profile.lastName;
+          // Note: gender and dateOfBirth are displayed but not editable in this form
+          _dobController.text = profile.dateOfBirth;
+
+          // Set the profile image if available
+          if (profile.profileImageUrl != null) {
+            _images = [
+              {'imageUrl': profile.profileImageUrl},
+            ];
+          }
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load profile: $e')));
+    }
   }
 
   Future<void> _fetchAvailableOptions() async {
-    final apiController = Provider.of<ApiController>(context, listen: false);
+    final apiController = Provider.of<ApiController>(
+      context,
+      listen: false,
+    ); // Use existing controller for other APIs
     try {
       final sports = await apiController.fetchAllSports();
       print('DEBUG: sports response: $sports');
@@ -218,55 +246,11 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
     }
   }
 
-  Future<void> _loadProfile() async {
-    try {
-      final apiController = Provider.of<ApiController>(context, listen: false);
-      final profileData = await apiController.fetchMaleMe();
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        if (profileData['success'] == true && profileData['data'] is Map) {
-          final data = profileData['data'] as Map<String, dynamic>;
-          _firstNameController.text = data['firstName']?.toString() ?? '';
-          _lastNameController.text = data['lastName']?.toString() ?? '';
-          _heightController.text = data['height']?.toString() ?? '';
-          _mobileController.text = data['mobileNumber']?.toString() ?? '';
-          _dobController.text = data['dateOfBirth']?.toString() ?? '';
-          _bioController.text = data['bio']?.toString() ?? '';
-          _interestsController.text = data['interests']?.toString() ?? '';
-          _languagesController.text = data['languages']?.toString() ?? '';
-          _relationshipGoalsController.text =
-              data['relationshipGoals']?.toString() ?? '';
-          _searchPreferencesController.text =
-              data['searchPreferences']?.toString() ?? '';
-          _hobbiesController.text = data['hobbies']?.toString() ?? '';
-          _sportsController.text = data['sports']?.toString() ?? '';
-          _filmController.text = data['film']?.toString() ?? '';
-          _musicController.text = data['music']?.toString() ?? '';
-          _travelController.text = data['travel']?.toString() ?? '';
-          // Pre-fill multi-selects from profile data (assume comma separated or list)
-          _selectedSports = _parseProfileList(data['sports']);
-          _selectedFilm = _parseProfileList(data['film']);
-          _selectedMusic = _parseProfileList(data['music']);
-          _selectedTravel = _parseProfileList(data['travel']);
-          _latitudeController.text = data['latitude']?.toString() ?? '';
-          _longitudeController.text = data['longitude']?.toString() ?? '';
-          final religionId = data['religion']?.toString();
-          if (religionId != null && religionId.isNotEmpty) {
-            _selectedReligionId = religionId;
-          }
-          _images = List<Map<String, dynamic>>.from(data['images'] ?? []);
-        }
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to load profile: $e')));
-    }
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileWithNewAPI(); // CHANGED: Use new API method
+    _fetchAvailableOptions();
   }
 
   // Widget for rounded text fields - moved inside the class
@@ -521,6 +505,7 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                             .where((e) => e.isNotEmpty)
                             .toList()
                       : <String>[];
+
                   try {
                     final sportsResult = await apiController.updateUserSports(
                       sports: sportsList,

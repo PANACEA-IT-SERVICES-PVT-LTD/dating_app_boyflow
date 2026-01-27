@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:Boy_flow/models/female_user.dart';
 import 'package:Boy_flow/utils/colors.dart';
+import 'package:Boy_flow/widgets/gift_selection_sheet.dart';
 
 class FemaleProfileScreen extends StatelessWidget {
   final FemaleUser user;
@@ -24,10 +25,7 @@ class FemaleProfileScreen extends StatelessWidget {
             backgroundColor: Colors.transparent,
             elevation: 0,
             leading: const BackButton(color: Colors.white),
-            title: const Text(
-              "My Profile",
-              style: TextStyle(color: Colors.white),
-            ),
+            title: const Text("Profile", style: TextStyle(color: Colors.white)),
             actions: const [Icon(Icons.more_vert, color: Colors.white)],
           ),
         ),
@@ -35,7 +33,7 @@ class FemaleProfileScreen extends StatelessWidget {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 150),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -218,6 +216,47 @@ class FemaleProfileScreen extends StatelessWidget {
                           ),
                         ),
                         onPressed: () {},
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: _mainGradient,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: ElevatedButton.icon(
+                        icon: const Icon(
+                          Icons.card_giftcard,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          "Gift",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => GiftSelectionSheet(
+                              femaleUserId: user.id,
+                              onGiftSent: (newBalance) {
+                                // Handle balance update if needed
+                                print('New balance: $newBalance');
+                              },
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),

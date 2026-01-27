@@ -1,7 +1,9 @@
 // lib/views/screens/mainhome.dart
 import 'package:Boy_flow/api_service/api_endpoint.dart';
 import 'package:Boy_flow/controllers/api_controller.dart';
-import 'package:Boy_flow/views/screens/call_page.dart';
+import 'package:Boy_flow/controllers/call_controller.dart';
+import 'package:Boy_flow/views/screens/outgoing_call_screen.dart';
+import 'package:Boy_flow/views/screens/incall_screen.dart';
 import 'package:Boy_flow/views/screens/outgoing_call_screen.dart';
 import 'package:Boy_flow/models/female_user.dart';
 import 'package:Boy_flow/views/screens/female_profile_screen.dart';
@@ -228,16 +230,25 @@ class _HomeScreenState extends State<MainHome> {
       if (response['success'] == true) {
         final data = response['data'];
 
-        // Navigate to outgoing call screen first
+        // Create CallCredentials from API response
+        final credentials = CallCredentials(
+          callId: data['callId'],
+          channelName: data['channelName'],
+          agoraToken: data['agoraToken'],
+          receiverId: profile['_id'].toString(),
+          callType: isVideo ? 'video' : 'audio',
+        );
+
+        // Navigate to outgoing call screen with new flow
         await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => OutgoingCallScreen(
-              receiverId: profile['_id'].toString(),
               receiverName: profile['name']?.toString() ?? 'Unknown',
-              channelName: data['channelName'] ?? data['callId'],
+              receiverImage:
+                  _getImageUrlFromProfile(profile) ?? 'assets/img_1.png',
               callType: isVideo ? 'video' : 'audio',
-              callId: data['callId'],
+              credentials: credentials,
             ),
           ),
         );
@@ -261,10 +272,20 @@ class _HomeScreenState extends State<MainHome> {
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => CallPage(
-                          channelName: data['callId'],
-                          enableVideo: data['callType'] == 'video',
-                          isInitiator: true,
+                        builder: (_) => InCallScreen(
+                          receiverName:
+                              profile['name']?.toString() ?? 'Unknown',
+                          receiverImage:
+                              _getImageUrlFromProfile(profile) ??
+                              'assets/img_1.png',
+                          callType: data['callType'] ?? 'audio',
+                          credentials: CallCredentials(
+                            callId: data['callId'],
+                            channelName: data['channelName'] ?? data['callId'],
+                            agoraToken: data['agoraToken'] ?? '',
+                            receiverId: profile['_id'].toString(),
+                            callType: data['callType'] ?? 'audio',
+                          ),
                         ),
                       ),
                     );

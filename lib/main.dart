@@ -11,6 +11,7 @@ import 'views/screens/main_navigation.dart';
 import 'views/screens/introduce_yourself_screen.dart';
 
 import 'controllers/api_controller.dart';
+import 'controllers/call_controller.dart';
 // Removed unused import
 // ...existing code...
 import 'views/screens/main_navigation.dart';
@@ -20,6 +21,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ApiController()),
+        ChangeNotifierProvider(create: (_) => CallController()),
         // Add other providers here if needed
       ],
       child: const MyApp(),
