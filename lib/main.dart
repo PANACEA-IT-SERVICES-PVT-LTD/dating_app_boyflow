@@ -16,7 +16,24 @@ import 'controllers/call_controller.dart';
 // ...existing code...
 import 'views/screens/main_navigation.dart';
 
-void main() {
+// Firebase imports
+import 'package:firebase_core/firebase_core.dart';
+import 'services/fcm_service.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp();
+    print('Firebase initialized successfully');
+  } catch (e) {
+    print('Error initializing Firebase: $e');
+  }
+
+  // Initialize FCM Service
+  await FCMService().initialize();
+
   runApp(
     MultiProvider(
       providers: [

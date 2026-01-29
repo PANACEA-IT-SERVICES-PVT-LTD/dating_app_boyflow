@@ -34,6 +34,7 @@ import 'package:Boy_flow/views/screens/withdraw_confirmation_screen.dart';
 import 'package:Boy_flow/views/screens/introduce_yourself_screen.dart';
 import 'package:Boy_flow/views/screens/Invite_friends_screen.dart';
 import 'package:Boy_flow/views/screens/registration_status.dart';
+import 'package:Boy_flow/views/screens/incoming_call_screen.dart';
 
 class AppRoutes {
   static const String login = '/login'; // request OTP (email input)
@@ -68,6 +69,7 @@ class AppRoutes {
   static const String introduceYourself = '/IntroduceYourself';
   static const String registrationstatus = '/RegistrationStatus';
   static const String signupVerification = '/signupVerification';
+  static const String incomingCall = '/incoming-call';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     final args = settings.arguments;
@@ -207,6 +209,21 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) => const IntroduceYourselfScreen(),
         );
+
+      case incomingCall:
+        if (args is Map<String, dynamic>) {
+          return MaterialPageRoute(
+            builder: (_) => IncomingCallScreen(
+              callerName: args['callerName'] ?? 'Unknown',
+              callerAvatar: args['callerAvatar'] ?? '',
+              callType: args['callType'] ?? 'audio',
+              callId:
+                  args['callId'] ??
+                  DateTime.now().millisecondsSinceEpoch.toString(),
+            ),
+          );
+        }
+        return _errorRoute("Invalid arguments for IncomingCallScreen");
 
       default:
         return _errorRoute("No route defined for ${settings.name}");

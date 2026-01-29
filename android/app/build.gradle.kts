@@ -7,24 +7,18 @@ plugins {
 }
 
 android {
-        // Enable ABI splits to reduce APK size per architecture
-        // ABI splits disabled: only a single universal APK will be built
-        splits {
-            abi {
-                isEnable = false
-            }
-        }
     namespace = "com.example.Boy_flow"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"  // Ensure this matches the NDK version required
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
 
     defaultConfig {
@@ -46,28 +40,22 @@ android {
         }
     }
 
-    dependencies {
-  // Import the Firebase BoM
-  implementation(platform("com.google.firebase:firebase-bom:34.8.0"))
-
-
-  // TODO: Add the dependencies for Firebase products you want to use
-  // When using the BoM, don't specify versions in Firebase dependencies
-  implementation("com.google.firebase:firebase-analytics")
-
-
-  // Add the dependencies for any other desired Firebase products
-  // https://firebase.google.com/docs/android/setup#available-libraries
-}
-
-    // Only add the externalNativeBuild section if you are working with native C++ code.
-    // If not, you can remove this section completely.
     externalNativeBuild {
         cmake {
-            // Only needed if you have C++ code
             // cppFlags "-DANDROID_STL=c++_shared"
         }
     }
+}
+
+dependencies {
+    // Import the Firebase BoM
+    implementation(platform("com.google.firebase:firebase-bom:34.8.0"))
+    
+    // Add the dependencies for Firebase products you want to use
+    implementation("com.google.firebase:firebase-analytics")
+    
+    // Add core library desugaring
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
 
 flutter {
