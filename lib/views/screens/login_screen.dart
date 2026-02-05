@@ -49,9 +49,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _submitting = true);
     try {
-      final apiController = Provider.of<ApiController>(context, listen: false);
-      print(
-        '[DEBUG] Attempting to call API controller login with email: $email',
+      final url = Uri.parse(
+        "${ApiEndPoints.baseUrls}${ApiEndPoints.loginMale}",
+      );
+      final resp = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email}),
       );
       final result = await apiController.login(email);
 

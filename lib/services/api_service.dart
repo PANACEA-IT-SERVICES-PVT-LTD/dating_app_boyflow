@@ -2,27 +2,21 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/female_user.dart';
 import '../api_service/api_endpoint.dart';
 
 class ApiService {
   // Fetch male user's wallet transactions
   Future<Map<String, dynamic>> fetchMaleWalletTransactions() async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrl}/male-user/me/transactions?operationType=wallet',
+      '${ApiEndPoints.baseUrls}/male-user/me/transactions?operationType=wallet',
     );
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
       return json.decode(response.body);
-    } else if (response.statusCode == 404) {
-      // Handle 404 for no transactions found
-      print('No wallet transactions found (404) - returning empty list');
-      return {
-        'success': true,
-        'data': [],
-        'message': 'No wallet transactions found',
-      };
     } else if (response.statusCode == 401) {
       throw Exception('Unauthorized. Please log in again.');
     } else {
@@ -105,39 +99,30 @@ class ApiService {
     };
   }
 
-  // Start a call (audio or video)
+  // Start a call (audio or video) - Updated to return credentials needed for Agora
   Future<Map<String, dynamic>> startCall({
     required String receiverId,
     required String callType, // "audio" or "video"
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.startCall}');
+    final url = Uri.parse('\${ApiEndPoints.baseUrls}\${ApiEndPoints.startCall}');
     final headers = await _getHeaders();
     final body = json.encode({'receiverId': receiverId, 'callType': callType});
-
+  
     final response = await http.post(url, headers: headers, body: body);
     if (response.statusCode == 200) {
       return json.decode(response.body);
-    } else if (response.statusCode == 404) {
-      // Handle 404 for call start endpoint not found
-      print('Call start endpoint not found (404)');
-      return {
-        'success': false,
-        'message': 'Unable to start call - service unavailable',
-        'data': null,
-      };
     } else {
-      _handleError(response.statusCode, response.body);
-      throw Exception('Failed to start call: ${response.body}');
+      throw Exception('Failed to start call: \${response.body}');
     }
   }
 
   // Check call status
-  Future<Map<String, dynamic>> checkCallStatus({required String callId}) async {
-    final url = Uri.parse(
-      '${ApiEndPoints.baseUrl}${ApiEndPoints.checkCallStatus}/$callId/status',
-    );
+  Future<Map<String, dynamic>> checkCallStatus({
+    required String callId,
+  }) async {
+    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.checkCallStatus}/$callId/status');
     final headers = await _getHeaders();
-
+  
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
       return json.decode(response.body);
@@ -205,7 +190,9 @@ class ApiService {
     double? latitude,
     double? longitude,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/dashboard');
+    final url = Uri.parse(
+      '${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardEndpoint}',
+    );
     final headers = await _getHeaders();
 
     // Construct request body
@@ -1189,27 +1176,21 @@ class ApiService {
     required String password,
     String? referralCode,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.signupMale}');
-    final headers = {'Content-Type': 'application/json'};
-    final body = jsonEncode({
-      'firstName': firstName,
-      'lastName': lastName,
-      'email': email,
-      'password': password,
-      if (referralCode != null) 'referralCode': referralCode,
-    });
-
-    // Log the request for debugging
-    print('[DEBUG] Sending registration request to: $url');
-    print('[DEBUG] Request headers: $headers');
-    print('[DEBUG] Request body: $body');
-
     try {
-      final response = await http.post(url, headers: headers, body: body);
-
-      // Log the response for debugging
-      print('[DEBUG] Registration response status: ${response.statusCode}');
-      print('[DEBUG] Registration response body: ${response.body}');
+      final url = Uri.parse(
+        '${ApiEndPoints.baseUrls}${ApiEndPoints.signupMale}',
+      );
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'firstName': firstName,
+          'lastName': lastName,
+          'email': email,
+          'password': password,
+          if (referralCode != null) 'referralCode': referralCode,
+        }),
+      );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(response.body);
@@ -1466,9 +1447,12 @@ class ApiService {
   Future<Map<String, dynamic>> unblockUser({
     required String femaleUserId,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleUnblock}');
-    final headers = await _getHeaders();
-    final body = jsonEncode({"femaleUserId": femaleUserId});
+    try {
+      final url = Uri.parse(
+        '${ApiEndPoints.baseUrls}${ApiEndPoints.maleUnblock}',
+      );
+      final headers = await _getHeaders();
+      final body = jsonEncode({"femaleUserId": femaleUserId});
 
     final response = await http.post(url, headers: headers, body: body);
 
@@ -1493,10 +1477,11 @@ class ApiService {
     int limit = 10,
     int skip = 0,
   }) async {
-    final url = Uri.parse(
-      '${ApiEndPoints.baseUrl}${ApiEndPoints.callHistory}?limit=$limit&skip=$skip',
-    );
-    final headers = await _getHeaders();
+    try {
+      final url = Uri.parse(
+        '${ApiEndPoints.baseUrls}${ApiEndPoints.callHistory}?limit=$limit&skip=$skip',
+      );
+      final headers = await _getHeaders();
 
     print('Fetching call history from: $url');
     print('Headers: $headers');
@@ -1543,8 +1528,11 @@ class ApiService {
 
   // Fetch call statistics
   Future<Map<String, dynamic>> fetchCallStats() async {
-    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.callStats}');
-    final headers = await _getHeaders();
+    try {
+      final url = Uri.parse(
+        '${ApiEndPoints.baseUrls}${ApiEndPoints.callStats}',
+      );
+      final headers = await _getHeaders();
 
     print('Fetching call stats from: $url');
     print('Headers: $headers');
@@ -1612,6 +1600,169 @@ class ApiService {
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to recharge wallet');
+    }
+  }
+
+  // Fetch all gifts
+  Future<List<Gift>> getAllGifts() async {
+    try {
+      final headers = await _getHeaders();
+      print('Fetching gifts from: ${ApiEndPoints.baseUrl}/male-user/gifts');
+
+      final response = await _dio.get(
+        '/male-user/gifts',
+        options: Options(headers: headers),
+      );
+
+      print('Gifts response status: ${response.statusCode}');
+      print('Gifts response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        if (data['success'] == true && data['data'] is List) {
+          return List<Gift>.from(
+            data['data'].map((item) => Gift.fromJson(item)),
+          );
+        } else {
+          throw Exception('Invalid response format');
+        }
+      } else {
+        throw Exception(
+          'Failed to fetch gifts. Status: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      print('DioException in gifts: $e');
+      if (e.response != null) {
+        switch (e.response?.statusCode) {
+          case 401:
+            throw Exception('Unauthorized: Please log in again');
+          case 403:
+            throw Exception(
+              'Forbidden: You do not have permission to access gifts',
+            );
+          case 500:
+            throw Exception('Internal Server Error: Please try again later');
+          default:
+            throw Exception(
+              'Error: ${e.response?.statusMessage ?? 'Unknown error'}',
+            );
+        }
+      } else {
+        throw Exception('Network error: Please check your connection');
+      }
+    } catch (e) {
+      print('Unexpected error in gifts: $e');
+      throw Exception('Failed to fetch gifts: $e');
+    }
+  }
+
+  // Send gift to female user
+  Future<SendGiftResponse> sendGift(String femaleUserId, String giftId) async {
+    try {
+      final headers = await _getHeaders();
+      print('Sending gift to female user: $femaleUserId, giftId: $giftId');
+
+      final response = await _dio.post(
+        '/male-user/gifts/send',
+        data: {'femaleUserId': femaleUserId, 'giftId': giftId},
+        options: Options(headers: headers),
+      );
+
+      print('Send gift response status: ${response.statusCode}');
+      print('Send gift response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        if (data['success'] == true) {
+          return SendGiftResponse.fromJson(data);
+        } else {
+          throw Exception(data['message'] ?? 'Failed to send gift');
+        }
+      } else {
+        throw Exception('Failed to send gift. Status: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      print('DioException in send gift: $e');
+      if (e.response != null) {
+        switch (e.response?.statusCode) {
+          case 400:
+            throw Exception(
+              'Invalid request: ${e.response?.data?['message'] ?? 'Validation error'}',
+            );
+          case 401:
+            throw Exception('Unauthorized: Please log in again');
+          case 403:
+            throw Exception(
+              'Forbidden: You do not have permission to send gifts',
+            );
+          case 500:
+            throw Exception('Internal Server Error: Please try again later');
+          default:
+            throw Exception(
+              'Error: ${e.response?.statusMessage ?? 'Unknown error'}',
+            );
+        }
+      } else {
+        throw Exception('Network error: Please check your connection');
+      }
+    } catch (e) {
+      print('Unexpected error in send gift: $e');
+      throw Exception('Failed to send gift: $e');
+    }
+  }
+
+  // Get profile details for the logged-in user
+  Future<ProfileModel> getProfileDetails() async {
+    try {
+      final headers = await _getHeaders();
+      print(
+        'Fetching profile details from: ${ApiEndPoints.baseUrl}/male-user/profile-and-image',
+      );
+
+      // For multipart form data, we'll send an empty form data as the API expects it
+      final formData = FormData.fromMap({});
+
+      final response = await _dio.post(
+        '/male-user/profile-and-image',
+        data: formData,
+        options: Options(headers: headers),
+      );
+
+      print('Profile details response status: ${response.statusCode}');
+      print('Profile details response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        if (data['success'] == true) {
+          return ProfileModel.fromJson(data);
+        } else {
+          throw Exception(data['message'] ?? 'Failed to fetch profile details');
+        }
+      } else {
+        throw Exception(
+          'Failed to fetch profile details. Status: ${response.statusCode}',
+        );
+      }
+    } on DioException catch (e) {
+      print('DioException in profile details: $e');
+      if (e.response != null) {
+        switch (e.response?.statusCode) {
+          case 401:
+            throw Exception('Unauthorized: Please log in again');
+          case 500:
+            throw Exception('Internal Server Error: Please try again later');
+          default:
+            throw Exception(
+              'Error: ${e.response?.statusMessage ?? 'Unknown error'}',
+            );
+        }
+      } else {
+        throw Exception('Network error: Please check your connection');
+      }
+    } catch (e) {
+      print('Unexpected error in profile details: $e');
+      throw Exception('Failed to fetch profile details: $e');
     }
   }
 }

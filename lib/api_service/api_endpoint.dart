@@ -5,7 +5,7 @@ class ApiEndPoints {
   static const String endCall = '/male-user/calls/end';
   static const String callHistory = '/male-user/calls/history';
   static const String callStats = '/male-user/calls/stats';
-  static const String baseUrl = "https://friendcircle-x7d6.onrender.com";
+  static const String baseUrls = "https://friend-circle-new.vercel.app";
   static const String dashboardEndpoint = '/male-user/dashboard';
 
   // Male auth & profile

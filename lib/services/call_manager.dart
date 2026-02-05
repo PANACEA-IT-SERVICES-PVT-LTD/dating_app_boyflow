@@ -1,20 +1,36 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import '../models/call_state.dart';
 import '../models/user.dart';
-import 'callkit_service.dart';
 
-class CallManager {
+class CallManager extends ChangeNotifier {
   static final CallManager _instance = CallManager._internal();
   factory CallManager() => _instance;
   CallManager._internal();
 
-  final StreamController<CallInfo?> _callStateController =
-      StreamController<CallInfo?>.broadcast();
+  final CallStateModel _callStateModel = CallStateModel();
   CallInfo? _currentCall;
 
-  Stream<CallInfo?> get callStateStream => _callStateController.stream;
+  CallState get currentState => _callStateModel.state;
+  String? get activeCallId => _callStateModel.activeCallId;
+  bool get hasActiveCall => _callStateModel.isActiveCall;
   CallInfo? get currentCall => _currentCall;
+
+  void setState(CallState newState, {String? callId}) {
+    _callStateModel.setState(newState, callId: callId);
+    notifyListeners();
+  }
+
+  void reset() {
+    _callStateModel.reset();
+    _currentCall = null;
+    notifyListeners();
+  }
+
+  bool canStartNewCall() {
+    return !hasActiveCall;
+  }
 
   static const String currentUserId = 'current_user';
   static const String currentUserName = 'You';
@@ -37,41 +53,29 @@ class CallManager {
       timestamp: DateTime.now(),
     );
 
-    _callStateController.add(_currentCall);
+    notifyListeners();
 
-
-    final callkit = CallkitService();
-    await callkit.showOutgoingCall(
-      callId: callId,
-      targetName: targetUser.name,
-      channelName: channelName,
-      isVideo: type == CallType.video,
-    );
-
-    // No incoming call simulation
+    // Callkit service integration would go here
+    // For now, just return the callId
     return callId;
   }
-
-
 
   Future<void> acceptCall() async {
     if (_currentCall == null) return;
 
     _currentCall = _currentCall!.copyWith(state: CallState.connected);
-    _callStateController.add(_currentCall);
+    notifyListeners();
 
-    final callkit = CallkitService();
-    await callkit.endCall(_currentCall!.id);
+    // Callkit service integration would go here
   }
 
   Future<void> rejectCall() async {
     if (_currentCall == null) return;
 
     _currentCall = _currentCall!.copyWith(state: CallState.ended);
-    _callStateController.add(_currentCall);
+    notifyListeners();
 
-    final callkit = CallkitService();
-    await callkit.endCall(_currentCall!.id);
+    // Callkit service integration would go here
 
     _clearCurrentCall();
   }
@@ -80,20 +84,17 @@ class CallManager {
     if (_currentCall == null) return;
 
     _currentCall = _currentCall!.copyWith(state: CallState.ended);
-    _callStateController.add(_currentCall);
+    notifyListeners();
 
-    final callkit = CallkitService();
-    await callkit.endCall(_currentCall!.id);
+    // Callkit service integration would go here
 
     _clearCurrentCall();
   }
 
   void _clearCurrentCall() {
     _currentCall = null;
-    _callStateController.add(null);
+    notifyListeners();
   }
-
-
 
   String _generateCallId() {
     return 'call_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}';
@@ -107,6 +108,6 @@ class CallManager {
   }
 
   void dispose() {
-    _callStateController.close();
+    // No stream controller to close in this simplified version
   }
 }

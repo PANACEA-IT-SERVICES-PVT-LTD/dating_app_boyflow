@@ -2,21 +2,20 @@ import 'package:Boy_flow/views/screens/BlockListScreen1.dart';
 import 'package:Boy_flow/views/screens/ReportAProblemPage.dart';
 import 'package:Boy_flow/views/screens/TransactionsScreen.dart';
 import 'package:Boy_flow/views/screens/WalletTransactionsScreen.dart';
+import 'package:Boy_flow/views/screens/gifts_screen.dart';
 import 'package:Boy_flow/views/screens/introduce_yourself_screen.dart';
-// Removed unused import
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-// Removed unused import
 
 // Screens
-import 'payment_page.dart';
-import 'settings_screen.dart';
-import 'followers_screen.dart';
-import 'call_rate_screen.dart';
-import 'withdraws_screen.dart';
-import 'support_service_screen.dart';
+import '../screens/call_rate_screen.dart';
+import '../screens/withdraws_screen.dart';
+import '../screens/followers_screen.dart';
+// Removed unused import
+import '../screens/support_service_screen.dart';
+import '../screens/settings_screen.dart';
 import '../../api_service/api_endpoint.dart';
 import 'coin_packages_sheet.dart';
 import '../../services/razorpay_service.dart';
@@ -388,6 +387,11 @@ class _AccountScreenState extends State<AccountScreen> {
       'iconPath': 'assets/profile.png',
       'label': 'Followers',
       'screen': MyFollowersScreen(),
+    },
+    {
+      'iconPath': 'assets/wallet.png',
+      'label': 'Gifts',
+      'screen': GiftsScreen(),
     },
     {
       'iconPath': 'assets/supportservice.png',

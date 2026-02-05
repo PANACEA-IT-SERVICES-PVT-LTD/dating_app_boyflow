@@ -9,42 +9,55 @@ import 'package:flutter/material.dart';
 
 import '../utils/token_helper.dart';
 import 'package:http/http.dart' as http;
+import '../models/wallet_transaction.dart';
 
 class ApiController extends ChangeNotifier {
   // Wallet transaction history state
   bool _isWalletTransactionLoading = false;
   String? _walletTransactionError;
-  List<Map<String, dynamic>> _walletTransactions = [];
+  List<WalletTransaction> _walletTransactions = [];
 
   bool get isWalletTransactionLoading => _isWalletTransactionLoading;
   String? get walletTransactionError => _walletTransactionError;
-  List<Map<String, dynamic>> get walletTransactions =>
+  List<WalletTransaction> get walletTransactions =>
       List.unmodifiable(_walletTransactions);
 
-  /// Fetch male user's wallet transactions (sorted by createdAt desc)
-  Future<void> fetchMaleWalletTransactions() async {
+  /// Fetch male user's wallet transactions with proper error handling
+  Future<void> fetchWalletTransactions() async {
     if (_isWalletTransactionLoading) return; // Prevent duplicate calls
     _isWalletTransactionLoading = true;
     _walletTransactionError = null;
     WidgetsBinding.instance.addPostFrameCallback((_) => notifyListeners());
+
     try {
-      final result = await _apiService.fetchMaleWalletTransactions();
-      if (result['success'] == true && result['data'] is List) {
-        final List<dynamic> data = result['data'];
-        // Sort by createdAt descending
-        data.sort(
-          (a, b) => (b['createdAt'] ?? '').compareTo(a['createdAt'] ?? ''),
-        );
-        _walletTransactions = data
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-      } else {
-        _walletTransactions = [];
-        _walletTransactionError = 'No wallet transactions found.';
-      }
-    } catch (e) {
+      print('[WALLET TRANSACTIONS] Starting fetch...');
+      final apiService = ApiService();
+      final transactionData = await apiService.fetchWalletTransactions();
+
+      print(
+        '[WALLET TRANSACTIONS] Received ${transactionData.length} transactions',
+      );
+
+      _walletTransactions =
+          transactionData
+              .map((json) => WalletTransaction.fromJson(json))
+              .toList()
+            ..sort(
+              (a, b) => b.createdAt.compareTo(a.createdAt),
+            ); // Sort by createdAt descending
+
+      _walletTransactionError = null;
+      print(
+        '[WALLET TRANSACTIONS] Successfully loaded ${_walletTransactions.length} transactions',
+      );
+    } on Exception catch (e) {
+      print('[WALLET TRANSACTIONS] Error: $e');
       _walletTransactions = [];
       _walletTransactionError = e.toString();
+    } catch (e) {
+      print('[WALLET TRANSACTIONS] Unexpected error: $e');
+      _walletTransactions = [];
+      _walletTransactionError = 'An unexpected error occurred: $e';
     } finally {
       _isWalletTransactionLoading = false;
       WidgetsBinding.instance.addPostFrameCallback((_) => notifyListeners());
@@ -108,7 +121,7 @@ class ApiController extends ChangeNotifier {
 
   final ApiService _apiService = ApiService();
 
-  // Start a call (audio or video)
+  // Start a call (audio or video) - Returns CallCredentials model
   Future<Map<String, dynamic>> startCall({
     required String receiverId,
     required String callType,
@@ -120,13 +133,12 @@ class ApiController extends ChangeNotifier {
   }
 
   // Check call status
-  Future<Map<String, dynamic>> checkCallStatus({required String callId}) async {
-    return await _apiService.checkCallStatus(callId: callId);
-  }
-
-  // Login method to send OTP
-  Future<Map<String, dynamic>> login(String email) async {
-    return await _apiService.login(email);
+  Future<Map<String, dynamic>> checkCallStatus({
+    required String callId,
+  }) async {
+    return await _apiService.checkCallStatus(
+      callId: callId,
+    );
   }
 
   // Public getter to access the ApiService instance
@@ -148,8 +160,11 @@ class ApiController extends ChangeNotifier {
   }
 
   // Remember identity + context for OTP verify
-  String? _otpEmail;
-  String? _otpSource;
+  // ...existing code...
+  // ...existing code...
+  // ...existing code...
+  // ...existing code...
+  // ...existing code...
 
   // Sent follow requests cache
   List<Map<String, dynamic>> _sentFollowRequests = [];
@@ -528,82 +543,25 @@ class ApiController extends ChangeNotifier {
     final endpoint = source == 'login'
         ? ApiEndPoints.loginotpMale
         : ApiEndPoints.verifyOtpMale;
-    final url = Uri.parse("${ApiEndPoints.baseUrl}$endpoint");
-    final headers = {"Content-Type": "application/json"};
-    final body = jsonEncode({"otp": otp});
-
-    // Log the request for debugging
-    print('[DEBUG] Sending OTP verification request to: $url');
-    print('[DEBUG] Request headers: $headers');
-    print('[DEBUG] Request body: $body');
-
-    try {
-      final response = await http.post(url, headers: headers, body: body);
-
-      // Log the response for debugging
-      print('[DEBUG] OTP verification response status: ${response.statusCode}');
-      print('[DEBUG] OTP verification response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final body = jsonDecode(response.body);
-        final success = body['success'] == true;
-        if (success) {
-          final token = body['token'] ?? body['access_token'];
-          if (token != null && token is String && token.isNotEmpty) {
-            _authToken = token;
-            // Save to SharedPreferences for later use
-            try {
-              await saveLoginToken(token);
-            } catch (_) {}
-          }
-        }
-        return success;
-      } else if (response.statusCode == 404) {
-        // Handle 404 for OTP verification endpoint not found
-        print('OTP verification endpoint not found (404)');
-        return false;
-      } else if (response.statusCode == 500) {
-        // Handle 500 server error specifically
-        print('Server error (500) when attempting OTP verification');
+    final url = Uri.parse("${ApiEndPoints.baseUrls}$endpoint");
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({"otp": otp}),
+    );
+    final body = jsonDecode(response.body);
+    final success = body['success'] == true;
+    if (success) {
+      final token = body['token'] ?? body['access_token'];
+      if (token != null && token is String && token.isNotEmpty) {
+        _authToken = token;
+        // Save to SharedPreferences for later use
         try {
-          final errorBody = jsonDecode(response.body);
-          final serverMessage =
-              errorBody['message'] ??
-              errorBody['error'] ??
-              'Internal server error';
-          print('OTP verification error (500): $serverMessage');
-
-          // Check if this is the referredBy validation error
-          if (serverMessage.contains('referredBy') &&
-              serverMessage.contains('ObjectId')) {
-            print(
-              'Detected referredBy validation issue - this may require backend fix',
-            );
-          }
-        } catch (e) {
-          print('OTP verification error (500): Internal server error');
-        }
-        return false;
-      } else {
-        // Handle other error codes
-        try {
-          final body = jsonDecode(response.body);
-          final message =
-              body['message'] ?? body['error'] ?? 'OTP verification failed';
-          print(
-            'OTP verification error: $message (Status: ${response.statusCode})',
-          );
-        } catch (e) {
-          print(
-            'OTP verification error: ${response.body} (Status: ${response.statusCode})',
-          );
-        }
-        return false;
+          await saveLoginToken(token);
+        } catch (_) {}
       }
-    } catch (e) {
-      print('Exception during OTP verification: $e');
-      return false;
     }
+    return success;
   }
 
   /// Fetches female profiles for a specific dashboard section (e.g., 'new', 'all')

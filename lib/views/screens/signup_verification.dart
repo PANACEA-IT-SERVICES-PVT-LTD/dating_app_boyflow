@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/api_controller.dart';
 import '../../core/routes/app_routes.dart';
 import '../../utils/colors.dart';
+import '../../views/screens/main_navigation.dart';
 import '../../widgets/gradient_button.dart';
 import '../../widgets/otp_input_fields.dart';
 import '../../utils/token_helper.dart';

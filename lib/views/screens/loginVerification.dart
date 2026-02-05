@@ -98,33 +98,45 @@ class _LoginVerificationScreenState extends State<LoginVerificationScreen> {
 
       if (userData['success'] == true && userData['data'] is Map) {
         final data = userData['data'] as Map<String, dynamic>;
-
+        
         // Check profile completion first
         final profileCompleted = data['profileCompleted'] as bool? ?? false;
-
-        // Regardless of profile completion, navigate directly to dashboard
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MainNavigationScreen()),
-        );
+        
+        if (!profileCompleted) {
+          // If profile is not completed, navigate to profile completion
+          Navigator.pushReplacementNamed(context, AppRoutes.introduceYourself);
+          return;
+        }
+        
+        // If profile is completed, check admin approval status
+        final adminApprovalStatus = data['reviewStatus']?.toString() ?? 'PENDING';
+        
+        switch (adminApprovalStatus.toUpperCase()) {
+          case 'APPROVED':
+            // Navigate to homepage if approved
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+            );
+            break;
+          case 'REJECTED':
+            // Navigate to rejected status screen
+            Navigator.pushReplacementNamed(context, AppRoutes.registrationstatus);
+            break;
+          case 'PENDING':
+          default:
+            // Navigate to under review status screen
+            Navigator.pushReplacementNamed(context, AppRoutes.registrationstatus);
+            break;
+        }
       } else {
         // If there's an error fetching user data, navigate to login
         Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
     } catch (e) {
       print('Error checking user status: $e');
-      // Show a user-friendly message
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Error loading user data. Please try again.';
-        });
-      }
-      // If there's an error, navigate to login after a delay to show the error
-      Future.delayed(Duration(seconds: 2), () {
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, AppRoutes.login);
-        }
-      });
+      // If there's an error, navigate to login
+      Navigator.pushReplacementNamed(context, AppRoutes.login);
     } finally {
       if (mounted) {
         setState(() {

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:Boy_flow/models/female_user.dart';
 import 'package:Boy_flow/utils/colors.dart';
-import 'package:provider/provider.dart';
-import 'package:Boy_flow/controllers/api_controller.dart';
-import 'package:Boy_flow/views/screens/outgoing_call_screen.dart';
 
 class FemaleProfileScreen extends StatefulWidget {
   final FemaleUser user;
@@ -136,7 +133,7 @@ class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 150),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -333,6 +330,47 @@ class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
                           ),
                         ),
                         onPressed: _isCallLoading ? null : _showCallOptions,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: _mainGradient,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: ElevatedButton.icon(
+                        icon: const Icon(
+                          Icons.card_giftcard,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          "Gift",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => GiftSelectionSheet(
+                              femaleUserId: user.id,
+                              onGiftSent: (newBalance) {
+                                // Handle balance update if needed
+                                print('New balance: $newBalance');
+                              },
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ),
