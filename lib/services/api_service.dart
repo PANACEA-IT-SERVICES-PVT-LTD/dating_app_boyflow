@@ -3,19 +3,26 @@ import 'dart:io';
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/female_user.dart';
 import '../api_service/api_endpoint.dart';
 
 class ApiService {
   // Fetch male user's wallet transactions
   Future<Map<String, dynamic>> fetchMaleWalletTransactions() async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}/male-user/me/transactions?operationType=wallet',
+      '${ApiEndPoints.baseUrl}/male-user/me/transactions?operationType=wallet',
     );
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for no transactions found
+      print('No wallet transactions found (404) - returning empty list');
+      return {
+        'success': true,
+        'data': [],
+        'message': 'No wallet transactions found',
+      };
     } else if (response.statusCode == 401) {
       throw Exception('Unauthorized. Please log in again.');
     } else {
@@ -24,20 +31,27 @@ class ApiService {
     }
   }
 
-  // Fetch male user's coin transactions
   Future<Map<String, dynamic>> fetchMaleCoinTransactions() async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}/male-user/me/transactions?operationType=coin',
+      '${ApiEndPoints.baseUrl}/male-user/me/transactions?operationType=coin',
     );
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for no coin transactions found
+      print('No coin transactions found (404) - returning empty list');
+      return {
+        'success': true,
+        'data': [],
+        'message': 'No coin transactions found',
+      };
     } else if (response.statusCode == 401) {
       throw Exception('Unauthorized. Please log in again.');
     } else {
       _handleError(response.statusCode, response.body);
-      throw Exception('Failed to fetch transactions');
+      throw Exception('Failed to fetch coin transactions');
     }
   }
 
@@ -48,7 +62,7 @@ class ApiService {
     required String callType, // "audio" or "video"
     required String callId,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.endCall}');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.endCall}');
     final headers = await _getHeaders();
     final body = json.encode({
       'receiverId': receiverId,
@@ -59,6 +73,14 @@ class ApiService {
     final response = await http.post(url, headers: headers, body: body);
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for call end endpoint not found
+      print('Call end endpoint not found (404)');
+      return {
+        'success': false,
+        'message': 'Unable to end call - service unavailable',
+        'data': null,
+      };
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to end call: ${response.body}');
@@ -66,7 +88,7 @@ class ApiService {
   }
 
   String? _authToken;
-  final String baseUrl = ApiEndPoints.baseUrls;
+  final String baseUrl = ApiEndPoints.baseUrl;
 
   // Get auth token from shared preferences
   Future<void> _getAuthToken() async {
@@ -88,30 +110,44 @@ class ApiService {
     required String receiverId,
     required String callType, // "audio" or "video"
   }) async {
-    final url = Uri.parse('\${ApiEndPoints.baseUrls}\${ApiEndPoints.startCall}');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.startCall}');
     final headers = await _getHeaders();
     final body = json.encode({'receiverId': receiverId, 'callType': callType});
-  
+
     final response = await http.post(url, headers: headers, body: body);
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for call start endpoint not found
+      print('Call start endpoint not found (404)');
+      return {
+        'success': false,
+        'message': 'Unable to start call - service unavailable',
+        'data': null,
+      };
     } else {
-      throw Exception('Failed to start call: \${response.body}');
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to start call: ${response.body}');
     }
   }
-  
+
   // Check call status
-  Future<Map<String, dynamic>> checkCallStatus({
-    required String callId,
-  }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.checkCallStatus}/$callId/status');
+  Future<Map<String, dynamic>> checkCallStatus({required String callId}) async {
+    final url = Uri.parse(
+      '${ApiEndPoints.baseUrl}${ApiEndPoints.checkCallStatus}/$callId/status',
+    );
     final headers = await _getHeaders();
-  
+
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for call not found
+      print('Call status not found (404) for callId: $callId');
+      return {'success': false, 'message': 'Call not found', 'data': null};
     } else {
-      throw Exception('Failed to check call status: \${response.body}');
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to check call status: ${response.body}');
     }
   }
 
@@ -120,17 +156,28 @@ class ApiService {
     String message = 'Failed to load data';
     try {
       if (responseBody is String) {
-        final jsonResponse = json.decode(responseBody);
-        message = jsonResponse['message'] ?? message;
-        if (message.toLowerCase().contains('user not found')) {
-          throw Exception(
-            'Your session has expired or user does not exist. Please log in again.',
-          );
+        // Only try to decode JSON if the response body is not empty
+        if (responseBody.isNotEmpty) {
+          final jsonResponse = json.decode(responseBody);
+          message = jsonResponse['message'] ?? jsonResponse['error'] ?? message;
+          if (message.toLowerCase().contains('user not found')) {
+            throw Exception(
+              'Your session has expired or user does not exist. Please log in again.',
+            );
+          }
+        } else {
+          message = 'Empty response received (Status: $statusCode)';
         }
+      } else if (responseBody != null) {
+        message = responseBody.toString();
       }
     } catch (e) {
-      message = 'Error: $statusCode';
+      // If JSON parsing fails, use the raw response body or status-based message
+      message = responseBody.toString().isNotEmpty
+          ? responseBody.toString()
+          : 'HTTP Error: $statusCode';
     }
+
     if (statusCode == 404) {
       if (responseBody.toString().toLowerCase().contains('user') ||
           responseBody.toString().toLowerCase().contains('profile')) {
@@ -138,71 +185,150 @@ class ApiService {
       } else {
         message = 'Resource does not exist (404).';
       }
+    } else if (statusCode == 401) {
+      message = 'Unauthorized access (401). Please log in again.';
+    } else if (statusCode == 500) {
+      message = 'Internal server error (500). Please try again later.';
+    } else if (statusCode == 0) {
+      message =
+          'Network error: Unable to connect to server. Please check your internet connection.';
     }
+
     throw Exception(message);
   }
 
-  // Fetch all female users for dashboard section
-  Future<Map<String, dynamic>> fetchDashboardSectionFemales({
-    String section = 'all',
+  // Fetch dashboard profiles based on section
+  Future<Map<String, dynamic>> fetchDashboardProfiles({
+    required String section,
     int page = 1,
     int limit = 10,
     double? latitude,
     double? longitude,
   }) async {
-    final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardEndpoint}',
-    );
+    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/dashboard');
     final headers = await _getHeaders();
-    final bodyMap = {'section': section, 'page': page, 'limit': limit};
-    if (latitude != null && longitude != null) {
-      bodyMap['location'] = {'latitude': latitude, 'longitude': longitude};
-    }
-    final body = json.encode(bodyMap);
-    final response = await http
-        .post(url, headers: headers, body: body)
-        .timeout(
-          const Duration(seconds: 10),
-          onTimeout: () {
-            throw TimeoutException('Request to dashboard API timed out');
-          },
-        );
-    print('URL: $url');
-    print('Headers: $headers');
-    print('Token: $_authToken');
-    print('Body: $body');
-    if (response.statusCode == 200) {
-      print('API raw response body: ${response.body}');
-      final result = json.decode(response.body);
-      // Return the full response, the controller will handle parsing
-      return result;
-    } else {
-      _handleError(response.statusCode, response.body);
-      throw Exception('Failed to fetch dashboard $section female users');
-    }
-  }
 
-  // Fetch all female users for dashboard 'all' section
-  Future<Map<String, dynamic>> fetchDashboardAllFemales({
-    int page = 1,
-    int limit = 10,
-  }) async {
-    return await fetchDashboardSectionFemales(
-      section: 'all',
-      page: page,
-      limit: limit,
-    );
+    // Construct request body
+    final Map<String, dynamic> body = {
+      'section': section,
+      'page': page,
+      'limit': limit,
+    };
+
+    // Add location if available (required for 'nearby' section)
+    if (latitude != null && longitude != null) {
+      body['location'] = {
+        'latitude': latitude,
+        'longitude': longitude,
+      };
+    }
+
+    print('[DEBUG] fetchDashboardProfiles called with section: $section');
+    print('[DEBUG] URL: $url');
+    print('[DEBUG] Body: $body');
+
+    try {
+      // Changed from GET to POST as per API requirement
+      final response = await http
+          .post(url, headers: headers, body: json.encode(body))
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              print('[ERROR] Request timed out after 10 seconds');
+              return http.Response('', 408); // Return timeout response
+            },
+          );
+
+      print('[DEBUG] Response status: ${response.statusCode}');
+      print('[DEBUG] Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        try {
+          // Safely decode JSON
+          final result = json.decode(response.body);
+          
+          // Check various possible response structures
+          if (result is Map) {
+            // Structure 1: { data: { results: [...] } }
+            if (result.containsKey('data') &&
+                result['data'] is Map &&
+                result['data'].containsKey('results')) {
+              final results = result['data']['results'];
+              print('[DEBUG] Found results in data.results: ${results is List ? results.length : 'not a list'}');
+              return result.cast<String, dynamic>();
+            }
+            // Structure 2: { data: [...] }
+            else if (result.containsKey('data') && result['data'] is List) {
+              return {
+                'success': true,
+                'data': {'results': result['data']},
+              };
+            }
+            // Structure 3: { results: [...] }
+            else if (result.containsKey('results') && result['results'] is List) {
+              return {
+                'success': true,
+                'data': {'results': result['results']},
+              };
+            }
+            // Unknown structure - log and return empty
+            else {
+              print('[WARNING] Unknown response structure. Available keys: ${result.keys.toList()}');
+              return {
+                'success': true,
+                'data': {'results': []},
+              };
+            }
+          } else {
+            return {
+              'success': false,
+              'data': {'results': []},
+            };
+          }
+        } catch (formatException) {
+          print('[ERROR] JSON decode failed: $formatException');
+          throw Exception('Failed to parse dashboard response: $formatException');
+        }
+      } else if (response.statusCode == 401) {
+        throw Exception('Unauthorized: Please log in again');
+      } else if (response.statusCode == 404) {
+        print('[ERROR] Dashboard endpoint not found (404)');
+        throw Exception('Dashboard endpoint not found');
+      } else if (response.statusCode == 408) {
+        throw Exception('Request timeout - please try again');
+      } else {
+        throw Exception('Failed to fetch dashboard profiles: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      print('[ERROR] Exception in fetchDashboardProfiles: $e');
+      rethrow;
+    }
   }
 
   // Fetch all dropdown options from profile-and-image endpoint
   Future<Map<String, dynamic>> fetchProfileAndImageOptions() async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}${ApiEndPoints.maleProfileAndImage}',
+      '${ApiEndPoints.baseUrl}${ApiEndPoints.maleProfileAndImage}',
     );
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for profile options not found
+      print(
+        'Profile and image options not found (404) - returning empty options',
+      );
+      return {
+        'success': true,
+        'data': {
+          'sports': [],
+          'films': [],
+          'musics': [],
+          'travels': [],
+          'images': [],
+        },
+      };
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to fetch profile and image options');
@@ -211,11 +337,49 @@ class ApiService {
 
   // Fetch male user profile (GET /male-user/me)
   Future<Map<String, dynamic>> fetchMaleMe() async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/me');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/me');
     final headers = await _getHeaders();
+
+    // Log the request for debugging
+    print('[DEBUG] Sending fetch male user profile request to: $url');
+    print('[DEBUG] Request headers: $headers');
+
     final response = await http.get(url, headers: headers);
+
+    // Log the response for debugging
+    print(
+      '[DEBUG] Fetch male user profile response status: ${response.statusCode}',
+    );
+    print('[DEBUG] Fetch male user profile response body: ${response.body}');
+
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 specifically for user profile not found
+      print('User profile not found (404) - may need to complete registration');
+      return {
+        'success': false,
+        'message': 'User profile not found. Please complete your registration.',
+        'data': null,
+      };
+    } else if (response.statusCode == 500) {
+      // Handle 500 server error specifically
+      print('Server error (500) when fetching male user profile');
+      try {
+        final errorBody = json.decode(response.body);
+        final serverMessage =
+            errorBody['message'] ??
+            errorBody['error'] ??
+            'Internal server error';
+        return {'success': false, 'message': serverMessage, 'data': null};
+      } catch (e) {
+        // If we can't parse the error response, return a generic 500 error
+        return {
+          'success': false,
+          'message': 'Internal server error (500). Please try again later.',
+          'data': null,
+        };
+      }
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to fetch male user profile');
@@ -224,7 +388,7 @@ class ApiService {
 
   // Fetch all available sports
   Future<List<String>> fetchAllSports() async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.maleSports}');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleSports}');
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
@@ -234,6 +398,10 @@ class ApiService {
           (data['data'] as List).map((e) => e['name'].toString()),
         );
       }
+      return [];
+    } else if (response.statusCode == 404) {
+      // Handle 404 for sports not found
+      print('Sports data not found (404) - returning empty list');
       return [];
     } else {
       _handleError(response.statusCode, response.body);
@@ -243,7 +411,7 @@ class ApiService {
 
   // Fetch all available film
   Future<List<String>> fetchAllFilm() async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.maleFilm}');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleFilm}');
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
@@ -253,6 +421,10 @@ class ApiService {
           (data['data'] as List).map((e) => e['name'].toString()),
         );
       }
+      return [];
+    } else if (response.statusCode == 404) {
+      // Handle 404 for films not found
+      print('Film data not found (404) - returning empty list');
       return [];
     } else {
       _handleError(response.statusCode, response.body);
@@ -262,7 +434,7 @@ class ApiService {
 
   // Fetch all available music
   Future<List<String>> fetchAllMusic() async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.maleMusic}');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleMusic}');
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
@@ -273,6 +445,10 @@ class ApiService {
         );
       }
       return [];
+    } else if (response.statusCode == 404) {
+      // Handle 404 for music not found
+      print('Music data not found (404) - returning empty list');
+      return [];
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to fetch music');
@@ -281,7 +457,7 @@ class ApiService {
 
   // Fetch all available travel
   Future<List<String>> fetchAllTravel() async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.maleTravel}');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleTravel}');
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 200) {
@@ -291,6 +467,10 @@ class ApiService {
           (data['data'] as List).map((e) => e['name'].toString()),
         );
       }
+      return [];
+    } else if (response.statusCode == 404) {
+      // Handle 404 for travel not found
+      print('Travel data not found (404) - returning empty list');
       return [];
     } else {
       _handleError(response.statusCode, response.body);
@@ -302,7 +482,7 @@ class ApiService {
   Future<Map<String, dynamic>> uploadUserImage({
     required File imageFile,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/upload-image');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/upload-image');
     final headers = await _getHeaders();
     final request = http.MultipartRequest('POST', url);
     request.headers.addAll(headers);
@@ -313,6 +493,14 @@ class ApiService {
     final response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for upload endpoint not found
+      print('Upload endpoint not found (404)');
+      return {
+        'success': false,
+        'message': 'Upload endpoint not found',
+        'data': null,
+      };
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to upload image');
@@ -323,7 +511,7 @@ class ApiService {
   Future<Map<String, dynamic>> updateUserTravel({
     required List<String> travel,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/travel');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/travel');
     final headers = await _getHeaders();
     final request = http.MultipartRequest('PATCH', url);
     request.headers.addAll(headers);
@@ -332,6 +520,14 @@ class ApiService {
     final response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for travel update endpoint not found
+      print('Travel update endpoint not found (404)');
+      return {
+        'success': false,
+        'message': 'Travel update endpoint not found',
+        'data': null,
+      };
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to update travel preferences');
@@ -342,7 +538,7 @@ class ApiService {
   Future<Map<String, dynamic>> updateUserMusic({
     required List<String> music,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/music');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/music');
     final headers = await _getHeaders();
     final request = http.MultipartRequest('PATCH', url);
     request.headers.addAll(headers);
@@ -351,6 +547,14 @@ class ApiService {
     final response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for music update endpoint not found
+      print('Music update endpoint not found (404)');
+      return {
+        'success': false,
+        'message': 'Music update endpoint not found',
+        'data': null,
+      };
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to update music preferences');
@@ -361,7 +565,7 @@ class ApiService {
   Future<Map<String, dynamic>> updateUserFilm({
     required List<String> film,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/film');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/film');
     final headers = await _getHeaders();
     final request = http.MultipartRequest('PATCH', url);
     request.headers.addAll(headers);
@@ -370,6 +574,14 @@ class ApiService {
     final response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for film update endpoint not found
+      print('Film update endpoint not found (404)');
+      return {
+        'success': false,
+        'message': 'Film update endpoint not found',
+        'data': null,
+      };
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to update film preferences');
@@ -380,7 +592,7 @@ class ApiService {
   Future<Map<String, dynamic>> updateUserSports({
     required List<String> sports,
   }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/sports');
+    final url = Uri.parse('${ApiEndPoints.baseUrl}/male-user/sports');
     final headers = await _getHeaders();
     final request = http.MultipartRequest('PATCH', url);
     request.headers.addAll(headers);
@@ -389,17 +601,82 @@ class ApiService {
     final response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for sports update endpoint not found
+      print('Sports update endpoint not found (404)');
+      return {
+        'success': false,
+        'message': 'Sports update endpoint not found',
+        'data': null,
+      };
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to update sports');
     }
   }
 
-  // Login method (stub, implement as needed)
-  Future<bool> login(String email) async {
-    // TODO: Implement actual login logic (send OTP, etc.)
-    // For now, just return true to allow flow
-    return true;
+  // Login method (send OTP to user's email)
+  Future<Map<String, dynamic>> login(String email) async {
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.loginMale}');
+    final headers = {"Content-Type": "application/json"};
+    final body = jsonEncode({"email": email.trim()});
+
+    // Log the request for debugging
+    print('[DEBUG] Sending login request to: $url');
+    print('[DEBUG] Request headers: $headers');
+    print('[DEBUG] Request body: $body');
+
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+
+      // Log the response for debugging
+      print('[DEBUG] Login response status: ${response.statusCode}');
+      print('[DEBUG] Login response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final body = json.decode(response.body);
+        return body;
+      } else if (response.statusCode == 404) {
+        // Handle 404 for login endpoint not found
+        print('Login endpoint not found (404)');
+        return {'success': false, 'message': 'User not found.', 'data': null};
+      } else if (response.statusCode == 500) {
+        // Handle 500 server error specifically
+        print('Server error (500) when attempting login');
+        try {
+          final errorBody = json.decode(response.body);
+          final serverMessage =
+              errorBody['message'] ??
+              errorBody['error'] ??
+              'Internal server error';
+          return {'success': false, 'message': serverMessage, 'data': null};
+        } catch (e) {
+          // If we can't parse the error response, return a generic 500 error
+          return {
+            'success': false,
+            'message': 'Internal server error (500). Please try again later.',
+            'data': null,
+          };
+        }
+      } else {
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to send login OTP: ${response.body}');
+      }
+    } on SocketException catch (e) {
+      print('[ERROR] SocketException in login: $e');
+      throw Exception(
+        'Network error: Unable to connect to server. Please check your internet connection.',
+      );
+    } on http.ClientException catch (e) {
+      print('[ERROR] ClientException in login: $e');
+      throw Exception('Connection error occurred while trying to send OTP.');
+    } on TimeoutException catch (e) {
+      print('[ERROR] TimeoutException in login: Request timed out');
+      throw Exception('Request timeout: Server is taking too long to respond.');
+    } catch (e) {
+      print('[ERROR] Unexpected error in login: $e');
+      throw Exception('An unexpected error occurred: $e');
+    }
   }
 
   // Update user profile (stub, implement as needed)
@@ -432,7 +709,7 @@ class ApiService {
   // Fetch sent follow requests
   Future<List<Map<String, dynamic>>> fetchSentFollowRequests() async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}/male-user/follow-requests/sent',
+      '${ApiEndPoints.baseUrl}/male-user/follow-requests/sent',
     );
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
@@ -446,6 +723,10 @@ class ApiService {
       } else {
         return <Map<String, dynamic>>[];
       }
+    } else if (response.statusCode == 404) {
+      // Handle 404 for no follow requests found
+      print('No sent follow requests found (404) - returning empty list');
+      return <Map<String, dynamic>>[];
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to fetch sent follow requests');
@@ -457,7 +738,7 @@ class ApiService {
     required String femaleUserId,
   }) async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}/male-user/follow-request/send',
+      '${ApiEndPoints.baseUrl}/male-user/follow-request/send',
     );
     final headers = await _getHeaders();
     final body = jsonEncode({"femaleUserId": femaleUserId});
@@ -466,6 +747,14 @@ class ApiService {
 
     if (response.statusCode == 200) {
       return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for follow request endpoint not found
+      print('Follow request endpoint not found (404)');
+      return {
+        'success': false,
+        'message': 'Unable to send follow request - service unavailable',
+        'data': null,
+      };
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to send follow request');
@@ -478,8 +767,9 @@ class ApiService {
     int limit = 10,
   }) async {
     try {
+      // First, try the original browse-females endpoint
       final url = Uri.parse(
-        '${ApiEndPoints.baseUrls}${ApiEndPoints.fetchfemaleusers}?page=$page&limit=$limit',
+        '${ApiEndPoints.baseUrl}${ApiEndPoints.fetchfemaleusers}?page=$page&limit=$limit',
       );
       final headers = await _getHeaders();
       print('URL: $url');
@@ -505,7 +795,250 @@ class ApiService {
             final firstGender = firstUser['gender']?.toString()?.toLowerCase();
             if (firstGender == 'male' || firstGender == 'm') {
               print(
-                'WARNING: API returned male users when expecting females. Filtering...',
+                'WARNING: Browse API returned male users when expecting females. Filtering...',
+              );
+              // Filter to ensure we only return female users
+              final femaleUsers = allUsers.where((user) {
+                final gender = user['gender']?.toString()?.toLowerCase();
+                return gender != null && (gender == 'female' || gender == 'f');
+              }).toList();
+              print(
+                'Found ${femaleUsers.length} female users out of ${allUsers.length} total',
+              );
+
+              // If no female users are found after filtering, return the original data
+              // This prevents empty results when the API doesn't properly filter on the backend
+              if (femaleUsers.isEmpty) {
+                print(
+                  'WARNING: No female users found after filtering. Returning original data as fallback.',
+                );
+                return allUsers
+                    .map<Map<String, dynamic>>(
+                      (e) => Map<String, dynamic>.from(e),
+                    )
+                    .toList();
+              }
+
+              return femaleUsers
+                  .map<Map<String, dynamic>>(
+                    (e) => Map<String, dynamic>.from(e),
+                  )
+                  .toList();
+            }
+          }
+
+          // If the first user is female or unknown, return all
+          return allUsers
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList();
+        } else if (data is Map && data['results'] is List) {
+          // Handle case where data has a results property
+          return (data['results'] as List)
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList();
+        } else {
+          print('Unexpected browse API data format: $data');
+          // Check if response has a different structure
+          if (decoded is Map<String, dynamic>) {
+            // Handle case where data is not in 'data' field
+            if (decoded.containsKey('users') && decoded['users'] is List) {
+              return (decoded['users'] as List)
+                  .map<Map<String, dynamic>>(
+                    (e) => Map<String, dynamic>.from(e),
+                  )
+                  .toList();
+            } else if (decoded.containsKey('results') &&
+                decoded['results'] is List) {
+              return (decoded['results'] as List)
+                  .map<Map<String, dynamic>>(
+                    (e) => Map<String, dynamic>.from(e),
+                  )
+                  .toList();
+            }
+          }
+          return <Map<String, dynamic>>[];
+        }
+      } else if (response.statusCode == 404) {
+        // If browse-females doesn't exist, fall back to dashboard endpoint
+        print(
+          'Browse-females endpoint not found (404), falling back to dashboard',
+        );
+        return await _fetchFemaleUsersFromDashboard(page: page, limit: limit);
+      } else {
+        print('Error: ${response.statusCode} - ${response.body}');
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to load female users');
+      }
+    } on SocketException catch (e) {
+      print('SocketException: $e');
+      throw Exception('Network error: $e');
+    } on http.ClientException catch (e) {
+      print('ClientException: $e');
+      throw Exception('Connection error: $e');
+    } catch (e, st) {
+      print('General Exception in fetchFemaleUsers: $e\n$st');
+      throw Exception('Network error: $e');
+    }
+  }
+
+  // Fallback method for fetching female users from dashboard
+  Future<List<Map<String, dynamic>>> _fetchFemaleUsersFromDashboard({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      final url = Uri.parse(
+        '${ApiEndPoints.baseUrl}${ApiEndPoints.dashboardEndpoint}?section=all&page=$page&limit=$limit',
+      );
+      final headers = await _getHeaders();
+      print('Dashboard fallback URL: $url');
+      print('Headers: $headers');
+      print('Token: $_authToken');
+
+      final response = await http.get(url, headers: headers);
+      print('Dashboard API Response Status: ${response.statusCode}');
+      print('Dashboard API Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        final data = decoded['data'];
+        if (data is List) {
+          // For now, return all users from the API response
+          // The backend should ideally return only female users
+          // but if it doesn't, we'll filter them
+          List<dynamic> allUsers = data;
+
+          // Check if the first item is male - if so, the API isn't filtering properly
+          if (allUsers.isNotEmpty) {
+            final firstUser = allUsers[0];
+            final firstGender = firstUser['gender']?.toString()?.toLowerCase();
+            if (firstGender == 'male' || firstGender == 'm') {
+              print(
+                'WARNING: Dashboard API returned male users when expecting females. Filtering...',
+              );
+              // Filter to ensure we only return female users
+              final femaleUsers = allUsers.where((user) {
+                final gender = user['gender']?.toString()?.toLowerCase();
+                return gender != null && (gender == 'female' || gender == 'f');
+              }).toList();
+              print(
+                'Found ${femaleUsers.length} female users out of ${allUsers.length} total',
+              );
+
+              // If no female users are found after filtering, return the original data
+              // This prevents empty results when the API doesn't properly filter on the backend
+              if (femaleUsers.isEmpty) {
+                print(
+                  'WARNING: No female users found after filtering. Returning original data as fallback.',
+                );
+                return allUsers
+                    .map<Map<String, dynamic>>(
+                      (e) => Map<String, dynamic>.from(e),
+                    )
+                    .toList();
+              }
+
+              return femaleUsers
+                  .map<Map<String, dynamic>>(
+                    (e) => Map<String, dynamic>.from(e),
+                  )
+                  .toList();
+            }
+          }
+
+          // If the first user is female or unknown, return all
+          return allUsers
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList();
+        } else if (data is Map && data['results'] is List) {
+          // Handle case where data has a results property
+          return (data['results'] as List)
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList();
+        } else {
+          print('Unexpected dashboard data format: $data');
+          // Check if response has a different structure
+          if (decoded is Map<String, dynamic>) {
+            // Handle case where data is not in 'data' field
+            if (decoded.containsKey('users') && decoded['users'] is List) {
+              return (decoded['users'] as List)
+                  .map<Map<String, dynamic>>(
+                    (e) => Map<String, dynamic>.from(e),
+                  )
+                  .toList();
+            } else if (decoded.containsKey('results') &&
+                decoded['results'] is List) {
+              return (decoded['results'] as List)
+                  .map<Map<String, dynamic>>(
+                    (e) => Map<String, dynamic>.from(e),
+                  )
+                  .toList();
+            }
+          }
+          return <Map<String, dynamic>>[];
+        }
+      } else if (response.statusCode == 404) {
+        // Handle 404 for no female users found
+        print('No female users found (404) - returning empty list');
+        return <Map<String, dynamic>>[];
+      } else {
+        print('Error: ${response.statusCode} - ${response.body}');
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to load female users from dashboard');
+      }
+    } on SocketException catch (e) {
+      print('SocketException: $e');
+      throw Exception('Network error: $e');
+    } on http.ClientException catch (e) {
+      print('ClientException: $e');
+      throw Exception('Connection error: $e');
+    } catch (e, st) {
+      print('General Exception in _fetchFemaleUsersFromDashboard: $e\n$st');
+      throw Exception('Network error: $e');
+    }
+  }
+
+  // Fallback method for fetching female users
+  Future<List<Map<String, dynamic>>> _fetchFemaleUsersFallback({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    try {
+      final url = Uri.parse(
+        '${ApiEndPoints.baseUrl}${ApiEndPoints.fetchfemaleusers}?page=$page&limit=$limit',
+      );
+      final headers = await _getHeaders();
+      print('Fallback URL: $url');
+      print('Headers: $headers');
+      print('Token: $_authToken');
+
+      final response = await http.get(url, headers: headers);
+      print('Fallback API Response Status: ${response.statusCode}');
+      print('Fallback API Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        final success = decoded['success'] ?? true;
+
+        if (!success) {
+          print('Fallback API returned failure: ${decoded["message"]}');
+          return <Map<String, dynamic>>[];
+        }
+
+        final data = decoded['data'];
+        if (data is List) {
+          // For now, return all users from the API response
+          // The backend should ideally return only female users
+          // but if it doesn't, we'll filter them
+          List<dynamic> allUsers = data;
+
+          // Check if the first item is male - if so, the API isn't filtering properly
+          if (allUsers.isNotEmpty) {
+            final firstUser = allUsers[0];
+            final firstGender = firstUser['gender']?.toString()?.toLowerCase();
+            if (firstGender == 'male' || firstGender == 'm') {
+              print(
+                'WARNING: Fallback API returned male users when expecting females. Filtering...',
               );
               // Filter to ensure we only return female users
               final femaleUsers = allUsers.where((user) {
@@ -542,9 +1075,95 @@ class ApiService {
               .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
               .toList();
         } else {
-          print('Unexpected data format: $data');
+          print('Unexpected fallback data format: $data');
+          // Check if response has a different structure
+          if (decoded is Map<String, dynamic>) {
+            // Handle case where data is not in 'data' field
+            if (decoded.containsKey('users') && decoded['users'] is List) {
+              return (decoded['users'] as List)
+                  .map<Map<String, dynamic>>(
+                    (e) => Map<String, dynamic>.from(e),
+                  )
+                  .toList();
+            } else if (decoded.containsKey('results') &&
+                decoded['results'] is List) {
+              return (decoded['results'] as List)
+                  .map<Map<String, dynamic>>(
+                    (e) => Map<String, dynamic>.from(e),
+                  )
+                  .toList();
+            }
+          }
           return <Map<String, dynamic>>[];
         }
+      } else if (response.statusCode == 404) {
+        // Handle 404 for no female users found
+        print('No female users found (404) - returning empty list');
+        return <Map<String, dynamic>>[];
+      } else {
+        print('Fallback Error: ${response.statusCode} - ${response.body}');
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to load female users from fallback endpoint');
+      }
+    } on SocketException catch (e) {
+      print('SocketException in fallback: $e');
+      throw Exception('Network error: $e');
+    } on http.ClientException catch (e) {
+      print('ClientException in fallback: $e');
+      throw Exception('Connection error: $e');
+    } catch (e, st) {
+      print('General Exception in _fetchFemaleUsersFallback: $e\n$st');
+      throw Exception('Network error: $e');
+    }
+  }
+
+  // Method for browsing female users
+  Future<List<Map<String, dynamic>>> fetchBrowseFemales({
+    int page = 1,
+    int limit = 10,
+  }) async {
+    // Since the browse-females endpoint doesn't exist, use dashboard endpoint instead
+    // This maintains compatibility while using the working endpoint
+    try {
+      final url = Uri.parse(
+        '${ApiEndPoints.baseUrl}${ApiEndPoints.dashboardEndpoint}?section=all&page=$page&limit=$limit',
+      );
+      final headers = await _getHeaders();
+      print('Dashboard URL: $url');
+      print('Headers: $headers');
+      print('Token: $_authToken');
+
+      final response = await http.get(url, headers: headers);
+      print('Dashboard API Response Status: ${response.statusCode}');
+      print('Dashboard API Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        final data = decoded['data'];
+        if (data is List) {
+          print('Browse endpoint returned ${data.length} profiles as List');
+          return data
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList();
+        } else if (data is Map && data['results'] is List) {
+          // Handle case where data has a results property
+          final results = (data['results'] as List)
+              .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+              .toList();
+          print(
+            'Browse endpoint returned ${results.length} profiles as Map.results',
+          );
+          return results;
+        } else {
+          print(
+            'Browse endpoint returned unexpected data format: ${data.runtimeType}',
+          );
+          return <Map<String, dynamic>>[];
+        }
+      } else if (response.statusCode == 404) {
+        // Handle 404 for no female users found in browse
+        print('No female users found in browse (404) - returning empty list');
+        return <Map<String, dynamic>>[];
       } else {
         print('Error: ${response.statusCode} - ${response.body}');
         _handleError(response.statusCode, response.body);
@@ -557,7 +1176,7 @@ class ApiService {
       print('ClientException: $e');
       throw Exception('Connection error: $e');
     } catch (e, st) {
-      print('General Exception in fetchFemaleUsers: $e\n$st');
+      print('General Exception in fetchBrowseFemales: $e\n$st');
       throw Exception('Network error: $e');
     }
   }
@@ -570,33 +1189,73 @@ class ApiService {
     required String password,
     String? referralCode,
   }) async {
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.signupMale}');
+    final headers = {'Content-Type': 'application/json'};
+    final body = jsonEncode({
+      'firstName': firstName,
+      'lastName': lastName,
+      'email': email,
+      'password': password,
+      if (referralCode != null) 'referralCode': referralCode,
+    });
+
+    // Log the request for debugging
+    print('[DEBUG] Sending registration request to: $url');
+    print('[DEBUG] Request headers: $headers');
+    print('[DEBUG] Request body: $body');
+
     try {
-      final url = Uri.parse(
-        '${ApiEndPoints.baseUrls}${ApiEndPoints.signupMale}',
-      );
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'firstName': firstName,
-          'lastName': lastName,
-          'email': email,
-          'password': password,
-          if (referralCode != null) 'referralCode': referralCode,
-        }),
-      );
+      final response = await http.post(url, headers: headers, body: body);
+
+      // Log the response for debugging
+      print('[DEBUG] Registration response status: ${response.statusCode}');
+      print('[DEBUG] Registration response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return json.decode(response.body);
+      } else if (response.statusCode == 404) {
+        // Handle 404 for registration endpoint not found
+        print('Registration endpoint not found (404)');
+        return {
+          'success': false,
+          'message': 'Registration service unavailable',
+          'data': null,
+        };
+      } else if (response.statusCode == 500) {
+        // Handle 500 server error specifically
+        print('Server error (500) when attempting registration');
+        try {
+          final errorBody = json.decode(response.body);
+          final serverMessage =
+              errorBody['message'] ??
+              errorBody['error'] ??
+              'Internal server error';
+          return {'success': false, 'message': serverMessage, 'data': null};
+        } catch (e) {
+          // If we can't parse the error response, return a generic 500 error
+          return {
+            'success': false,
+            'message': 'Internal server error (500). Please try again later.',
+            'data': null,
+          };
+        }
       } else {
         _handleError(response.statusCode, response.body);
-        throw Exception('Failed to register user');
+        throw Exception('Failed to register user: ${response.body}');
       }
-    } on SocketException {
-      throw Exception('Network error: Please check your internet connection');
-    } on http.ClientException {
-      throw Exception('Connection error: Unable to connect to server');
+    } on SocketException catch (e) {
+      print('[ERROR] SocketException in registration: $e');
+      throw Exception('Network error: Please check your internet connection.');
+    } on http.ClientException catch (e) {
+      print('[ERROR] ClientException in registration: $e');
+      throw Exception(
+        'Connection error: Please check your internet connection.',
+      );
+    } on TimeoutException catch (e) {
+      print('[ERROR] TimeoutException in registration: Request timed out');
+      throw Exception('Request timeout: Server is taking too long to respond.');
     } catch (e) {
+      print('[ERROR] Unexpected error in registration: $e');
       throw Exception('Registration error: $e');
     }
   }
@@ -608,9 +1267,15 @@ class ApiService {
     int limit = 10,
   }) async {
     try {
-      final url = Uri.parse(
-        '$baseUrl${ApiEndPoints.dashboardEndpoint}?section=$section&page=$page&limit=$limit',
-      );
+      // Use GET with query parameters instead of POST with body
+      final url = Uri.parse('$baseUrl${ApiEndPoints.dashboardEndpoint}')
+          .replace(
+            queryParameters: {
+              'section': section,
+              'page': page.toString(),
+              'limit': limit.toString(),
+            },
+          );
       final headers = await _getHeaders();
       print('Dashboard URL: $url');
       print('Headers: $headers');
@@ -660,18 +1325,26 @@ class ApiService {
   Future<Map<String, dynamic>> fetchUserProfile() async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiEndPoints.baseUrls}/api/user/profile'),
+        Uri.parse('${ApiEndPoints.baseUrl}/api/user/profile'),
         headers: await _getHeaders(),
       );
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
+      } else if (response.statusCode == 404) {
+        // Handle 404 for user profile not found
+        print('User profile not found (404)');
+        return {
+          'success': false,
+          'message': 'User profile not found',
+          'data': null,
+        };
       } else {
         _handleError(response.statusCode, response.body);
-        throw Exception('Failed to load user profile');
+        throw Exception('Failed to fetch user profile: ${response.body}');
       }
     } catch (e) {
-      throw Exception('Failed to fetch profile: $e');
+      throw Exception('Network error: $e');
     }
   }
 
@@ -681,7 +1354,7 @@ class ApiService {
     int limit = 10,
   }) async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardEndpoint}',
+      '${ApiEndPoints.baseUrl}${ApiEndPoints.dashboardEndpoint}',
     );
     final headers = await _getHeaders();
     final body = json.encode({
@@ -713,29 +1386,36 @@ class ApiService {
   Future<Map<String, dynamic>> fetchMaleProfileAndImage() async {
     try {
       final response = await http.get(
-        Uri.parse(
-          '${ApiEndPoints.baseUrls}${ApiEndPoints.maleProfileAndImage}',
-        ),
+        Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleProfileAndImage}'),
         headers: await _getHeaders(),
       );
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        final decoded = json.decode(response.body);
+        return {'success': true, 'data': decoded};
+      } else if (response.statusCode == 404) {
+        // Handle 404 for profile and images not found
+        print('Male profile and images not found (404)');
+        return {
+          'success': false,
+          'message': 'Profile and images not found',
+          'data': null,
+        };
       } else {
         _handleError(response.statusCode, response.body);
-        throw Exception('Failed to fetch male profile and images');
+        throw Exception(
+          'Failed to fetch male profile and images: ${response.body}',
+        );
       }
     } catch (e) {
-      throw Exception('Failed to fetch profile and images: $e');
+      throw Exception('Network error: $e');
     }
   }
 
   // Block a female user
   Future<Map<String, dynamic>> blockUser({required String femaleUserId}) async {
     try {
-      final url = Uri.parse(
-        '${ApiEndPoints.baseUrls}${ApiEndPoints.maleBlock}',
-      );
+      final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleBlock}');
       final headers = await _getHeaders();
       final body = jsonEncode({"femaleUserId": femaleUserId});
 
@@ -758,18 +1438,27 @@ class ApiService {
   }) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.maleBlockList}'),
+        Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleBlockList}'),
         headers: await _getHeaders(),
       );
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        final decoded = json.decode(response.body);
+        return {'success': true, 'data': decoded};
+      } else if (response.statusCode == 404) {
+        // Handle 404 for blocked users list not found
+        print('Blocked users list not found (404)');
+        return {
+          'success': true, // Return success with empty list
+          'data': [],
+          'message': 'No blocked users found',
+        };
       } else {
         _handleError(response.statusCode, response.body);
-        throw Exception('Failed to fetch blocked users list');
+        throw Exception('Failed to fetch blocked users list: ${response.body}');
       }
     } catch (e) {
-      throw Exception('Failed to fetch blocked users list: $e');
+      throw Exception('Network error: $e');
     }
   }
 
@@ -777,23 +1466,25 @@ class ApiService {
   Future<Map<String, dynamic>> unblockUser({
     required String femaleUserId,
   }) async {
-    try {
-      final url = Uri.parse(
-        '${ApiEndPoints.baseUrls}${ApiEndPoints.maleUnblock}',
-      );
-      final headers = await _getHeaders();
-      final body = jsonEncode({"femaleUserId": femaleUserId});
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleUnblock}');
+    final headers = await _getHeaders();
+    final body = jsonEncode({"femaleUserId": femaleUserId});
 
-      final response = await http.post(url, headers: headers, body: body);
+    final response = await http.post(url, headers: headers, body: body);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return json.decode(response.body);
-      } else {
-        _handleError(response.statusCode, response.body);
-        throw Exception('Failed to unblock user');
-      }
-    } catch (e) {
-      throw Exception('Failed to unblock user: $e');
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for unblock endpoint not found
+      print('Unblock endpoint not found (404)');
+      return {
+        'success': false,
+        'message': 'Unable to unblock user - service unavailable',
+        'data': null,
+      };
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to unblock user');
     }
   }
 
@@ -802,57 +1493,125 @@ class ApiService {
     int limit = 10,
     int skip = 0,
   }) async {
+    final url = Uri.parse(
+      '${ApiEndPoints.baseUrl}${ApiEndPoints.callHistory}?limit=$limit&skip=$skip',
+    );
+    final headers = await _getHeaders();
+
+    print('Fetching call history from: $url');
+    print('Headers: $headers');
+
     try {
-      final url = Uri.parse(
-        '${ApiEndPoints.baseUrls}${ApiEndPoints.callHistory}?limit=$limit&skip=$skip',
-      );
-      final headers = await _getHeaders();
-
-      print('Fetching call history from: $url');
-      print('Headers: $headers');
-
       final response = await http.get(url, headers: headers);
 
       print('Call history response status: ${response.statusCode}');
       print('Call history response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        final data = json.decode(response.body);
+        return {'success': true, 'data': data['data'] ?? data};
+      } else if (response.statusCode == 404) {
+        // Handle 404 for call history not found - this endpoint might not exist
+        print('Call history endpoint not found (404) - returning empty list');
+        return {
+          'success': true,
+          'data': [],
+          'message': 'No call history found',
+        };
+      } else if (response.statusCode == 500) {
+        // Handle 500 server error - return empty data instead of throwing
+        print('Call history server error (500) - returning empty list');
+        return {
+          'success': true,
+          'data': [],
+          'message': 'Call history temporarily unavailable',
+        };
       } else {
         _handleError(response.statusCode, response.body);
-        throw Exception('Failed to fetch call history');
+        throw Exception('Failed to fetch call history: ${response.body}');
       }
     } catch (e) {
+      // Catch network errors and return empty data
       print('Error fetching call history: $e');
-      throw Exception('Failed to fetch call history: $e');
+      return {
+        'success': true,
+        'data': [],
+        'message': 'Unable to fetch call history',
+      };
     }
   }
 
   // Fetch call statistics
   Future<Map<String, dynamic>> fetchCallStats() async {
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.callStats}');
+    final headers = await _getHeaders();
+
+    print('Fetching call stats from: $url');
+    print('Headers: $headers');
+
     try {
-      final url = Uri.parse(
-        '${ApiEndPoints.baseUrls}${ApiEndPoints.callStats}',
-      );
-      final headers = await _getHeaders();
-
-      print('Fetching call stats from: $url');
-      print('Headers: $headers');
-
       final response = await http.get(url, headers: headers);
 
       print('Call stats response status: ${response.statusCode}');
       print('Call stats response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        final data = json.decode(response.body);
+        return {'success': true, 'data': data['data'] ?? data};
+      } else if (response.statusCode == 404) {
+        // Handle 404 for call stats not found - this endpoint might not exist
+        print('Call stats endpoint not found (404) - returning empty stats');
+        return {
+          'success': true,
+          'data': {},
+          'message': 'No call stats available',
+        };
+      } else if (response.statusCode == 500) {
+        // Handle 500 server error - return empty data instead of throwing
+        print('Call stats server error (500) - returning empty stats');
+        return {
+          'success': true,
+          'data': {},
+          'message': 'Call stats temporarily unavailable',
+        };
       } else {
         _handleError(response.statusCode, response.body);
-        throw Exception('Failed to fetch call stats');
+        throw Exception('Failed to fetch call stats: ${response.body}');
       }
     } catch (e) {
+      // Catch network errors and return empty data
       print('Error fetching call stats: $e');
-      throw Exception('Failed to fetch call stats: $e');
+      return {
+        'success': true,
+        'data': {},
+        'message': 'Unable to fetch call stats',
+      };
+    }
+  }
+
+  // Recharge wallet
+  Future<Map<String, dynamic>> rechargeWallet({required int amount}) async {
+    final url = Uri.parse(
+      '${ApiEndPoints.baseUrl}${ApiEndPoints.maleWalletRecharge}',
+    );
+    final headers = await _getHeaders();
+    final body = jsonEncode({"amount": amount});
+
+    final response = await http.post(url, headers: headers, body: body);
+
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    } else if (response.statusCode == 404) {
+      // Handle 404 for wallet recharge endpoint not found
+      print('Wallet recharge endpoint not found (404)');
+      return {
+        'success': false,
+        'message': 'Wallet recharge service unavailable',
+        'data': null,
+      };
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to recharge wallet');
     }
   }
 }

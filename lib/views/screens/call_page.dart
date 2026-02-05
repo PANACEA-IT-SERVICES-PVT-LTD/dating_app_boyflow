@@ -399,10 +399,15 @@ class _CallPageState extends State<CallPage> {
             ).showSnackBar(SnackBar(content: Text('Call Error: $msg')));
             // If there's a critical error, end the call session
             // Error code -102 is CONNECTION_REJECTED which can mean various connection issues
-            if (err.index == -102 || err.index == 102) {
-              // Handle both positive and negative indices
+            if (err.index == -102 ||
+                err.index == 102 ||
+                err.index == -8 ||
+                err.index == 8) {
+              // Handle both positive and negative indices for common connection errors
+              // -102/102: CONNECTION_REJECTED
+              // -8/8: INVALID_APP_ID
               print(
-                '[DEBUG] Critical Agora error detected, ending call session',
+                '[DEBUG] Critical Agora error detected (${err.index}), ending call session',
               );
               _endCallSession();
             }
@@ -443,17 +448,37 @@ class _CallPageState extends State<CallPage> {
 
     print('[DEBUG] Attempting to join channel: ${widget.channelName}');
 
-    await engine.joinChannel(
-      token: token,
-      channelId: widget.channelName,
-      uid: 0,
-      options: ChannelMediaOptions(
-        clientRoleType: ClientRoleType.clientRoleBroadcaster,
-        channelProfile: ChannelProfileType.channelProfileCommunication,
-        publishMicrophoneTrack: true,
-        publishCameraTrack: widget.enableVideo,
-      ),
-    );
+    // Add timeout for the join channel operation
+    try {
+      await engine
+          .joinChannel(
+            token: token,
+            channelId: widget.channelName,
+            uid: 0,
+            options: ChannelMediaOptions(
+              clientRoleType: ClientRoleType.clientRoleBroadcaster,
+              channelProfile: ChannelProfileType.channelProfileCommunication,
+              publishMicrophoneTrack: true,
+              publishCameraTrack: widget.enableVideo,
+            ),
+          )
+          .timeout(const Duration(seconds: 15)); // Add 15-second timeout
+    } catch (e) {
+      print('[DEBUG] Failed to join channel: $e');
+      if (mounted && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to connect to call. Please try again.'),
+          ),
+        );
+        // Navigate back after showing error
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted && context.mounted) {
+            Navigator.of(context).maybePop();
+          }
+        });
+      }
+    }
   }
 
   Future<bool> _ensurePermissions() async {

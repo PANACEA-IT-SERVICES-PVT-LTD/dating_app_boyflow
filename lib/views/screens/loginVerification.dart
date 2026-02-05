@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:Boy_flow/views/screens/main_navigation.dart';
 import '../../controllers/api_controller.dart';
 import '../../core/routes/app_routes.dart';
-// ...existing code...
-// Removed unused imports
 import '../../widgets/gradient_button.dart';
 import '../../widgets/otp_input_fields.dart';
 
@@ -70,7 +68,16 @@ class _LoginVerificationScreenState extends State<LoginVerificationScreen> {
         }
       }
     } catch (e) {
-      setState(() => _errorMessage = 'Error verifying OTP: $e');
+      String errorMessage = 'Error verifying OTP: $e';
+      // Provide more user-friendly error message for common issues
+      if (e.toString().toLowerCase().contains('connection') ||
+          e.toString().toLowerCase().contains('network')) {
+        errorMessage = "Network error: Please check your internet connection.";
+      } else if (e.toString().toLowerCase().contains('404')) {
+        errorMessage =
+            "Service temporarily unavailable. Please try again later.";
+      }
+      setState(() => _errorMessage = errorMessage);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -106,8 +113,18 @@ class _LoginVerificationScreenState extends State<LoginVerificationScreen> {
       }
     } catch (e) {
       print('Error checking user status: $e');
-      // If there's an error, navigate to login
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
+      // Show a user-friendly message
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Error loading user data. Please try again.';
+        });
+      }
+      // If there's an error, navigate to login after a delay to show the error
+      Future.delayed(Duration(seconds: 2), () {
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, AppRoutes.login);
+        }
+      });
     } finally {
       if (mounted) {
         setState(() {

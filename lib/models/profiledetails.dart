@@ -39,7 +39,7 @@ class Profiledetails {
   final List<dynamic> malefollowing;
   final List<dynamic> malefollowers;
   final bool? profileCompleted;
-  final List<dynamic> referredBy;
+  final String? referredBy;
   final Map<String, dynamic>? searchPreferences;
 
   const Profiledetails({
@@ -83,7 +83,7 @@ class Profiledetails {
     this.malefollowing = const [],
     this.malefollowers = const [],
     this.profileCompleted,
-    this.referredBy = const [],
+    this.referredBy,
     this.searchPreferences,
   });
 
@@ -181,9 +181,10 @@ class Profiledetails {
       profileCompleted: json["profileCompleted"] is bool
           ? json["profileCompleted"] as bool
           : null,
-      referredBy: (json["referredBy"] is List)
-          ? List<dynamic>.from(json["referredBy"])
-          : const [],
+      referredBy:
+          (json["referredBy"] is String && json["referredBy"].isNotEmpty)
+          ? json["referredBy"]
+          : null,
       searchPreferences: json["searchPreferences"] is Map<String, dynamic>
           ? Map<String, dynamic>.from(json["searchPreferences"] as Map)
           : null,
@@ -191,7 +192,7 @@ class Profiledetails {
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{
       "_id": id,
       "email": email,
       "mobileNumber": mobileNumber,
@@ -213,9 +214,6 @@ class Profiledetails {
       "coinBalance": coinBalance,
       "referralCode": referralCode,
       "referralBonusAwarded": referralBonusAwarded,
-      "createdAt": createdAt?.toIso8601String(),
-      "updatedAt": updatedAt?.toIso8601String(),
-      "__v": v,
       "age": age,
       "bio": bio,
       "gender": gender,
@@ -232,9 +230,23 @@ class Profiledetails {
       "malefollowing": malefollowing,
       "malefollowers": malefollowers,
       "profileCompleted": profileCompleted,
-      "referredBy": referredBy,
       "searchPreferences": searchPreferences,
     };
+
+    if (createdAt != null) {
+      map["createdAt"] = createdAt!.toIso8601String();
+    }
+    if (updatedAt != null) {
+      map["updatedAt"] = updatedAt!.toIso8601String();
+    }
+    if (v != null) {
+      map["__v"] = v;
+    }
+    if (referredBy != null && referredBy!.isNotEmpty) {
+      map["referredBy"] = referredBy;
+    }
+
+    return map;
   }
 
   static DateTime? _tryParseDate(dynamic value) {

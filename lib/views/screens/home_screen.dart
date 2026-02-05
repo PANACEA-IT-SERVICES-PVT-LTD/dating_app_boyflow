@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       final response = await http.post(
-        Uri.parse('https://friend-circle-new.vercel.app/male-user/location'),
+        Uri.parse('${ApiEndPoints.baseUrl}/male-user/location'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -94,22 +94,38 @@ class _HomeScreenState extends State<HomeScreen> {
       isLoading = true;
       error = null;
     });
+
     try {
-      final response = await http.get(
-        Uri.parse(
-          'https://friend-circle-new.vercel.app/male-user/dashboard?section=all&page=1&limit=10',
-        ),
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      final response = await http.post(
+        Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.dashboardEndpoint}'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({"section": "all", "page": 1, "limit": 10}),
       );
+
       final data = json.decode(response.body);
-      if (data['success'] == true) {
+
+      if (response.statusCode == 200 && data['success'] == true) {
         final results = data['data']['results'] as List;
+
+        // 🔥 IMPORTANT: do not overwrite with empty
+        if (results.isNotEmpty) {
+          setState(() {
+            users = results.map((u) => FemaleUser.fromJson(u)).toList();
+          });
+        }
+
         setState(() {
-          users = results.map((u) => FemaleUser.fromJson(u)).toList();
           isLoading = false;
         });
       } else {
         setState(() {
-          error = 'Failed to load data';
+          error = data['message'] ?? 'Failed to load dashboard';
           isLoading = false;
         });
       }
@@ -125,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
     print('[Recharge] Function entered with amount: $amount');
     try {
       final url = Uri.parse(
-        ApiEndPoints.baseUrls + ApiEndPoints.maleWalletRecharge,
+        ApiEndPoints.baseUrl + ApiEndPoints.maleWalletRecharge,
       );
       print('[Recharge] Calling: ' + url.toString());
       final response = await http.post(
@@ -388,7 +404,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              Text('Age:  24{user.age}'),
+                              Text('Age: \${user.age}'),
                               Text(
                                 user.bio,
                                 maxLines: 2,

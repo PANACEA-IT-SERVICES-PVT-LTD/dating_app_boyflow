@@ -18,6 +18,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../models/user.dart' as call_user;
 import '../../models/call_state.dart';
 import '../../services/call_manager.dart';
+import 'package:Boy_flow/views/screens/payment_page.dart';
 
 class MainHome extends StatefulWidget {
   const MainHome({super.key});
@@ -65,7 +66,7 @@ class _HomeScreenState extends State<MainHome> {
   Future<void> rechargeWallet(int amount) async {
     try {
       final url = Uri.parse(
-        ApiEndPoints.baseUrls + ApiEndPoints.maleWalletRecharge,
+        ApiEndPoints.baseUrl + ApiEndPoints.maleWalletRecharge,
       );
 
       // Get auth token from shared preferences
@@ -125,6 +126,7 @@ class _HomeScreenState extends State<MainHome> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startUILoadingTimeout();
+      _loadStaticData(); // Load static data as fallback
       _loadProfiles();
       _loadSentFollowRequests();
     });
@@ -171,7 +173,7 @@ class _HomeScreenState extends State<MainHome> {
       );
       if (response['success'] == true) {
         final data = response['data'];
-        
+
         // Navigate to outgoing call screen first
         await Navigator.push(
           context,
@@ -312,6 +314,8 @@ class _HomeScreenState extends State<MainHome> {
   }
 
   Future<void> _loadProfiles() async {
+    print('[DEBUG] _loadProfiles called with filter: $_filter');
+
     _startUILoadingTimeout();
     try {
       if (_filter == 'Near By') {
@@ -334,6 +338,7 @@ class _HomeScreenState extends State<MainHome> {
           position.longitude,
         );
       } else {
+        // Only make one API call per filter change
         await _fetchProfilesByFilter(_filter);
       }
     } catch (e) {
@@ -347,6 +352,7 @@ class _HomeScreenState extends State<MainHome> {
   }
 
   void _loadStaticData() {
+    print('[DEBUG] _loadStaticData called');
     // Static data based on the API response structure provided
     final staticProfiles = [
       {
@@ -402,7 +408,34 @@ class _HomeScreenState extends State<MainHome> {
   }
 
   List<Map<String, dynamic>> _applyFilter(List<Map<String, dynamic>> profiles) {
-    // Always return profiles; API call is handled by filter chip selection
+    print('[DEBUG] Applying filter: $_filter to ${profiles.length} profiles');
+
+    // For now, return all profiles but log which filter is active
+    // In the future, you might want to implement actual filtering logic here
+    // based on profile properties like isFollowed, distance, isNew, etc.
+
+    switch (_filter) {
+      case 'Follow':
+        print(
+          '[DEBUG] Filter set to Follow - showing all profiles (implement actual follow filtering)',
+        );
+        break;
+      case 'New':
+        print(
+          '[DEBUG] Filter set to New - showing all profiles (implement actual new user filtering)',
+        );
+        break;
+      case 'Near By':
+        print(
+          '[DEBUG] Filter set to Near By - showing all profiles (implement actual location filtering)',
+        );
+        break;
+      case 'All':
+      default:
+        print('[DEBUG] Filter set to All - showing all profiles');
+        break;
+    }
+
     return profiles;
   }
 
@@ -411,25 +444,32 @@ class _HomeScreenState extends State<MainHome> {
     double? lat,
     double? lng,
   ]) async {
+    print('[DEBUG] _fetchProfilesByFilter called with filter: $filter');
     final apiController = Provider.of<ApiController>(context, listen: false);
     try {
+      // Clear old profiles before loading new ones
+      apiController.clearFemaleProfiles();
+
       switch (filter) {
         case 'Follow':
-          await apiController.fetchDashboardSectionFemales(
+          print('[DEBUG] Calling fetchDashboardProfiles with section: follow');
+          await apiController.fetchDashboardProfiles(
             section: 'follow',
             page: 1,
             limit: 10,
           );
           break;
         case 'New':
-          await apiController.fetchDashboardSectionFemales(
+          print('[DEBUG] Calling fetchDashboardProfiles with section: new');
+          await apiController.fetchDashboardProfiles(
             section: 'new',
             page: 1,
             limit: 10,
           );
           break;
         case 'Near By':
-          await apiController.fetchDashboardSectionFemales(
+          print('[DEBUG] Calling fetchDashboardProfiles with section: nearby');
+          await apiController.fetchDashboardProfiles(
             section: 'nearby',
             page: 1,
             limit: 10,
@@ -438,30 +478,46 @@ class _HomeScreenState extends State<MainHome> {
           );
           break;
         case 'All':
-          await apiController.fetchBrowseFemales(page: 1, limit: 10);
+          print('[DEBUG] Calling fetchDashboardProfiles with section: all');
+          await apiController.fetchDashboardProfiles(
+            section: 'all',
+            page: 1,
+            limit: 10,
+          );
           break;
         default:
-          await apiController.fetchBrowseFemales(page: 1, limit: 10);
+          print(
+            '[DEBUG] Calling fetchDashboardProfiles with section: all (default)',
+          );
+          await apiController.fetchDashboardProfiles(
+            section: 'all',
+            page: 1,
+            limit: 10,
+          );
       }
     } catch (e) {
       print('Error loading new females: $e');
-      // If it's a 404 error (section not supported), try loading all females instead
-      if (e.toString().toLowerCase().contains('404') ||
-          e.toString().toLowerCase().contains('resource not found')) {
-        print('404 detected for new section, falling back to browse API');
+      // Only use fallback for specific sections, not 'All'
+      if ((_filter == 'New' || _filter == 'Follow' || _filter == 'Near By') &&
+          (e.toString().toLowerCase().contains('404') ||
+              e.toString().toLowerCase().contains('resource not found'))) {
+        print(
+          '404 detected for $_filter section, falling back to all profiles',
+        );
         try {
-          final fallbackApiController = Provider.of<ApiController>(
-            context,
-            listen: false,
+          // Only fallback to 'All' section of dashboard API
+          await apiController.fetchDashboardProfiles(
+            section: 'all',
+            page: 1,
+            limit: 10,
           );
-          await fallbackApiController.fetchBrowseFemales(page: 1, limit: 10);
         } catch (fallbackError) {
           print('Fallback also failed: $fallbackError');
           if (mounted && context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  'Failed to load new users, showing all users: $fallbackError',
+                  'Failed to load $_filter users, showing all users: $fallbackError',
                 ),
               ),
             );
@@ -471,7 +527,7 @@ class _HomeScreenState extends State<MainHome> {
         // For other errors, show the error message
         if (mounted && context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to load new users: $e')),
+            SnackBar(content: Text('Failed to load $_filter users: $e')),
           );
         }
       }
@@ -502,7 +558,7 @@ class _HomeScreenState extends State<MainHome> {
     }
   }
 
-  // Method to load all females from browse API
+  // Method to load all females from dashboard API (primary source)
   Future<void> _loadAllFemales() async {
     try {
       final apiController = Provider.of<ApiController>(context, listen: false);
@@ -510,10 +566,16 @@ class _HomeScreenState extends State<MainHome> {
       // Show loading state
       _startUILoadingTimeout();
 
-      // Load all females using the browse method
-      await apiController.fetchBrowseFemales(page: 1, limit: 10);
+      // Only make one API call and don't allow interference
+      print('[DEBUG] Starting primary profile load from dashboard');
+      await apiController.fetchDashboardProfiles(
+        section: 'all',
+        page: 1,
+        limit: 10,
+      );
+      print('[DEBUG] Primary profile load completed');
     } catch (e) {
-      print('Error loading all females: $e');
+      print('Error loading all females from dashboard: $e');
 
       // Show error message
       if (mounted && context.mounted) {
@@ -524,6 +586,7 @@ class _HomeScreenState extends State<MainHome> {
     }
   }
 
+
   void _showQuickSheet() {
     showModalBottomSheet(
       context: context,
@@ -531,7 +594,11 @@ class _HomeScreenState extends State<MainHome> {
       backgroundColor: Colors.transparent,
       builder: (_) => _QuickActionsBottomSheet(
         onRechargePressed: () {
-          rechargeWallet(250); // Call the API for 250 coins
+          // Navigate to PaymentPage for Razorpay integration testing
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const PaymentPage()),
+          );
         },
       ),
     );
@@ -540,6 +607,11 @@ class _HomeScreenState extends State<MainHome> {
   @override
   Widget build(BuildContext context) {
     final apiController = Provider.of<ApiController>(context);
+
+    // Debug print to see what's happening
+    print(
+      '[DEBUG] Building MainHome - isLoading: ${apiController.isLoading}, profiles length: ${apiController.femaleProfiles.length}, error: ${apiController.error}',
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F5FF),
@@ -606,57 +678,27 @@ class _HomeScreenState extends State<MainHome> {
     debugPrint(
       '[UI DEBUG] Current filter: [33m$_filter[0m, femaleProfiles.length: [36m${apiController.femaleProfiles.length}[0m, isLoading: [35m${apiController.isLoading}[0m',
     );
-    // --- INFINITE LOADING FIX ---
-    // 1. If loading and not timed out, show spinner, but set a hard timeout fallback
-    if (apiController.isLoading && !_uiLoadingTimeout) {
+
+    // Debug: Print first few profile IDs if available
+    if (apiController.femaleProfiles.isNotEmpty) {
+      print(
+        '[DEBUG] First few profiles: ${apiController.femaleProfiles.take(3).map((p) => p['_id'] ?? p['id'] ?? 'no-id').toList()}',
+      );
+    }
+
+    // --- NEW LOADING LOGIC ---
+    // 1. isLoading → show loader
+    if (apiController.isLoading) {
       _showDebug('UI: Still loading, showing spinner.');
       return const Center(child: CircularProgressIndicator());
     }
 
-    // 2. If loading timed out, show error and allow retry or fallback
-    if (_uiLoadingTimeout && apiController.isLoading) {
-      _showDebug('UI: Loading timed out, showing fallback.');
-      // Always provide a way out of loading, but do not show demo data button
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Loading is taking too long.'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                _startUILoadingTimeout();
-                _loadProfiles();
-              },
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // 3. If error, show error and allow retry/fallback
-    if (apiController.error != null) {
-      _showDebug('UI error: \u001b[31m${apiController.error}\u001b[0m');
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Error: ${apiController.error}'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadProfiles,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // 4. If no profiles, show fallback and allow refresh/fallback
+    // 2. profiles.isEmpty → show "No profiles found"
     final profiles = _applyFilter(apiController.femaleProfiles);
+    print('[DEBUG] Profiles after filtering: ${profiles.length}');
+
     if (profiles.isEmpty) {
-      _showDebug('UI: No profiles found after all attempts.');
+      _showDebug('UI: No profiles found');
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -672,7 +714,8 @@ class _HomeScreenState extends State<MainHome> {
       );
     }
 
-    // 5. Success: show main content
+    // 3. profiles.isNotEmpty → show profiles
+    // Success: show main content
     _showDebug('UI: Showing profiles (${profiles.length})');
     return SafeArea(
       child: CustomScrollView(
@@ -751,6 +794,7 @@ class _HomeScreenState extends State<MainHome> {
                       label: 'All',
                       selected: _filter == 'All',
                       onSelected: (v) {
+                        print('[DEBUG] All filter selected');
                         if (_filter != 'All') {
                           setState(() => _filter = 'All');
                           _loadProfiles();
@@ -762,6 +806,7 @@ class _HomeScreenState extends State<MainHome> {
                       label: 'Follow',
                       selected: _filter == 'Follow',
                       onSelected: (v) {
+                        print('[DEBUG] Follow filter selected');
                         if (_filter != 'Follow') {
                           setState(() => _filter = 'Follow');
                           _loadProfiles();
@@ -773,6 +818,7 @@ class _HomeScreenState extends State<MainHome> {
                       label: 'Near By',
                       selected: _filter == 'Near By',
                       onSelected: (v) async {
+                        print('[DEBUG] Near By filter selected');
                         if (_filter != 'Near By') {
                           setState(() => _filter = 'Near By');
                           LocationPermission permission =
@@ -816,6 +862,7 @@ class _HomeScreenState extends State<MainHome> {
                       label: 'New',
                       selected: _filter == 'New',
                       onSelected: (v) {
+                        print('[DEBUG] New filter selected');
                         if (_filter != 'New') {
                           setState(() => _filter = 'New');
                           _loadProfiles();
@@ -830,7 +877,21 @@ class _HomeScreenState extends State<MainHome> {
           const SliverToBoxAdapter(child: SizedBox(height: 10)),
           SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
+              // Check if index is valid
+              if (index >= profiles.length) {
+                print(
+                  '[ERROR] Index out of bounds: $index, profiles length: ${profiles.length}',
+                );
+                return Container();
+              }
+
               final profile = profiles[index];
+
+              // Check if profile is valid
+              if (profile == null) {
+                print('[ERROR] Null profile at index: $index');
+                return Container();
+              }
 
               final String name = profile['name']?.toString() ?? '';
               final String bio = profile['bio']?.toString() ?? '';

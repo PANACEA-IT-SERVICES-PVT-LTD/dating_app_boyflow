@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       onGenerateRoute: AppRoutes.generateRoute,
-      home: LoginScreen(), // Set initial route to login screen as requested
+      home: AuthCheck(), // Use AuthCheck to verify authentication status
     );
   }
 }
@@ -58,6 +58,7 @@ class _AuthCheckState extends State<AuthCheck> {
   }
 
   Future<void> checkAuthStatus() async {
+    print('[DEBUG] checkAuthStatus called');
     if (_isCheckingAuth) {
       return; // Prevent multiple simultaneous checks
     }
@@ -65,11 +66,14 @@ class _AuthCheckState extends State<AuthCheck> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
+      print(
+        '[DEBUG] Token from SharedPreferences: ${token != null ? 'exists' : 'null'}',
+      );
 
       if (token != null && token.isNotEmpty) {
         // Fetch user profile to check completion and approval status
         final profileResp = await http.get(
-          Uri.parse('${ApiEndPoints.baseUrls}/male-user/me'),
+          Uri.parse('${ApiEndPoints.baseUrl}/male-user/me'),
           headers: {
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
@@ -77,6 +81,7 @@ class _AuthCheckState extends State<AuthCheck> {
         );
 
         if (profileResp.statusCode == 200) {
+          print('[DEBUG] Profile API response status 200');
           try {
             final body = profileResp.body.isNotEmpty
                 ? jsonDecode(profileResp.body)
@@ -91,12 +96,12 @@ class _AuthCheckState extends State<AuthCheck> {
                   data['profileCompleted'] as bool? ?? false;
 
               if (!profileCompleted) {
-                // If profile is not completed, navigate to profile completion
+                // If profile is not completed, still navigate to dashboard as requested
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => IntroduceYourselfScreen(),
+                      builder: (context) => MainNavigationScreen(),
                     ),
                   );
                 });
@@ -156,6 +161,9 @@ class _AuthCheckState extends State<AuthCheck> {
             });
           }
         } else {
+          print(
+            '[DEBUG] Profile API response status: ${profileResp.statusCode}',
+          );
           // Different status codes might need different handling
           if (profileResp.statusCode == 404) {
             // User profile not found - clear the token and redirect to login
@@ -198,6 +206,7 @@ class _AuthCheckState extends State<AuthCheck> {
           }
         }
       } else {
+        print('[DEBUG] No token found, redirecting to login');
         // User is not logged in, go to login
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Navigator.pushReplacement(

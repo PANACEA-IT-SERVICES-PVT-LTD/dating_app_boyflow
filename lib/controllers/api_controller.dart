@@ -120,12 +120,13 @@ class ApiController extends ChangeNotifier {
   }
 
   // Check call status
-  Future<Map<String, dynamic>> checkCallStatus({
-    required String callId,
-  }) async {
-    return await _apiService.checkCallStatus(
-      callId: callId,
-    );
+  Future<Map<String, dynamic>> checkCallStatus({required String callId}) async {
+    return await _apiService.checkCallStatus(callId: callId);
+  }
+
+  // Login method to send OTP
+  Future<Map<String, dynamic>> login(String email) async {
+    return await _apiService.login(email);
   }
 
   // Public getter to access the ApiService instance
@@ -140,12 +141,15 @@ class ApiController extends ChangeNotifier {
   // female profiles cache
   List<Map<String, dynamic>> _femaleProfiles = [];
 
+  // Clear female profiles
+  void clearFemaleProfiles() {
+    _femaleProfiles = [];
+    notifyListeners();
+  }
+
   // Remember identity + context for OTP verify
-  // ...existing code...
-  // ...existing code...
-  // ...existing code...
-  // ...existing code...
-  // ...existing code...
+  String? _otpEmail;
+  String? _otpSource;
 
   // Sent follow requests cache
   List<Map<String, dynamic>> _sentFollowRequests = [];
@@ -475,6 +479,7 @@ class ApiController extends ChangeNotifier {
     int page = 1,
     int limit = 10,
   }) async {
+    print('[DEBUG] fetchBrowseFemales called');
     _isLoading = true;
     _error = null;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -483,162 +488,16 @@ class ApiController extends ChangeNotifier {
 
     try {
       // Call service (expected to return a typed model or Map/List)
-      final dynamic res = await _apiService.fetchFemaleUsers(
+      final dynamic res = await fetchDashboardProfiles(
+        section: 'all',
         page: page,
         limit: limit,
       );
 
       debugPrint("📥 fetchBrowseFemales raw response: $res");
 
-      List<Map<String, dynamic>> _normalizeList(dynamic input) {
-        if (input is List<Map<String, dynamic>>) return input;
-        if (input is List) {
-          return input
-              .where((e) => e != null)
-              .map((e) {
-                if (e is Map) return Map<String, dynamic>.from(e);
-                try {
-                  final jsonLike = (e as dynamic).toJson();
-                  if (jsonLike is Map)
-                    return Map<String, dynamic>.from(jsonLike);
-                } catch (_) {}
-                return <String, dynamic>{};
-              })
-              .where((m) => m.isNotEmpty)
-              .toList();
-        }
-        if (input is Map) {
-          final mapInput = Map<String, dynamic>.from(input);
-          final candidates = [
-            mapInput['items'],
-            mapInput['list'],
-            mapInput['results'],
-          ];
-          for (final c in candidates) {
-            if (c is List) {
-              return _normalizeList(c);
-            }
-          }
-        }
-        return <Map<String, dynamic>>[];
-      }
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
-
-      dynamic rawData;
-      if (res is Map) {
-        if (res['data'] != null) {
-          rawData = res['data'];
-        } else if (res['docs'] != null) {
-          rawData = res['docs'];
-        } else if (res['items'] != null) {
-          rawData = res['items'];
-        } else if (res['list'] != null) {
-          rawData = res['list'];
-        } else if (res['results'] != null) {
-          rawData = res['results'];
-        } else {
-          rawData = res;
-        }
-      } else {
-        try {
-          final jsonForm = (res as dynamic).toJson();
-          if (jsonForm is Map) {
-            rawData =
-                jsonForm['data'] ??
-                jsonForm['docs'] ??
-                jsonForm['items'] ??
-                jsonForm['list'] ??
-                jsonForm['results'] ??
-                jsonForm;
-          } else if (jsonForm is List) {
-            rawData = jsonForm;
-          } else {
-            rawData = res;
-          }
-        } catch (_) {
-          rawData = res;
-        }
-      }
-
-      List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
-
-      if (normalizedProfiles.isEmpty) {
-        if (rawData is Map) {
-          final Map<String, dynamic> candidateMap = Map<String, dynamic>.from(
-            rawData,
-          );
-          if (candidateMap.containsKey('name') ||
-              candidateMap.containsKey('_id') ||
-              candidateMap.containsKey('avatarUrl') ||
-              candidateMap.containsKey('avatar')) {
-            normalizedProfiles = [candidateMap];
-          }
-        }
-        if (normalizedProfiles.isEmpty && res is Map) {
-          for (final v in res.values) {
-            if (v is List) {
-              normalizedProfiles = _normalizeList(v);
-              if (normalizedProfiles.isNotEmpty) break;
-            }
-          }
-        }
-        if (normalizedProfiles.isEmpty) {
-          try {
-            final jsonForm = (res as dynamic).toJson();
-            if (jsonForm is List) normalizedProfiles = _normalizeList(jsonForm);
-          } catch (_) {}
-        }
-      }
-
-      if (normalizedProfiles.isNotEmpty) {
-        _femaleProfiles = normalizedProfiles;
-        _isLoading = false;
-        _error = null;
-        if (WidgetsBinding.instance != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            notifyListeners();
-          });
-        } else {
-          notifyListeners();
-        }
-        return normalizedProfiles;
-      }
-
-      if (normalizedProfiles.isEmpty) {
-        _femaleProfiles = [];
-        _isLoading = false;
-        _error = null;
-        if (WidgetsBinding.instance != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            notifyListeners();
-          });
-        } else {
-          notifyListeners();
-        }
-        return [];
-      }
-
-      String serverMessage = 'No profiles found';
-      try {
-        if (res is Map) {
-          serverMessage =
-              (res['message'] ?? res['error'] ?? res['msg'] ?? serverMessage)
-                  .toString();
-        } else {
-          final modelMsg =
-              (res as dynamic).message ??
-              (res as dynamic).error ??
-              (res as dynamic).msg;
-          if (modelMsg != null) serverMessage = modelMsg.toString();
-        }
-      } catch (_) {}
-
-      _femaleProfiles = [];
       _isLoading = false;
-      _error = _friendlyMessage(serverMessage);
+      _error = null;
       if (WidgetsBinding.instance != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           notifyListeners();
@@ -646,7 +505,7 @@ class ApiController extends ChangeNotifier {
       } else {
         notifyListeners();
       }
-      throw Exception(_error);
+      return res;
     } catch (e, st) {
       debugPrint("❌ fetchBrowseFemales exception: $e\n$st");
       _femaleProfiles = [];
@@ -669,184 +528,148 @@ class ApiController extends ChangeNotifier {
     final endpoint = source == 'login'
         ? ApiEndPoints.loginotpMale
         : ApiEndPoints.verifyOtpMale;
-    final url = Uri.parse("${ApiEndPoints.baseUrls}$endpoint");
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"otp": otp}),
-    );
-    final body = jsonDecode(response.body);
-    final success = body['success'] == true;
-    if (success) {
-      final token = body['token'] ?? body['access_token'];
-      if (token != null && token is String && token.isNotEmpty) {
-        _authToken = token;
-        // Save to SharedPreferences for later use
+    final url = Uri.parse("${ApiEndPoints.baseUrl}$endpoint");
+    final headers = {"Content-Type": "application/json"};
+    final body = jsonEncode({"otp": otp});
+
+    // Log the request for debugging
+    print('[DEBUG] Sending OTP verification request to: $url');
+    print('[DEBUG] Request headers: $headers');
+    print('[DEBUG] Request body: $body');
+
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+
+      // Log the response for debugging
+      print('[DEBUG] OTP verification response status: ${response.statusCode}');
+      print('[DEBUG] OTP verification response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        final success = body['success'] == true;
+        if (success) {
+          final token = body['token'] ?? body['access_token'];
+          if (token != null && token is String && token.isNotEmpty) {
+            _authToken = token;
+            // Save to SharedPreferences for later use
+            try {
+              await saveLoginToken(token);
+            } catch (_) {}
+          }
+        }
+        return success;
+      } else if (response.statusCode == 404) {
+        // Handle 404 for OTP verification endpoint not found
+        print('OTP verification endpoint not found (404)');
+        return false;
+      } else if (response.statusCode == 500) {
+        // Handle 500 server error specifically
+        print('Server error (500) when attempting OTP verification');
         try {
-          await saveLoginToken(token);
-        } catch (_) {}
+          final errorBody = jsonDecode(response.body);
+          final serverMessage =
+              errorBody['message'] ??
+              errorBody['error'] ??
+              'Internal server error';
+          print('OTP verification error (500): $serverMessage');
+
+          // Check if this is the referredBy validation error
+          if (serverMessage.contains('referredBy') &&
+              serverMessage.contains('ObjectId')) {
+            print(
+              'Detected referredBy validation issue - this may require backend fix',
+            );
+          }
+        } catch (e) {
+          print('OTP verification error (500): Internal server error');
+        }
+        return false;
+      } else {
+        // Handle other error codes
+        try {
+          final body = jsonDecode(response.body);
+          final message =
+              body['message'] ?? body['error'] ?? 'OTP verification failed';
+          print(
+            'OTP verification error: $message (Status: ${response.statusCode})',
+          );
+        } catch (e) {
+          print(
+            'OTP verification error: ${response.body} (Status: ${response.statusCode})',
+          );
+        }
+        return false;
       }
+    } catch (e) {
+      print('Exception during OTP verification: $e');
+      return false;
     }
-    return success;
   }
 
   /// Fetches female profiles for a specific dashboard section (e.g., 'new', 'all')
-  Future<List<Map<String, dynamic>>> fetchDashboardSectionFemales({
-    String section = 'all',
+  Future<List<Map<String, dynamic>>> fetchDashboardProfiles({
+    required String section,
     int page = 1,
     int limit = 10,
     double? latitude,
     double? longitude,
   }) async {
+    print('[DEBUG] fetchDashboardProfiles called with section: $section');
     _isLoading = true;
     _error = null;
-    if (WidgetsBinding.instance != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
-    } else {
-      notifyListeners();
-    }
+    notifyListeners(); // Notify immediately to show loading spinner
 
     try {
-      final dynamic res = await _apiService.fetchDashboardSectionFemales(
+      final dynamic res = await _apiService.fetchDashboardProfiles(
         section: section,
         page: page,
         limit: limit,
         latitude: latitude,
         longitude: longitude,
       );
-      debugPrint(
-        "📥 fetchDashboardSectionFemales ($section) raw response: $res",
-      );
+      debugPrint("📥 fetchDashboardProfiles ($section) raw response type: ${res.runtimeType}");
 
-      List<Map<String, dynamic>> _normalizeList(dynamic input) {
-        if (input is List<Map<String, dynamic>>) return input;
-        if (input is List) {
-          return input
-              .where((e) => e != null)
-              .map((e) {
-                if (e is Map) return Map<String, dynamic>.from(e);
-                try {
-                  if (e is String) return {'name': e};
-                  if (e is int || e is double) return {'value': e};
-                  if (e is List) return {'list': e};
-                } catch (_) {}
-                return <String, dynamic>{};
-              })
-              .where((m) => m.isNotEmpty)
-              .toList();
-        }
-        if (input is Map) {
-          final mapInput = Map<String, dynamic>.from(input);
-          final candidates = [
-            mapInput['items'],
-            mapInput['list'],
-            mapInput['results'],
-            mapInput['data'],
-            mapInput['docs'],
-          ];
-          for (final c in candidates) {
-            if (c is List) {
-              return _normalizeList(c);
-            }
-          }
-        }
-        return <Map<String, dynamic>>[];
-      }
-
-      dynamic rawData;
+      // The ApiService now returns normalized data or a Map with 'data'
+      // We need to extract the list of profiles from it
+      
+      List<dynamic> rawList = [];
+      
       if (res is Map) {
-        // Try to find a list of profiles in the most likely places
-        if (res['data'] != null &&
-            res['data'] is Map &&
-            res['data']['results'] is List) {
-          rawData = res['data']['results'];
-        } else if (res['data'] != null && res['data'] is List) {
-          rawData = res['data'];
-        } else if (res['results'] != null && res['results'] is List) {
-          rawData = res['results'];
-        } else if (res['data'] != null &&
-            res['data'] is Map &&
-            res['data']['results'] is List) {
-          rawData = res['data']['results'];
-        } else if (res['data'] != null &&
-            res['data'] is Map &&
-            res['data']['results'] == null &&
-            res['data'].isNotEmpty) {
-          // If data exists but no results, try to find any list in data
-          final dataMap = res['data'] as Map;
-          final listInData = dataMap.values.firstWhere(
-            (v) => v is List,
-            orElse: () => null,
-          );
-          rawData = listInData ?? [];
-        } else if (res['docs'] != null && res['docs'] is List) {
-          rawData = res['docs'];
-        } else if (res['items'] != null && res['items'] is List) {
-          rawData = res['items'];
-        } else if (res['list'] != null && res['list'] is List) {
-          rawData = res['list'];
-        } else {
-          rawData = [];
+        if (res.containsKey('results') && res['results'] is List) {
+           rawList = res['results'];
+        } else if (res.containsKey('data')) {
+           final data = res['data'];
+           if (data is Map && data.containsKey('results') && data['results'] is List) {
+             rawList = data['results'];
+           } else if (data is List) {
+             rawList = data;
+           }
         }
-      } else {
-        try {
-          final jsonForm = (res as dynamic).toJson();
-          if (jsonForm is Map) {
-            if (jsonForm['data'] != null &&
-                jsonForm['data']['results'] != null) {
-              rawData = jsonForm['data']['results'];
-            } else {
-              rawData =
-                  jsonForm['data'] ??
-                  jsonForm['docs'] ??
-                  jsonForm['items'] ??
-                  jsonForm['list'] ??
-                  jsonForm['results'] ??
-                  jsonForm;
-            }
-          } else if (jsonForm is List) {
-            rawData = jsonForm;
-          } else {
-            rawData = res;
-          }
-        } catch (_) {
-          rawData = res;
-        }
+      } else if (res is List) {
+        rawList = res;
       }
-      List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
-      // Inject fallback demo profiles for 'follow' and 'new' if API returns empty
-      // ...existing code...
-      _femaleProfiles = normalizedProfiles;
-      debugPrint('[DEBUG] _femaleProfiles set:');
-      for (final p in _femaleProfiles) {
-        debugPrint(p.toString());
-      }
+
+      print('[DEBUG] Extracted ${rawList.length} profiles from response');
+
+      // Normalize and cast
+       _femaleProfiles = rawList
+          .where((item) => item != null && item is Map)
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+
+      print('[DEBUG] _femaleProfiles updated: ${_femaleProfiles.length} profiles');
+      
       _isLoading = false;
-      if (WidgetsBinding.instance != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          notifyListeners();
-        });
-      } else {
-        notifyListeners();
-      }
-      return normalizedProfiles;
+      notifyListeners();
+      
+      return _femaleProfiles;
     } catch (e, st) {
-      debugPrint(
-        "❌ fetchDashboardSectionFemales ($section) exception: $e\n$st",
-      );
+      debugPrint("❌ fetchDashboardProfiles exception: $e\n$st");
       _femaleProfiles = [];
       _isLoading = false;
       _error = e.toString();
       _handleTokenError(e);
-      if (WidgetsBinding.instance != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          notifyListeners();
-        });
-      } else {
-        notifyListeners();
-      }
+      notifyListeners();
       rethrow;
     }
   }
@@ -1088,7 +911,7 @@ class ApiController extends ChangeNotifier {
     }
 
     try {
-      final dynamic res = await _apiService.fetchFemaleUsersFromDashboard(
+      final dynamic res = await fetchDashboardProfiles(
         section: section,
         page: page,
         limit: limit,
@@ -1097,129 +920,6 @@ class ApiController extends ChangeNotifier {
         "📥 fetchFemaleUsersFromDashboard ($section) raw response: $res",
       );
 
-      List<Map<String, dynamic>> _normalizeList(dynamic input) {
-        if (input is List<Map<String, dynamic>>) return input;
-        if (input is List) {
-          return input
-              .where((e) => e != null)
-              .map((e) {
-                if (e is Map) return Map<String, dynamic>.from(e);
-                try {
-                  if (e is String) return {'name': e};
-                  if (e is int || e is double) return {'value': e};
-                  if (e is List) return {'list': e};
-                } catch (_) {}
-                return <String, dynamic>{};
-              })
-              .where((m) => m.isNotEmpty)
-              .toList();
-        }
-        if (input is Map) {
-          final mapInput = Map<String, dynamic>.from(input);
-          final candidates = [
-            mapInput['items'],
-            mapInput['list'],
-            mapInput['results'],
-            mapInput['data'],
-            mapInput['docs'],
-          ];
-          for (final c in candidates) {
-            if (c is List) {
-              return _normalizeList(c);
-            }
-          }
-        }
-        return <Map<String, dynamic>>[];
-      }
-
-      dynamic rawData;
-      if (res is Map) {
-        if (res['data'] != null && res['data']['results'] != null) {
-          // Handle new response structure: {data: {results: [...]}}
-          rawData = res['data']['results'];
-        } else if (res['data'] != null && res['data'] is List) {
-          rawData = res['data'];
-        } else if (res['results'] != null && res['results'] is List) {
-          rawData = res['results'];
-        } else if (res['data'] != null &&
-            res['data'] is Map &&
-            res['data']['results'] is List) {
-          rawData = res['data']['results'];
-        } else if (res['data'] != null &&
-            res['data'] is Map &&
-            res['data']['results'] == null &&
-            res['data'].isNotEmpty) {
-          // If data exists but no results, try to find any list in data
-          final dataMap = res['data'] as Map;
-          final listInData = dataMap.values.firstWhere(
-            (v) => v is List,
-            orElse: () => null,
-          );
-          rawData = listInData ?? [];
-        } else if (res['docs'] != null && res['docs'] is List) {
-          rawData = res['docs'];
-        } else if (res['items'] != null && res['items'] is List) {
-          rawData = res['items'];
-        } else if (res['list'] != null && res['list'] is List) {
-          rawData = res['list'];
-        } else {
-          rawData = [];
-        }
-      } else {
-        try {
-          final jsonForm = (res as dynamic).toJson();
-          if (jsonForm is Map) {
-            // Check for new structure first
-            if (jsonForm['data'] != null &&
-                jsonForm['data']['results'] != null) {
-              rawData = jsonForm['data']['results'];
-            } else {
-              rawData =
-                  jsonForm['data'] ??
-                  jsonForm['docs'] ??
-                  jsonForm['items'] ??
-                  jsonForm['list'] ??
-                  jsonForm['results'] ??
-                  jsonForm;
-            }
-          } else if (jsonForm is List) {
-            rawData = jsonForm;
-          } else {
-            rawData = res;
-          }
-        } catch (_) {
-          rawData = res;
-        }
-      }
-      List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
-      if (normalizedProfiles.isEmpty) {
-        if (rawData is Map) {
-          final Map<String, dynamic> candidateMap = Map<String, dynamic>.from(
-            rawData,
-          );
-          if (candidateMap.containsKey('name') ||
-              candidateMap.containsKey('_id') ||
-              candidateMap.containsKey('avatarUrl') ||
-              candidateMap.containsKey('avatar')) {
-            normalizedProfiles = [candidateMap];
-          }
-        }
-        if (normalizedProfiles.isEmpty && res is Map) {
-          for (final v in res.values) {
-            if (v is List) {
-              normalizedProfiles = _normalizeList(v);
-              if (normalizedProfiles.isNotEmpty) break;
-            }
-          }
-        }
-        if (normalizedProfiles.isEmpty) {
-          try {
-            final jsonForm = (res as dynamic).toJson();
-            if (jsonForm is List) normalizedProfiles = _normalizeList(jsonForm);
-          } catch (_) {}
-        }
-      }
-      _femaleProfiles = normalizedProfiles;
       _isLoading = false;
       _error = null;
       if (WidgetsBinding.instance != null) {
@@ -1229,7 +929,7 @@ class ApiController extends ChangeNotifier {
       } else {
         notifyListeners();
       }
-      return normalizedProfiles;
+      return res;
     } catch (e, st) {
       debugPrint(
         "❌ fetchFemaleUsersFromDashboard ($section) exception: $e\n$st",
@@ -1261,103 +961,21 @@ class ApiController extends ChangeNotifier {
     });
 
     try {
-      final result = await _apiService.fetchFollowedFemales(
+      final result = await fetchDashboardProfiles(
+        section: 'follow',
         page: page,
         limit: limit,
       );
 
       debugPrint("📥 fetchFollowedFemales raw response: $result");
 
-      List<Map<String, dynamic>> _normalizeList(dynamic input) {
-        if (input is List<Map<String, dynamic>>) return input;
-        if (input is List) {
-          return input
-              .where((e) => e != null)
-              .map((e) {
-                if (e is Map) return Map<String, dynamic>.from(e);
-                try {
-                  if (e is String) return {'name': e};
-                  if (e is int || e is double) return {'value': e};
-                  if (e is List) return {'list': e};
-                } catch (_) {}
-                return <String, dynamic>{};
-              })
-              .where((m) => m.isNotEmpty)
-              .toList();
-        }
-        if (input is Map) {
-          final mapInput = Map<String, dynamic>.from(input);
-          final candidates = [
-            mapInput['items'],
-            mapInput['list'],
-            mapInput['results'],
-            mapInput['data'],
-            mapInput['docs'],
-          ];
-          for (final c in candidates) {
-            if (c is List) {
-              return _normalizeList(c);
-            }
-          }
-        }
-        return <Map<String, dynamic>>[];
-      }
-
-      dynamic rawData;
-      if (result is Map) {
-        if (result['data'] != null && result['data']['results'] != null) {
-          // Handle new response structure: {data: {results: [...]}},
-          rawData = result['data']['results'];
-        } else if (result['data'] != null) {
-          rawData = result['data'];
-        } else if (result['docs'] != null) {
-          rawData = result['docs'];
-        } else if (result['items'] != null) {
-          rawData = result['items'];
-        } else if (result['list'] != null) {
-          rawData = result['list'];
-        } else if (result['results'] != null) {
-          rawData = result['results'];
-        } else {
-          rawData = result;
-        }
-      } else {
-        try {
-          final jsonForm = (result as dynamic).toJson();
-          if (jsonForm is Map) {
-            // Check for new structure first
-            if (jsonForm['data'] != null &&
-                jsonForm['data']['results'] != null) {
-              rawData = jsonForm['data']['results'];
-            } else {
-              rawData =
-                  jsonForm['data'] ??
-                  jsonForm['docs'] ??
-                  jsonForm['items'] ??
-                  jsonForm['list'] ??
-                  jsonForm['results'] ??
-                  jsonForm;
-            }
-          } else if (jsonForm is List) {
-            rawData = jsonForm;
-          } else {
-            rawData = result;
-          }
-        } catch (_) {
-          rawData = result;
-        }
-      }
-
-      List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
-
-      _femaleProfiles = normalizedProfiles;
       _isLoading = false;
       _error = null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         notifyListeners();
       });
 
-      return normalizedProfiles;
+      return result;
     } catch (e, st) {
       debugPrint("❌ fetchFollowedFemales exception: $e\n$st");
       _femaleProfiles = [];
@@ -1394,12 +1012,29 @@ class ApiController extends ChangeNotifier {
       return result;
     } catch (e) {
       _isLoading = false;
-      _error = e.toString();
-      _handleTokenError(e);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
-      rethrow;
+      // Don't treat missing endpoints or server errors as critical errors for non-critical APIs
+      if (e.toString().contains('404') ||
+          e.toString().contains('not found') ||
+          e.toString().contains('500') ||
+          e.toString().contains('server error') ||
+          e.toString().contains('Internal server error')) {
+        // Return default empty response for missing or error endpoints
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+        return {
+          'success': true,
+          'data': [],
+          'message': 'Call history temporarily unavailable',
+        };
+      } else {
+        _error = e.toString();
+        _handleTokenError(e);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+        rethrow;
+      }
     }
   }
 
@@ -1420,12 +1055,29 @@ class ApiController extends ChangeNotifier {
       return result;
     } catch (e) {
       _isLoading = false;
-      _error = e.toString();
-      _handleTokenError(e);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
-      rethrow;
+      // Don't treat missing endpoints or server errors as critical errors for non-critical APIs
+      if (e.toString().contains('404') ||
+          e.toString().contains('not found') ||
+          e.toString().contains('500') ||
+          e.toString().contains('server error') ||
+          e.toString().contains('Internal server error')) {
+        // Return default empty response for missing or error endpoints
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+        return {
+          'success': true,
+          'data': {},
+          'message': 'Call stats temporarily unavailable',
+        };
+      } else {
+        _error = e.toString();
+        _handleTokenError(e);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+        rethrow;
+      }
     }
   }
 }

@@ -1,10 +1,11 @@
 class ApiEndPoints {
   static const String startCall = '/male-user/calls/start';
-  static const String checkCallStatus = '/male-user/calls'; // Will append /:callId/status
+  static const String checkCallStatus =
+      '/male-user/calls'; // Will append /:callId/status
   static const String endCall = '/male-user/calls/end';
   static const String callHistory = '/male-user/calls/history';
   static const String callStats = '/male-user/calls/stats';
-  static const String baseUrls = "https://friend-circle-new.vercel.app";
+  static const String baseUrl = "https://friendcircle-x7d6.onrender.com";
   static const String dashboardEndpoint = '/male-user/dashboard';
 
   // Male auth & profile
@@ -48,4 +49,9 @@ class ApiEndPoints {
   static const String maleFilm = '/male-user/film';
   static const String maleMusic = '/male-user/music';
   static const String maleTravel = '/male-user/travel';
+  
+  // Payment
+  static const String coinOrder = '/male-user/payment/coin/order';
+  static const String paymentVerify = '/male-user/payment/verify';
+  static const String paymentPackages = '/male-user/payment/packages';
 }

@@ -51,9 +51,27 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
 
     try {
       final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleFollowers}",
+        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleFollowers}",
       );
       final resp = await http.get(url);
+
+      // Handle 404 response specifically
+      if (resp.statusCode == 404) {
+        if (!mounted) return;
+        setState(() {
+          _followers = [];
+          _loading = false;
+          _error = 'No followers found';
+        });
+        return;
+      } else if (resp.statusCode != 200) {
+        if (!mounted) return;
+        setState(() {
+          _loading = false;
+          _error = 'Failed to load followers: Status ${resp.statusCode}';
+        });
+        return;
+      }
 
       dynamic body;
       try {
@@ -112,8 +130,21 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
 
   Future<void> _fetchFavourites() async {
     try {
-      final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.maleMe}");
+      final url = Uri.parse("${ApiEndPoints.baseUrl}${ApiEndPoints.maleMe}");
       final resp = await http.get(url);
+
+      // Handle 404 response specifically
+      if (resp.statusCode == 404) {
+        if (!mounted) return;
+        setState(() {
+          _favourites = <String>{};
+        });
+        return;
+      } else if (resp.statusCode != 200) {
+        // Handle other error status codes silently or log them
+        print('Warning: Failed to fetch favourites: Status ${resp.statusCode}');
+        return;
+      }
 
       dynamic body;
       try {
@@ -151,13 +182,22 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
     if (userId.isEmpty) return;
     try {
       final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleAddFavourite}",
+        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleAddFavourite}",
       );
-      await http.post(
+      final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"userId": userId}),
       );
+
+      // Handle 404 response specifically
+      if (response.statusCode == 404) {
+        print('Add favourite endpoint not found (404)');
+        return;
+      } else if (response.statusCode != 200) {
+        print('Failed to add favourite: Status ${response.statusCode}');
+        return;
+      }
 
       if (!mounted) return;
       setState(() {
@@ -172,13 +212,22 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
     if (userId.isEmpty) return;
     try {
       final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleRemoveFavourite}",
+        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleRemoveFavourite}",
       );
-      await http.delete(
+      final response = await http.delete(
         url,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"userId": userId}),
       );
+
+      // Handle 404 response specifically
+      if (response.statusCode == 404) {
+        print('Remove favourite endpoint not found (404)');
+        return;
+      } else if (response.statusCode != 200) {
+        print('Failed to remove favourite: Status ${response.statusCode}');
+        return;
+      }
 
       if (!mounted) return;
       setState(() {
@@ -197,9 +246,26 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
 
     try {
       final url = Uri.parse(
-        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleFollowing}",
+        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleFollowing}",
       );
       final resp = await http.get(url);
+
+      // Handle 404 response specifically
+      if (resp.statusCode == 404) {
+        if (!mounted) return;
+        setState(() {
+          _following = [];
+          _loading = false;
+        });
+        return;
+      } else if (resp.statusCode != 200) {
+        if (!mounted) return;
+        setState(() {
+          _loading = false;
+          _error = 'Failed to load following: Status ${resp.statusCode}';
+        });
+        return;
+      }
 
       dynamic body;
       try {

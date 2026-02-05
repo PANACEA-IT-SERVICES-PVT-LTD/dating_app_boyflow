@@ -18,19 +18,16 @@ class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
 
   Future<void> _startCall(bool isVideo) async {
     if (_isCallLoading) return;
-    
+
     setState(() {
       _isCallLoading = true;
     });
 
     try {
       final apiController = Provider.of<ApiController>(context, listen: false);
-      
+
       // Convert FemaleUser to the format expected by the API
-      final profileData = {
-        '_id': widget.user.id,
-        'name': widget.user.name,
-      };
+      final profileData = {'_id': widget.user.id, 'name': widget.user.name};
 
       final response = await apiController.startCall(
         receiverId: widget.user.id,
@@ -39,7 +36,7 @@ class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
 
       if (response['success'] == true) {
         final data = response['data'];
-        
+
         // Navigate to outgoing call screen
         if (mounted) {
           await Navigator.push(
@@ -66,9 +63,9 @@ class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error starting call: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error starting call: $e')));
       }
     } finally {
       if (mounted) {
@@ -131,10 +128,7 @@ class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             leading: const BackButton(color: Colors.white),
-            title: const Text(
-              "Profile",
-              style: TextStyle(color: Colors.white),
-            ),
+            title: const Text("Profile", style: TextStyle(color: Colors.white)),
             actions: const [Icon(Icons.more_vert, color: Colors.white)],
           ),
         ),
@@ -165,10 +159,13 @@ class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
                       CircleAvatar(
                         radius: 36,
                         backgroundImage:
-                            widget.user.avatarUrl != null && widget.user.avatarUrl!.isNotEmpty
+                            widget.user.avatarUrl != null &&
+                                widget.user.avatarUrl!.isNotEmpty
                             ? NetworkImage(widget.user.avatarUrl!)
                             : null,
-                        child: widget.user.avatarUrl == null || widget.user.avatarUrl!.isEmpty
+                        child:
+                            widget.user.avatarUrl == null ||
+                                widget.user.avatarUrl!.isEmpty
                             ? const Icon(Icons.person, size: 36)
                             : null,
                       ),
@@ -311,16 +308,18 @@ class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: ElevatedButton.icon(
-                        icon: _isCallLoading 
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Icon(Icons.call, color: Colors.white),
+                        icon: _isCallLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.call, color: Colors.white),
                         label: Text(
                           _isCallLoading ? "Calling..." : "Call",
                           style: const TextStyle(color: Colors.white),

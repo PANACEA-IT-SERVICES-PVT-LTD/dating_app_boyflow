@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../services/razorpay_service.dart';
+import 'payment_page.dart';
 
 class MyCallRate extends StatefulWidget {
   const MyCallRate({super.key});
@@ -8,18 +10,9 @@ class MyCallRate extends StatefulWidget {
 }
 
 class _MyCallRateState extends State<MyCallRate> {
-  // Sample offer data: [getAmount, payAmount]
-  final List<List<int>> offers = const [
-    [99, 99],
-    [149, 149],
-    [304, 299],
-    [520, 500],
-    [900, 800],
-    [1075, 1000],
-    [2150, 2000],
-    [3200, 3000],
-    [5500, 5000],
-  ];
+  List<dynamic> _packages = [];
+  bool _isLoading = true;
+  String? _error;
 
   int? selectedIndex;
   int availableTalktime = 0;
@@ -34,23 +27,27 @@ class _MyCallRateState extends State<MyCallRate> {
       text: availableTalktime.toString(),
     );
 
-    // Keep the numeric field -> availableTalktime in sync
-    _talktimeController.addListener(() {
-      final text = _talktimeController.text.trim();
-      if (text.isEmpty) {
-        setState(() => availableTalktime = 0);
-        return;
-      }
 
-      // parse int safely
-      final parsed = int.tryParse(text.replaceAll(',', ''));
-      if (parsed != null && parsed != availableTalktime) {
-        setState(() => availableTalktime = parsed);
-      } else if (parsed == null && availableTalktime != 0) {
-        // if parse fails, reset to 0 (or keep previous — here we choose 0)
-        setState(() => availableTalktime = 0);
+    _fetchPackages();
+  }
+
+  Future<void> _fetchPackages() async {
+    try {
+      final packages = await RazorpayService.fetchPackages();
+      if (mounted) {
+        setState(() {
+          _packages = packages;
+          _isLoading = false;
+        });
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -62,14 +59,14 @@ class _MyCallRateState extends State<MyCallRate> {
   void _onCardTap(int index) {
     setState(() {
       if (selectedIndex == index) {
-        // deselect
         selectedIndex = null;
         availableTalktime = 0;
         _talktimeController.text = '0';
       } else {
         selectedIndex = index;
-        availableTalktime = offers[index][0];
-        _talktimeController.text = offers[index][0].toString();
+        final pkg = _packages[index];
+        availableTalktime = pkg['coin'] ?? 0;
+        _talktimeController.text = availableTalktime.toString();
       }
     });
   }
@@ -189,7 +186,7 @@ class _MyCallRateState extends State<MyCallRate> {
                                   setState(() => availableTalktime = parsed);
                                   // If parsed doesn't match any offer, deselect
                                   if (selectedIndex != null &&
-                                      offers[selectedIndex!][0] != parsed) {
+                                      _packages[selectedIndex!]['coin'] != parsed) {
                                     selectedIndex = null;
                                   }
                                 },
@@ -230,9 +227,13 @@ class _MyCallRateState extends State<MyCallRate> {
 
             // Grid of offers (selectable)
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: offers.length,
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null
+                      ? Center(child: Text("Error: $_error"))
+                      : GridView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          itemCount: _packages.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   mainAxisSpacing: 12,
@@ -240,8 +241,9 @@ class _MyCallRateState extends State<MyCallRate> {
                   childAspectRatio: 0.68,
                 ),
                 itemBuilder: (context, index) {
-                  final getAmt = offers[index][0];
-                  final payAmt = offers[index][1];
+                  final pkg = _packages[index];
+                  final getAmt = pkg['coin'] ?? 0;
+                  final payAmt = pkg['amount'] ?? 0;
                   final bool isSelected = selectedIndex == index;
 
                   // Animated elevation/scale for selected item
@@ -362,19 +364,17 @@ class _MyCallRateState extends State<MyCallRate> {
                     // handle continue action
                     // you can read `selectedIndex` and `availableTalktime`
                     if (selectedIndex == null) {
-                      // maybe show a toast or prompt to select
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Please select an offer')),
                       );
                       return;
                     }
-                    // proceed to next flow...
-                    // For demonstration: show what will be processed
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Selected: ₹${offers[selectedIndex!][0]} (Pay ₹${offers[selectedIndex!][1]}) — AvailableTalktime: ₹$availableTalktime',
-                        ),
+                    
+                    final pkgId = _packages[selectedIndex!]['_id'];
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PaymentPage(packageId: pkgId),
                       ),
                     );
                   },
