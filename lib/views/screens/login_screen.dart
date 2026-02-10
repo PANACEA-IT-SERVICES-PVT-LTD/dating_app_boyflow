@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
+import 'package:provider/provider.dart';
 import '../../core/routes/app_routes.dart';
 import '../../utils/colors.dart';
 import '../../widgets/gradient_button.dart';
+import '../../controllers/api_controller.dart';
 import '../../utils/otp_toast_util.dart'; // Import OTP toast utility
-// import '../../controllers/api_controller.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../api_service/api_endpoint.dart';
@@ -50,39 +50,20 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _submitting = true);
     try {
-      final url = Uri.parse("${ApiEndPoints.baseUrl}${ApiEndPoints.loginMale}");
-      final resp = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": email}),
-      );
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      final result = await apiController.login(email);
 
-      dynamic body;
-      try {
-        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
-      } catch (_) {
-        body = {"raw": resp.body};
-      }
+      print('[DEBUG] Login API result: $result');
 
-      final success = (body is Map && body["success"] == true);
+      final success = result["success"] == true;
       final message =
-          (body is Map ? body["message"] : null) ??
-          (resp.statusCode >= 200 && resp.statusCode < 300
-              ? "OTP sent"
-              : "Failed to send OTP");
+          result["message"] ??
+          (success ? "OTP sent successfully" : "Failed to send OTP");
 
       if (!mounted) return;
 
       if (success) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("✅ $message")));
-
-        // Show OTP as toast if available in response
-        if (body['otp'] != null) {
-          OtpToastUtil.showOtpToast(body['otp'].toString());
-        }
-
+        // Navigate first before showing snackbar to avoid widget deactivation issues
         if (mounted) {
           Navigator.pushNamed(
             context,
@@ -90,9 +71,27 @@ class _LoginScreenState extends State<LoginScreen> {
             arguments: <String, dynamic>{
               'email': email,
               'source': 'login',
-              if (body['otp'] != null) 'otp': body['otp'].toString(),
+              if (result['otp'] != null) 'otp': result['otp'].toString(),
+              if (result['data'] != null && result['data']['otp'] != null)
+                'otp': result['data']['otp'].toString(),
             },
           );
+
+          // Show OTP as toast if available in response
+          if (result['otp'] != null) {
+            OtpToastUtil.showOtpToast(result['otp'].toString());
+          } else if (result['data'] != null && result['data']['otp'] != null) {
+            OtpToastUtil.showOtpToast(result['data']['otp'].toString());
+          }
+
+          // Show success message after navigation
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text("✅ $message")));
+            }
+          });
         }
       } else {
         ScaffoldMessenger.of(
@@ -100,10 +99,27 @@ class _LoginScreenState extends State<LoginScreen> {
         ).showSnackBar(SnackBar(content: Text("❌ $message")));
       }
     } catch (e) {
+      print('[ERROR] Login error: $e');
       if (!mounted) return;
+      String errorMessage = "❌ Error: ${e.toString()}";
+      // Provide more user-friendly error message for common issues
+      if (e.toString().toLowerCase().contains('connection') ||
+          e.toString().toLowerCase().contains('network')) {
+        errorMessage =
+            "❌ Network error: Please check your internet connection.";
+      } else if (e.toString().toLowerCase().contains('404')) {
+        errorMessage =
+            "❌ Service temporarily unavailable. Please try again later.";
+      } else if (e.toString().toLowerCase().contains('500')) {
+        errorMessage =
+            "❌ Server error: We're experiencing technical difficulties. Please try again later.";
+      } else if (e.toString().toLowerCase().contains('timeout')) {
+        errorMessage =
+            "❌ Request timeout: Server is taking too long to respond. Please try again.";
+      }
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("❌ Error: ${e.toString()}")));
+      ).showSnackBar(SnackBar(content: Text(errorMessage)));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

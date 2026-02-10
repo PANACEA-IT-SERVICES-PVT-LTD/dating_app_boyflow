@@ -14,6 +14,8 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 
+import 'package:Boy_flow/views/screens/payment_page.dart';
+
 class MainHome extends StatefulWidget {
   const MainHome({super.key});
 
@@ -118,23 +120,13 @@ class _HomeScreenState extends State<MainHome> {
     }
   }
 
-  void _startUILoadingTimeout() {
-    _loadingTimer?.cancel();
-    _uiLoadingTimeout = false;
-    _loadingTimer = Timer(const Duration(seconds: 30), () {
-      if (mounted) {
-        setState(() {
-          _uiLoadingTimeout = true;
-        });
-      }
-    });
-  }
-
   @override
   void initState() {
     super.initState();
     // Load initial profiles immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startUILoadingTimeout();
+      _loadStaticData(); // Load static data as fallback
       _loadInitialProfiles();
       _loadFollowedProfiles();
     });
@@ -146,6 +138,7 @@ class _HomeScreenState extends State<MainHome> {
       apiController.fetchSentFollowRequests(); // Initial fetch of follow requests
     });
   }
+
   
   void _onProfilesChanged() {
     // Use post-frame callback with delay to ensure stability
@@ -165,7 +158,7 @@ class _HomeScreenState extends State<MainHome> {
   
   @override
   void dispose() {
-    // Check if we're still mounted before removing listener
+    _loadingTimer?.cancel();
     if (mounted) {
       final apiController = Provider.of<ApiController>(context, listen: false);
       apiController.removeListener(_onProfilesChanged);
@@ -173,127 +166,407 @@ class _HomeScreenState extends State<MainHome> {
     super.dispose();
   }
 
-  Future<void> _loadInitialProfiles() async {
+
+  Future<void> _loadSentFollowRequests() async {
     try {
       final apiController = Provider.of<ApiController>(context, listen: false);
-      await apiController.fetchDashboardSectionFemales(section: 'all', page: 1, limit: 20);
+      await apiController.fetchSentFollowRequests();
     } catch (e) {
-      print('Error loading initial profiles: $e');
-    }
-  }
-
-  Future<void> _showCallTypePopup(Map<String, dynamic> profile) async {
-    if (mounted) {
-      showModalBottomSheet(
-        context: context,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (context) => Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Call ${profile['name'] ?? 'User'}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildCallOption(
-                    icon: Icons.call,
-                    label: 'Audio Call',
-                    color: Colors.green,
-                    onTap: () => _startCall(profile, 'audio'),
-                  ),
-                  _buildCallOption(
-                    icon: Icons.videocam,
-                    label: 'Video Call',
-                    color: Colors.purple,
-                    onTap: () => _startCall(profile, 'video'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-  }
-
-  Widget _buildCallOption({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 30, color: color),
-            const SizedBox(height: 8),
-            Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w500)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _startCall(Map<String, dynamic> profile, String callType) async {
-    if (mounted) {
-      Navigator.pop(context); // Close the bottom sheet
-      
-      // Navigate to call screen
       if (mounted) {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CallScreen(
-              channelName: 'friends_call',
-              callType: callType,
-              receiverName: profile['name'] ?? 'Unknown',
-            ),
-          ),
-        );
+        // Only show error if it's not a token error (handled by the controller)
+        final errorMessage = e.toString().toLowerCase();
+        if (!errorMessage.contains('no valid token') &&
+            !errorMessage.contains('please log in again') &&
+            !errorMessage.contains('invalid token')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to load sent follow requests: $e')),
+          );
+        }
       }
     }
   }
+
+  Future<void> _loadProfiles() async {
+    print('[DEBUG] _loadProfiles called with filter: $_filter');
+
+    _startUILoadingTimeout();
+    try {
+      if (_filter == 'Near By') {
+        LocationPermission permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Location permission is required for Nearby'),
+            ),
+          );
+          return;
+        }
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+        await _fetchProfilesByFilter(
+          'Near By',
+          position.latitude,
+          position.longitude,
+        );
+      } else {
+        // Only make one API call per filter change
+        await _fetchProfilesByFilter(_filter);
+      }
+    } catch (e) {
+      print('Error loading profiles: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load profiles: $e')));
+      }
+    }
+  }
+
+  void _loadStaticData() {
+    print('[DEBUG] _loadStaticData called');
+    // Static data based on the API response structure provided
+    final staticProfiles = [
+      {
+        "_id": "696501a81b996e284c122cff",
+        "name": "Female E",
+        "gender": "female",
+        "bio": "Hi there! How are you!",
+        "images": [
+          {
+            "_id": "696519ffe95614370e8b16c8",
+            "imageUrl":
+                "https://res.cloudinary.com/dqtasamcu/image/upload/v1768233446/admin_uploads/hb3zfycdzk329tgvzkbt.jpg",
+          },
+        ],
+        "onlineStatus": true,
+        "age": 23,
+      },
+      {
+        "_id": "695f711c945b800e3a11b9a9",
+        "name": "Female D",
+        "gender": "female",
+        "bio": "Hi there! How are you!",
+        "images": [
+          {
+            "_id": "695f9de94667fdc61869359e",
+            "imageUrl":
+                "https://res.cloudinary.com/dqtasamcu/image/upload/v1767874001/admin_uploads/nt4wtrvyh9pg4k0h3ll2.jpg",
+          },
+        ],
+        "onlineStatus": true,
+        "age": 23,
+      },
+      {
+        "_id": "695b49eca40ac5f37a01913a",
+        "name": "Female C",
+        "gender": "female",
+        "bio": "Hi there!",
+        "images": [
+          {
+            "_id": "695b4a4ca40ac5f37a019140",
+            "imageUrl":
+                "https://res.cloudinary.com/dqtasamcu/image/upload/v1767590449/admin_uploads/rdri3unpbitymhlbzhqj.jpg",
+          },
+        ],
+        "onlineStatus": true,
+        "age": 23,
+      },
+    ];
+
+    // Update the controller with static data
+    final apiController = Provider.of<ApiController>(context, listen: false);
+    apiController.setStaticProfiles(staticProfiles);
+  }
+
+  List<Map<String, dynamic>> _applyFilter(List<Map<String, dynamic>> profiles) {
+    print('[DEBUG] Applying filter: $_filter to ${profiles.length} profiles');
+
+    // For now, return all profiles but log which filter is active
+    // In the future, you might want to implement actual filtering logic here
+    // based on profile properties like isFollowed, distance, isNew, etc.
+
+    switch (_filter) {
+      case 'Follow':
+        print(
+          '[DEBUG] Filter set to Follow - showing all profiles (implement actual follow filtering)',
+        );
+        break;
+      case 'New':
+        print(
+          '[DEBUG] Filter set to New - showing all profiles (implement actual new user filtering)',
+        );
+        break;
+      case 'Near By':
+        print(
+          '[DEBUG] Filter set to Near By - showing all profiles (implement actual location filtering)',
+        );
+        break;
+      case 'All':
+      default:
+        print('[DEBUG] Filter set to All - showing all profiles');
+        break;
+    }
+
+    return profiles;
+  }
+
+  Future<void> _fetchProfilesByFilter(
+    String filter, [
+    double? lat,
+    double? lng,
+  ]) async {
+    print('[DEBUG] _fetchProfilesByFilter called with filter: $filter');
+    final apiController = Provider.of<ApiController>(context, listen: false);
+    try {
+      // Clear old profiles before loading new ones
+      apiController.clearFemaleProfiles();
+
+      switch (filter) {
+        case 'Follow':
+          print('[DEBUG] Calling fetchDashboardProfiles with section: follow');
+          await apiController.fetchDashboardProfiles(
+            section: 'follow',
+            page: 1,
+            limit: 10,
+          );
+          break;
+        case 'New':
+          print('[DEBUG] Calling fetchDashboardProfiles with section: new');
+          await apiController.fetchDashboardProfiles(
+            section: 'new',
+            page: 1,
+            limit: 10,
+          );
+          break;
+        case 'Near By':
+          print('[DEBUG] Calling fetchDashboardProfiles with section: nearby');
+          await apiController.fetchDashboardProfiles(
+            section: 'nearby',
+            page: 1,
+            limit: 10,
+            latitude: lat,
+            longitude: lng,
+          );
+          break;
+        case 'All':
+          print('[DEBUG] Calling fetchDashboardProfiles with section: all');
+          await apiController.fetchDashboardProfiles(
+            section: 'all',
+            page: 1,
+            limit: 10,
+          );
+          break;
+        default:
+          print(
+            '[DEBUG] Calling fetchDashboardProfiles with section: all (default)',
+          );
+          await apiController.fetchDashboardProfiles(
+            section: 'all',
+            page: 1,
+            limit: 10,
+          );
+      }
+    } catch (e) {
+      print('Error loading new females: $e');
+      // Only use fallback for specific sections, not 'All'
+      if ((_filter == 'New' || _filter == 'Follow' || _filter == 'Near By') &&
+          (e.toString().toLowerCase().contains('404') ||
+              e.toString().toLowerCase().contains('resource not found'))) {
+        print(
+          '404 detected for $_filter section, falling back to all profiles',
+        );
+        try {
+          // Only fallback to 'All' section of dashboard API
+          await apiController.fetchDashboardProfiles(
+            section: 'all',
+            page: 1,
+            limit: 10,
+          );
+        } catch (fallbackError) {
+          print('Fallback also failed: $fallbackError');
+          if (mounted && context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Failed to load $_filter users, showing all users: $fallbackError',
+                ),
+              ),
+            );
+          }
+        }
+      } else {
+        // For other errors, show the error message
+        if (mounted && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to load $_filter users: $e')),
+          );
+        }
+      }
+    }
+  }
+
+  // --- Followed profiles fetch method ---
+  Future<void> _loadFollowedProfiles() async {
+    setState(() {
+      _isLoadingFollowed = true;
+      _followedError = null;
+    });
+    try {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      final results = await apiController.fetchFollowedFemales(
+        page: 1,
+        limit: 10,
+      );
+      setState(() {
+        _followedProfiles = results;
+        _isLoadingFollowed = false;
+      });
+    } catch (e) {
+      setState(() {
+        _followedError = e.toString();
+        _isLoadingFollowed = false;
+      });
+    }
+  }
+
+  bool _isCallLoading = false;
+
+  Future<void> _startCall(Map<String, dynamic> profile, String callType) async {
+    if (_isCallLoading) return;
+
+    if (mounted) {
+      Navigator.pop(context); // Close the bottom sheet
+    }
+
+    final isVideo = callType == 'video';
+    final requiredCoins = isVideo ? 20 : 10;
+
+    final apiController = Provider.of<ApiController>(context, listen: false);
+    try {
+      final userProfile = await apiController.fetchMaleMe();
+      final currentBalance = (userProfile['data'] != null) 
+          ? (userProfile['data']['balance'] ?? 0) 
+          : 0;
+
+      if (currentBalance < requiredCoins) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Insufficient balance to start call.')),
+          );
+        }
+        return;
+      }
+    } catch (e) {
+      print('Could not fetch balance: $e');
+    }
+
+    setState(() {
+      _isCallLoading = true;
+    });
+
+    try {
+      final response = await apiController.startCall(
+        receiverId: profile['_id'].toString(),
+        callType: callType,
+      );
+
+      if (response['success'] == true) {
+        final data = response['data'];
+        if (mounted) {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CallScreen(
+                channelName: data['channelName'] ?? data['callId'] ?? 'friends_call',
+                callType: callType,
+                receiverName: profile['name'] ?? 'Unknown',
+              ),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(response['message'] ?? 'Failed to start call')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error starting call: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCallLoading = false;
+        });
+      }
+    }
+  }
+
+  // Method to load all females from dashboard API (primary source)
+  Future<void> _loadAllFemales() async {
+    try {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+
+      // Show loading state
+      _startUILoadingTimeout();
+
+      // Only make one API call and don't allow interference
+      print('[DEBUG] Starting primary profile load from dashboard');
+      await apiController.fetchDashboardProfiles(
+        section: 'all',
+        page: 1,
+        limit: 10,
+      );
+      print('[DEBUG] Primary profile load completed');
+    } catch (e) {
+      print('Error loading all females from dashboard: $e');
+
+      // Show error message
+      if (mounted && context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to load users: $e')));
+>>>>>>> bdb130b3dbffca9ef8c885e9138f7a8ac86a159a
+      }
+    }
+  }
+
 
   void _showQuickSheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+<<<<<<< HEAD
       builder: (_) => const _QuickActionsBottomSheet(),
+=======
+      builder: (_) => _QuickActionsBottomSheet(
+        onRechargePressed: () {
+          // Navigate to PaymentPage for Razorpay integration testing
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const PaymentPage()),
+          );
+        },
+      ),
+>>>>>>> bdb130b3dbffca9ef8c885e9138f7a8ac86a159a
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final apiController = Provider.of<ApiController>(context);
+
+    // Debug print to see what's happening
+    print(
+      '[DEBUG] Building MainHome - isLoading: ${apiController.isLoading}, profiles length: ${apiController.femaleProfiles.length}, error: ${apiController.error}',
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F5FF),
@@ -355,6 +628,7 @@ class _HomeScreenState extends State<MainHome> {
   }
 
   Widget _buildHomeTab(ApiController apiController) {
+<<<<<<< HEAD
     if (apiController.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -386,6 +660,52 @@ class _HomeScreenState extends State<MainHome> {
     if (profiles.isEmpty && _filter == 'All' && apiController.femaleProfiles.isNotEmpty) {
       // Fallback to all profiles if filter returns empty but all profiles exist
       return CustomScrollView(
+=======
+    debugPrint(
+      '[UI DEBUG] Current filter: [33m$_filter[0m, femaleProfiles.length: [36m${apiController.femaleProfiles.length}[0m, isLoading: [35m${apiController.isLoading}[0m',
+    );
+
+    // Debug: Print first few profile IDs if available
+    if (apiController.femaleProfiles.isNotEmpty) {
+      print(
+        '[DEBUG] First few profiles: ${apiController.femaleProfiles.take(3).map((p) => p['_id'] ?? p['id'] ?? 'no-id').toList()}',
+      );
+    }
+
+    // --- NEW LOADING LOGIC ---
+    // 1. isLoading → show loader
+    if (apiController.isLoading) {
+      _showDebug('UI: Still loading, showing spinner.');
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // 2. profiles.isEmpty → show "No profiles found"
+    final profiles = _applyFilter(apiController.femaleProfiles);
+    print('[DEBUG] Profiles after filtering: ${profiles.length}');
+
+    if (profiles.isEmpty) {
+      _showDebug('UI: No profiles found');
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('No profiles found'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadProfiles,
+              child: const Text('Refresh'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 3. profiles.isNotEmpty → show profiles
+    // Success: show main content
+    _showDebug('UI: Showing profiles (${profiles.length})');
+    return SafeArea(
+      child: CustomScrollView(
+>>>>>>> bdb130b3dbffca9ef8c885e9138f7a8ac86a159a
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           const SliverToBoxAdapter(child: SizedBox(height: 14)),
@@ -400,7 +720,15 @@ class _HomeScreenState extends State<MainHome> {
                       label: 'All',
                       selected: _filter == 'All',
                       onSelected: (v) {
+<<<<<<< HEAD
                         setState(() => _filter = 'All');
+=======
+                        print('[DEBUG] All filter selected');
+                        if (_filter != 'All') {
+                          setState(() => _filter = 'All');
+                          _loadProfiles();
+                        }
+>>>>>>> bdb130b3dbffca9ef8c885e9138f7a8ac86a159a
                       },
                     ),
                     const SizedBox(width: 8),
@@ -408,14 +736,70 @@ class _HomeScreenState extends State<MainHome> {
                       label: 'Follow',
                       selected: _filter == 'Follow',
                       onSelected: (v) {
+<<<<<<< HEAD
                         setState(() => _filter = 'Follow');
                       },
                     ),
                     const SizedBox(width: 8),
+=======
+                        print('[DEBUG] Follow filter selected');
+                        if (_filter != 'Follow') {
+                          setState(() => _filter = 'Follow');
+                          _loadProfiles();
+                        }
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    FilterChipWidget(
+                      label: 'Near By',
+                      selected: _filter == 'Near By',
+                      onSelected: (v) async {
+                        print('[DEBUG] Near By filter selected');
+                        if (_filter != 'Near By') {
+                          setState(() => _filter = 'Near By');
+                          LocationPermission permission =
+                              await Geolocator.requestPermission();
+                          if (permission == LocationPermission.denied ||
+                              permission == LocationPermission.deniedForever) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Location permission is required for Nearby',
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+                          Position position =
+                              await Geolocator.getCurrentPosition(
+                                desiredAccuracy: LocationAccuracy.high,
+                              );
+                          await showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Current Location'),
+                              content: Text(
+                                'Latitude:  ${position.latitude}\nLongitude:  ${position.longitude}',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            ),
+                          );
+                          _loadProfiles();
+                        }
+                      },
+                    ),
+                    const SizedBox(width: 10),
+>>>>>>> bdb130b3dbffca9ef8c885e9138f7a8ac86a159a
                     FilterChipWidget(
                       label: 'New',
                       selected: _filter == 'New',
                       onSelected: (v) {
+<<<<<<< HEAD
                         setState(() => _filter = 'New');
                       },
                     ),
@@ -425,6 +809,13 @@ class _HomeScreenState extends State<MainHome> {
                       selected: _filter == 'Near By',
                       onSelected: (v) {
                         setState(() => _filter = 'Near By');
+=======
+                        print('[DEBUG] New filter selected');
+                        if (_filter != 'New') {
+                          setState(() => _filter = 'New');
+                          _loadProfiles();
+                        }
+>>>>>>> bdb130b3dbffca9ef8c885e9138f7a8ac86a159a
                       },
                     ),
                   ],
@@ -432,6 +823,7 @@ class _HomeScreenState extends State<MainHome> {
               ),
             ),
           ),
+<<<<<<< HEAD
           SliverPadding(
             padding: const EdgeInsets.only(top: 10),
             sliver: SliverGrid(
@@ -498,6 +890,54 @@ class _HomeScreenState extends State<MainHome> {
                 childCount: apiController.femaleProfiles.length,
               ),
             ),
+=======
+          const SliverToBoxAdapter(child: SizedBox(height: 10)),
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              // Check if index is valid
+              if (index >= profiles.length) {
+                print(
+                  '[ERROR] Index out of bounds: $index, profiles length: ${profiles.length}',
+                );
+                return Container();
+              }
+
+              final profile = profiles[index];
+
+              // Check if profile is valid
+              if (profile == null) {
+                print('[ERROR] Null profile at index: $index');
+                return Container();
+              }
+
+              final String name = profile['name']?.toString() ?? '';
+              final String bio = profile['bio']?.toString() ?? '';
+              final String ageStr = profile['age']?.toString() ?? '';
+
+              return Padding(
+                padding: const EdgeInsets.only(left: 10, right: 10, bottom: 16),
+                child: _BlockableProfileCard(
+                  name: name,
+                  badgeImagePath: 'assets/vector.png',
+                  imagePath:
+                      _getImageUrlFromProfile(profile) ?? 'assets/img_1.png',
+                  language: bio.isNotEmpty ? bio : 'Bio not available',
+                  age: ageStr,
+                  callRate: '10/min',
+                  videoRate: '20/min',
+                  onCardTap: () => _navigateToFemaleProfile(profile),
+                  onAudioCallTap: _isCallLoading
+                      ? null
+                      : () => _startCall(isVideo: false, profile: profile),
+                  onVideoCallTap: _isCallLoading
+                      ? null
+                      : () => _startCall(isVideo: true, profile: profile),
+                  femaleUserId: profile['_id']?.toString() ?? '',
+                  femaleName: name,
+                ),
+              );
+            }, childCount: profiles.length),
+>>>>>>> bdb130b3dbffca9ef8c885e9138f7a8ac86a159a
           ),
         ],
       );

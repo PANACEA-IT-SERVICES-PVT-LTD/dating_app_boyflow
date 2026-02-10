@@ -23,23 +23,230 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
   );
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_isInit) {
-      final apiController = Provider.of<ApiController>(context, listen: false);
-      apiController.fetchFollowers();
-      _isInit = false;
+  void initState() {
+    super.initState();
+    _fetchFollowers();
+    _fetchFavourites();
+  }
+
+  String? _extractId(dynamic item) {
+    if (item == null) return null;
+    if (item is Map<String, dynamic>) {
+      return (item["id"] ?? item["_id"] ?? "").toString();
+    }
+    return item.toString();
+  }
+
+  Future<void> _fetchFollowers() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final url = Uri.parse(
+        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleFollowers}",
+      );
+      final resp = await http.get(url);
+
+      dynamic body;
+      try {
+        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
+      } catch (_) {
+        body = {"raw": resp.body};
+      }
+
+      List<dynamic> dataList = [];
+      if (body is Map && body["data"] is List) {
+        dataList = body["data"] as List<dynamic>;
+      } else if (body is List) {
+        dataList = body;
+      }
+
+      final mapped = dataList
+          .whereType<Map<String, dynamic>>()
+          .map<Map<String, dynamic>>((item) {
+            final username = (item["username"] ?? item["name"] ?? "User")
+                .toString();
+            final age = int.tryParse((item["age"] ?? "0").toString()) ?? 0;
+            final gender = (item["gender"] ?? "").toString();
+            final level = (item["level"] ?? "01").toString();
+            final online = item["online"] == true || item["isOnline"] == true;
+            final avatarUrl =
+                (item["avatar"] ?? item["avatarUrl"] ?? item["photo"] ?? "")
+                    .toString();
+            final id = (item["id"] ?? item["_id"] ?? "").toString();
+
+            return {
+              "id": id,
+              "username": username,
+              "age": age,
+              "gender": gender,
+              "level": level,
+              "online": online,
+              "avatarUrl": avatarUrl,
+            };
+          })
+          .toList();
+
+      if (!mounted) return;
+
+      setState(() {
+        _followers = mapped;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = e.toString();
+      });
     }
   }
 
-  Future<void> _handleRefresh() async {
-    final apiController = Provider.of<ApiController>(context, listen: false);
-    if (_tabIndex == 0) {
-      await apiController.fetchFollowers();
-    } else if (_tabIndex == 1) {
-      await apiController.fetchFollowing();
-    } else {
-      await apiController.fetchSentFollowRequests();
+  Future<void> _fetchFavourites() async {
+    try {
+      final url = Uri.parse("${ApiEndPoints.baseUrl}${ApiEndPoints.maleMe}");
+      final resp = await http.get(url);
+
+      dynamic body;
+      try {
+        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
+      } catch (_) {
+        body = {"raw": resp.body};
+      }
+
+      final favIds = <String>{};
+      if (body is Map && body["data"] is Map) {
+        final data = body["data"] as Map;
+        final favourites = data["favourites"];
+
+        if (favourites is List) {
+          for (final item in favourites) {
+            final id = _extractId(item);
+            if (id != null && id.isNotEmpty) {
+              favIds.add(id);
+            }
+          }
+        }
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _favourites = favIds;
+      });
+    } catch (_) {
+      // silent failure for favourites list
+    }
+  }
+
+  Future<void> _addFavourite(String userId) async {
+    if (userId.isEmpty) return;
+    try {
+      final url = Uri.parse(
+        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleAddFavourite}",
+      );
+      await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"userId": userId}),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _favourites.add(userId);
+      });
+    } catch (_) {
+      // you can add snackbar/logging here if needed
+    }
+  }
+
+  Future<void> _removeFavourite(String userId) async {
+    if (userId.isEmpty) return;
+    try {
+      final url = Uri.parse(
+        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleRemoveFavourite}",
+      );
+      await http.delete(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"userId": userId}),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _favourites.remove(userId);
+      });
+    } catch (_) {
+      // you can add snackbar/logging here if needed
+    }
+  }
+
+  Future<void> _fetchFollowing() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final url = Uri.parse(
+        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleFollowing}",
+      );
+      final resp = await http.get(url);
+
+      dynamic body;
+      try {
+        body = resp.body.isNotEmpty ? jsonDecode(resp.body) : {};
+      } catch (_) {
+        body = {"raw": resp.body};
+      }
+
+      List<dynamic> dataList = [];
+      if (body is Map && body["data"] is List) {
+        dataList = body["data"] as List<dynamic>;
+      } else if (body is List) {
+        dataList = body;
+      }
+
+      final mapped = dataList
+          .whereType<Map<String, dynamic>>()
+          .map<Map<String, dynamic>>((item) {
+            final username = (item["username"] ?? item["name"] ?? "User")
+                .toString();
+            final age = int.tryParse((item["age"] ?? "0").toString()) ?? 0;
+            final gender = (item["gender"] ?? "").toString();
+            final level = (item["level"] ?? "01").toString();
+            final online = item["online"] == true || item["isOnline"] == true;
+            final avatarUrl =
+                (item["avatar"] ?? item["avatarUrl"] ?? item["photo"] ?? "")
+                    .toString();
+            final id = (item["id"] ?? item["_id"] ?? "").toString();
+
+            return {
+              "id": id,
+              "username": username,
+              "age": age,
+              "gender": gender,
+              "level": level,
+              "online": online,
+              "avatarUrl": avatarUrl,
+            };
+          })
+          .toList();
+
+      if (!mounted) return;
+
+      setState(() {
+        _following = mapped;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = e.toString();
+      });
     }
   }
 

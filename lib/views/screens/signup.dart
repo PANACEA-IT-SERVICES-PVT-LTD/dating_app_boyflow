@@ -44,6 +44,7 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _submitting = true);
 
     try {
+      print('[DEBUG] Attempting to call API controller registerMaleUser');
       // Use the ApiController for registration
       final apiController = Provider.of<ApiController>(context, listen: false);
       final result = await apiController.registerMaleUser(
@@ -55,6 +56,8 @@ class _SignupScreenState extends State<SignupScreen> {
             ? _referralCtrl.text.trim()
             : null,
       );
+
+      print('[DEBUG] Registration API result: $result');
 
       final success = result["success"] == true;
       final message = result["message"] ?? "Registration successful";
@@ -89,10 +92,27 @@ class _SignupScreenState extends State<SignupScreen> {
         ).showSnackBar(SnackBar(content: Text("❌ $message")));
       }
     } catch (e) {
+      print('[ERROR] Registration error: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Registration failed: ${e.toString()}")),
-      );
+      String errorMessage = "❌ Registration failed: ${e.toString()}";
+      // Provide more user-friendly error message for common issues
+      if (e.toString().toLowerCase().contains('connection') ||
+          e.toString().toLowerCase().contains('network')) {
+        errorMessage =
+            "❌ Network error: Please check your internet connection.";
+      } else if (e.toString().toLowerCase().contains('404')) {
+        errorMessage =
+            "❌ Service temporarily unavailable. Please try again later.";
+      } else if (e.toString().toLowerCase().contains('500')) {
+        errorMessage =
+            "❌ Server error: We're experiencing technical difficulties. Please try again later.";
+      } else if (e.toString().toLowerCase().contains('timeout')) {
+        errorMessage =
+            "❌ Request timeout: Server is taking too long to respond. Please try again.";
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage)));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

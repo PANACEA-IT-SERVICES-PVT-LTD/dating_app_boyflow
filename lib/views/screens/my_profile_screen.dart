@@ -65,7 +65,12 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
           "referralCode": data["referralCode"],
           "referralBonusAwarded": data["referralBonusAwarded"],
           "profileCompleted": data["profileCompleted"],
-          "referredBy": data["referredBy"] ?? [],
+          "referredBy":
+              (data["referredBy"] != null &&
+                  data["referredBy"] is! List &&
+                  data["referredBy"].toString().isNotEmpty)
+              ? data["referredBy"]
+              : null,
           "hobbies": data["hobbies"] ?? [],
           "sports": data["sports"] ?? [],
           "film": data["film"] ?? [],

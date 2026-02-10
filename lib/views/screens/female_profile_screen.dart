@@ -4,12 +4,111 @@ import 'package:Boy_flow/controllers/api_controller.dart';
 import 'package:Boy_flow/models/female_user.dart';
 import 'package:Boy_flow/utils/colors.dart';
 import 'package:Boy_flow/widgets/gift_selection_sheet.dart';
-import 'package:Boy_flow/agora_video_call.dart';
-import 'package:Boy_flow/services/call_notification_service.dart';
 
 class FemaleProfileScreen extends StatefulWidget {
   final FemaleUser user;
   const FemaleProfileScreen({Key? key, required this.user}) : super(key: key);
+
+  @override
+  State<FemaleProfileScreen> createState() => _FemaleProfileScreenState();
+}
+
+class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
+  bool _isCallLoading = false;
+
+  Future<void> _startCall(bool isVideo) async {
+    if (_isCallLoading) return;
+
+    setState(() {
+      _isCallLoading = true;
+    });
+
+    try {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+
+      // Convert FemaleUser to the format expected by the API
+      final profileData = {'_id': widget.user.id, 'name': widget.user.name};
+
+      final response = await apiController.startCall(
+        receiverId: widget.user.id,
+        callType: isVideo ? 'video' : 'audio',
+      );
+
+      if (response['success'] == true) {
+        final data = response['data'];
+
+        // Navigate to outgoing call screen
+        if (mounted) {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OutgoingCallScreen(
+                receiverId: widget.user.id,
+                receiverName: widget.user.name,
+                channelName: data['channelName'] ?? data['callId'],
+                callType: isVideo ? 'video' : 'audio',
+                callId: data['callId'],
+              ),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(response['message'] ?? 'Failed to start call'),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error starting call: $e')));
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCallLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _showCallOptions() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Choose Call Type'),
+          content: const Text('Select the type of call you want to make'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _startCall(false); // Audio call
+              },
+              child: const Text('Audio Call'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _startCall(true); // Video call
+              },
+              child: const Text('Video Call'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   State<FemaleProfileScreen> createState() => _FemaleProfileScreenState();
@@ -195,10 +294,10 @@ class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
                       CircleAvatar(
                         radius: 36,
                         backgroundImage:
-                            widget.user.avatarUrl != null && widget.user.avatarUrl!.isNotEmpty
-                            ? NetworkImage(widget.user.avatarUrl!)
+                            user.avatarUrl != null && user.avatarUrl!.isNotEmpty
+                            ? NetworkImage(user.avatarUrl!)
                             : null,
-                        child: widget.user.avatarUrl == null || widget.user.avatarUrl!.isEmpty
+                        child: user.avatarUrl == null || user.avatarUrl!.isEmpty
                             ? const Icon(Icons.person, size: 36)
                             : null,
                       ),
@@ -355,10 +454,21 @@ class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: ElevatedButton.icon(
-                        icon: const Icon(Icons.call, color: Colors.white),
-                        label: const Text(
-                          "Call",
-                          style: TextStyle(color: Colors.white),
+                        icon: _isCallLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Icon(Icons.call, color: Colors.white),
+                        label: Text(
+                          _isCallLoading ? "Calling..." : "Call",
+                          style: const TextStyle(color: Colors.white),
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.transparent,
@@ -368,9 +478,7 @@ class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
-                        onPressed: () {
-                          _showCallOptionsDialog(context);
-                        },
+                        onPressed: () {},
                       ),
                     ),
                   ),

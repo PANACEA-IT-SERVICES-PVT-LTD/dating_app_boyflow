@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../../api_service/api_endpoint.dart';
 
 class ApiUserListScreen extends StatefulWidget {
   @override
@@ -26,7 +27,7 @@ class _ApiUserListScreenState extends State<ApiUserListScreen> {
     try {
       final response = await http.get(
         Uri.parse(
-          'https://friend-circle-new.vercel.app/male-user/dashboard?section=all&page=1&limit=10',
+          '${ApiEndPoints.baseUrl}${ApiEndPoints.dashboardEndpoint}?section=all&page=1&limit=10',
         ),
       );
       final data = json.decode(response.body);

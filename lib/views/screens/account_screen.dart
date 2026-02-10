@@ -13,9 +13,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../screens/withdraws_screen.dart';
 import '../screens/followers_screen.dart';
+// Removed unused import
 import '../screens/support_service_screen.dart';
 import '../screens/settings_screen.dart';
 import '../../api_service/api_endpoint.dart';
+import 'coin_packages_sheet.dart';
+import '../../services/razorpay_service.dart';
 
 // Global variables
 
@@ -45,19 +48,29 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
               ),
               Spacer(),
-              Row(
-                children: [
-                  Image.asset("assets/coins.png", width: 22, height: 22),
-                  const SizedBox(width: 4),
-                  Text(
-                    _coinBalance?.toString() ?? "0",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+              GestureDetector(
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => const CoinPackagesSheet(),
+                  );
+                },
+                child: Row(
+                  children: [
+                    Image.asset("assets/coins.png", width: 22, height: 22),
+                    const SizedBox(width: 4),
+                    Text(
+                      _coinBalance?.toString() ?? "0",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -290,11 +303,20 @@ class _AccountScreenState extends State<AccountScreen> {
                           color: Colors.black,
                         ),
                         onTap: () {
-                          final Widget screen = item['screen'] as Widget;
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => screen),
-                          );
+                          if (item['label'] == 'Buy Coins') {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (context) => const CoinPackagesSheet(),
+                            );
+                          } else {
+                            final Widget screen = item['screen'] as Widget;
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => screen),
+                            );
+                          }
                         },
                       );
                     },
@@ -340,6 +362,12 @@ class _AccountScreenState extends State<AccountScreen> {
       'iconPath': 'assets/wallet.png',
       'label': 'Levels',
       'screen': RewardLevelsScreen(),
+    },
+    {
+      'iconPath': 'assets/coins.png',
+      'label': 'Buy Coins',
+      'screen': const PaymentPage(), // Default payment page or we can trigger sheet
+      'onTap': true,
     },
     {
       'iconPath': 'assets/followers.png',

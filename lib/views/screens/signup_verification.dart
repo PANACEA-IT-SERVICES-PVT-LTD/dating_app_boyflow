@@ -7,6 +7,7 @@ import '../../views/screens/main_navigation.dart';
 import '../../widgets/gradient_button.dart';
 import '../../widgets/otp_input_fields.dart';
 import '../../utils/token_helper.dart';
+import '../screens/main_navigation.dart';
 
 class SignupVerificationScreen extends StatefulWidget {
   final String? email;
