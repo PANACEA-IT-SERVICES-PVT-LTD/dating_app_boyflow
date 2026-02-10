@@ -1,4 +1,3 @@
-import 'package:Boy_flow/views/screens/call_rate_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:Boy_flow/controllers/api_controller.dart';
 import 'package:provider/provider.dart';
@@ -230,28 +229,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   style: TextStyle(
                     fontFamily: 'ComicNeue',
                     color: Color(0xFFFF00CC),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                onPressed: () {},
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: pink,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                icon: const Icon(Icons.call, color: Colors.white),
-                label: const Text(
-                  'Call',
-                  style: TextStyle(
-                    fontFamily: 'ComicNeue',
-                    color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

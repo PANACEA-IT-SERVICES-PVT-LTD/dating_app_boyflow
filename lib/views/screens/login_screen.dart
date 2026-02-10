@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/routes/app_routes.dart';
 import '../../utils/colors.dart';
 import '../../widgets/gradient_button.dart';
+import '../../utils/otp_toast_util.dart'; // Import OTP toast utility
 // import '../../controllers/api_controller.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -76,6 +77,11 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("✅ $message")));
+
+        // Show OTP as toast if available in response
+        if (body['otp'] != null) {
+          OtpToastUtil.showOtpToast(body['otp'].toString());
+        }
 
         if (mounted) {
           Navigator.pushNamed(

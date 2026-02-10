@@ -1,10 +1,4 @@
 class ApiEndPoints {
-  static const String startCall = '/male-user/calls/start';
-  static const String checkCallStatus =
-      '/male-user/calls'; // Will append /:callId/status
-  static const String endCall = '/male-user/calls/end';
-  static const String callHistory = '/male-user/calls/history';
-  static const String callStats = '/male-user/calls/stats';
   static const String baseUrl = "https://friend-circle-new.vercel.app";
   static const String dashboardEndpoint = '/male-user/dashboard';
 
@@ -16,6 +10,7 @@ class ApiEndPoints {
   static const String profiledetailsMale = "/male-user/add-info";
   static const String maleProfileDetails = "/male-user/profile-details";
   static const String uploadImageMale = "/male-user/upload-image";
+  static const String deleteAccountMale = "/male-user/account";
   static const String maleMe = '/male-user/me';
   static const String maleUploadImages = '/male-user/upload-images';
   static const String maleInterests = "/male-user/interests";
@@ -31,6 +26,9 @@ class ApiEndPoints {
   static const String maleBlockList = "/male-user/block-list";
   static const String maleUnblock = "/male-user/unblock";
   static const String maleBlock = "/male-user/block";
+  static const String maleFollowSend = "/male-user/follow-request/send";
+  static const String maleFollowCancel = "/male-user/follow-request/cancel";
+  static const String maleFollowRequestsSent = "/male-user/follow-requests/sent";
 
   // Female auth & profile
   static const String signup = "/female-user/register";

@@ -11,17 +11,15 @@ import 'package:Boy_flow/views/screens/onboardingscreen.dart';
 import 'package:Boy_flow/views/screens/verificationfail.dart';
 import 'package:Boy_flow/views/screens/signup.dart';
 import 'package:Boy_flow/views/screens/mainhome.dart';
-import 'package:Boy_flow/views/screens/call_screen.dart';
+
 import 'package:Boy_flow/views/screens/chat_screen.dart';
 import 'package:Boy_flow/views/screens/notification_screen.dart';
 import 'package:Boy_flow/views/screens/account_screen.dart';
 import 'package:Boy_flow/views/screens/help_videos_screen.dart';
-import 'package:Boy_flow/views/screens/chat_detail_screen.dart';
-import 'package:Boy_flow/views/screens/call_user_details_screen.dart';
 import 'package:Boy_flow/views/screens/profile_gallery_screen.dart';
 import 'package:Boy_flow/models/female_user.dart';
 import 'package:Boy_flow/views/screens/support_service_screen.dart';
-import 'package:Boy_flow/views/screens/call_rate_screen.dart';
+
 import 'package:Boy_flow/views/screens/withdraws_screen.dart';
 import 'package:Boy_flow/views/screens/followers_screen.dart';
 import 'package:Boy_flow/views/screens/earnings_screen.dart';
@@ -34,7 +32,6 @@ import 'package:Boy_flow/views/screens/withdraw_confirmation_screen.dart';
 import 'package:Boy_flow/views/screens/introduce_yourself_screen.dart';
 import 'package:Boy_flow/views/screens/Invite_friends_screen.dart';
 import 'package:Boy_flow/views/screens/registration_status.dart';
-import 'package:Boy_flow/views/screens/incoming_call_screen.dart';
 
 class AppRoutes {
   static const String login = '/login'; // request OTP (email input)
@@ -46,14 +43,14 @@ class AppRoutes {
   static const String aboutScreen = '/aboutScreen';
   static const String homepage = '/homepage';
   static const String chatScreen = '/chatScreen';
-  static const String callScreen = '/callScreen';
+
   static const String notificationScreen = '/notificationScreen';
   static const String accountScreen = '/accountScreen';
   static const String helpVideos = '/helpVideos';
   static const String chatDetail = '/chatDetail';
-  static const String calluserdetails = '/CallUserDetails';
+
   static const String profilegallery = '/ProfileGallery';
-  static const String callrate = '/Callrate';
+
   static const String withdraws = '/Withdraws';
   static const String followers = '/Followers';
   static const String earnings = '/Earnings';
@@ -69,7 +66,6 @@ class AppRoutes {
   static const String introduceYourself = '/IntroduceYourself';
   static const String registrationstatus = '/RegistrationStatus';
   static const String signupVerification = '/signupVerification';
-  static const String incomingCall = '/incoming-call';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     final args = settings.arguments;
@@ -122,9 +118,6 @@ class AppRoutes {
       case chatScreen:
         return MaterialPageRoute(builder: (_) => const ChatScreen());
 
-      case callScreen:
-        return MaterialPageRoute(builder: (_) => const CallScreen());
-
       case notificationScreen:
         return MaterialPageRoute(builder: (_) => const NotificationScreen());
 
@@ -140,18 +133,7 @@ class AppRoutes {
         );
 
       case chatDetail:
-        if (args is Map<String, String>) {
-          return MaterialPageRoute(
-            builder: (_) => ChatDetailScreen(
-              name: args['name'] ?? 'Unknown',
-              img: args['img'] ?? '',
-            ),
-          );
-        }
-        return _errorRoute("Invalid arguments for ChatDetailScreen");
-
-      case calluserdetails:
-        return MaterialPageRoute(builder: (_) => const CallUserDetailsScreen());
+        return _errorRoute("Chat detail screen is not available");
 
       case profilegallery:
         // TODO: Pass the correct FemaleUser instance here. For now, pass a dummy user or refactor to get user from arguments.
@@ -166,9 +148,6 @@ class AppRoutes {
             ),
           ),
         );
-
-      case callrate:
-        return MaterialPageRoute(builder: (_) => const MyCallRate());
 
       case withdraws:
         return MaterialPageRoute(builder: (_) => const RewardLevelsScreen());
@@ -209,21 +188,6 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) => const IntroduceYourselfScreen(),
         );
-
-      case incomingCall:
-        if (args is Map<String, dynamic>) {
-          return MaterialPageRoute(
-            builder: (_) => IncomingCallScreen(
-              callerName: args['callerName'] ?? 'Unknown',
-              callerAvatar: args['callerAvatar'] ?? '',
-              callType: args['callType'] ?? 'audio',
-              callId:
-                  args['callId'] ??
-                  DateTime.now().millisecondsSinceEpoch.toString(),
-            ),
-          );
-        }
-        return _errorRoute("Invalid arguments for IncomingCallScreen");
 
       default:
         return _errorRoute("No route defined for ${settings.name}");

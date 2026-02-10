@@ -3,6 +3,5 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">friend-circle-nine.vercel.app</domain>
         <domain includeSubdomains="true">friend-circle-2.vercel.app</domain>
-        <domain includeSubdomains="true">agora-token-server.onrender.com</domain>
     </domain-config>
 </network-security-config>

@@ -1,12 +1,9 @@
 // lib/views/screens/mainhome.dart
 import 'package:Boy_flow/api_service/api_endpoint.dart';
 import 'package:Boy_flow/controllers/api_controller.dart';
-import 'package:Boy_flow/controllers/call_controller.dart';
-import 'package:Boy_flow/views/screens/outgoing_call_screen.dart';
-import 'package:Boy_flow/views/screens/incall_screen.dart';
-import 'package:Boy_flow/views/screens/outgoing_call_screen.dart';
 import 'package:Boy_flow/models/female_user.dart';
 import 'package:Boy_flow/views/screens/female_profile_screen.dart';
+import 'package:Boy_flow/views/screens/call_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -16,10 +13,6 @@ import 'dart:io';
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
-
-import '../../models/user.dart' as call_user;
-import '../../models/call_state.dart';
-import '../../services/call_manager.dart';
 
 class MainHome extends StatefulWidget {
   const MainHome({super.key});
@@ -38,7 +31,6 @@ class _HomeScreenState extends State<MainHome> {
   bool _uiLoadingTimeout = false;
   Timer? _loadingTimer;
   String _filter = 'All';
-  final CallManager _callManager = CallManager();
 
   // --- Followed profiles state ---
   List<Map<String, dynamic>> _followedProfiles = [];
@@ -49,94 +41,88 @@ class _HomeScreenState extends State<MainHome> {
     // Check if there are images in the profile
     if (profile['images'] != null &&
         profile['images'] is List &&
-        profile['images'].isNotEmpty) {
-      final imageList = profile['images'] as List;
-      final firstImage = imageList[0];
-      if (firstImage is Map<String, dynamic> &&
-          firstImage['imageUrl'] != null) {
-        return firstImage['imageUrl'].toString();
+        profile['images'].length > 0) {
+      // Return the first image URL if available
+      final firstImage = profile['images'][0];
+      if (firstImage is String) {
+        return firstImage;
+      } else if (firstImage is Map && firstImage['imageUrl'] != null) {
+        return firstImage['imageUrl'];
       }
-    } else if (profile['avatarUrl'] != null) {
-      // Fallback to avatarUrl if images are not available
-      return profile['avatarUrl']?.toString();
     }
-    // Return null if no image is found
+
+    // Check for avatarUrl field
+    if (profile['avatarUrl'] != null &&
+        profile['avatarUrl'] is String &&
+        profile['avatarUrl'].isNotEmpty) {
+      return profile['avatarUrl'];
+    }
+
+    // Check for avatar field
+    if (profile['avatar'] != null &&
+        profile['avatar'] is String &&
+        profile['avatar'].isNotEmpty) {
+      return profile['avatar'];
+    }
+
+    // Check for image field
+    if (profile['image'] != null &&
+        profile['image'] is String &&
+        profile['image'].isNotEmpty) {
+      return profile['image'];
+    }
+
+    // Check for profilePic field
+    if (profile['profilePic'] != null &&
+        profile['profilePic'] is String &&
+        profile['profilePic'].isNotEmpty) {
+      return profile['profilePic'];
+    }
+
+    // Check for profilePicture field
+    if (profile['profilePicture'] != null &&
+        profile['profilePicture'] is String &&
+        profile['profilePicture'].isNotEmpty) {
+      return profile['profilePicture'];
+    }
+
     return null;
   }
 
-  Future<void> rechargeWallet(int amount) async {
+  // --- Followed profiles methods ---
+  Future<void> _loadFollowedProfiles() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingFollowed = true;
+      _followedError = null;
+    });
+
     try {
-      final url = Uri.parse(
-        ApiEndPoints.baseUrl + ApiEndPoints.maleWalletRecharge,
-      );
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      final List<Map<String, dynamic>> profiles = await apiController
+          .fetchFollowedFemales(page: 1, limit: 20);
 
-      // Get auth token from shared preferences
-      String? authToken;
-      final prefs = await SharedPreferences.getInstance();
-      authToken = prefs.getString('token');
-
-      // Prepare headers with authorization
-      final headers = {
-        'Content-Type': 'application/json',
-        if (authToken != null) 'Authorization': 'Bearer $authToken',
-      };
-
-      final response = await http.post(
-        url,
-        headers: headers,
-        body: jsonEncode({'amount': amount}),
-      );
-      print('[Recharge] API response: ${response.statusCode} ${response.body}');
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Wallet recharged successfully!')),
-          );
-        } else {
-          String errorMessage = data['message'] ?? 'Recharge failed';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Recharge failed: $errorMessage')),
-          );
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('API error: ${response.statusCode}')),
-        );
+      if (mounted) {
+        setState(() {
+          _followedProfiles = profiles;
+          _isLoadingFollowed = false;
+        });
       }
-    } on SocketException catch (e) {
-      print('[Recharge] Network error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Network error: Please check your connection')),
-      );
-    } on http.ClientException catch (e) {
-      print('[Recharge] Client error: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Connection error: $e')));
-    } catch (e, st) {
-      print('[Recharge] Exception: $e\n$st');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Recharge error: $e')));
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingFollowed = false;
+          _followedError = e.toString();
+        });
+      }
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startUILoadingTimeout();
-      _loadProfiles();
-      _loadSentFollowRequests();
-    });
-  }
-
   void _startUILoadingTimeout() {
-    _uiLoadingTimeout = false;
     _loadingTimer?.cancel();
-    _loadingTimer = Timer(const Duration(seconds: 12), () {
-      if (mounted && context.mounted) {
+    _uiLoadingTimeout = false;
+    _loadingTimer = Timer(const Duration(seconds: 30), () {
+      if (mounted) {
         setState(() {
           _uiLoadingTimeout = true;
         });
@@ -144,460 +130,154 @@ class _HomeScreenState extends State<MainHome> {
     });
   }
 
-  void _navigateToFemaleProfile(Map<String, dynamic> profile) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            FemaleProfileScreen(user: FemaleUser.fromJson(profile)),
+  @override
+  void initState() {
+    super.initState();
+    // Load initial profiles immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialProfiles();
+      _loadFollowedProfiles();
+    });
+    
+    // Listen to API controller to refresh UI when profiles change
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      apiController.addListener(_onProfilesChanged);
+      apiController.fetchSentFollowRequests(); // Initial fetch of follow requests
+    });
+  }
+  
+  void _onProfilesChanged() {
+    // Use post-frame callback with delay to ensure stability
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {
+              // Force UI refresh when profiles change
+              // This prevents rapid updates that cause flickering
+            });
+          }
+        });
+      }
+    });
+  }
+  
+  @override
+  void dispose() {
+    // Check if we're still mounted before removing listener
+    if (mounted) {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      apiController.removeListener(_onProfilesChanged);
+    }
+    super.dispose();
+  }
+
+  Future<void> _loadInitialProfiles() async {
+    try {
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      await apiController.fetchDashboardSectionFemales(section: 'all', page: 1, limit: 20);
+    } catch (e) {
+      print('Error loading initial profiles: $e');
+    }
+  }
+
+  Future<void> _showCallTypePopup(Map<String, dynamic> profile) async {
+    if (mounted) {
+      showModalBottomSheet(
+        context: context,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Call ${profile['name'] ?? 'User'}',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildCallOption(
+                    icon: Icons.call,
+                    label: 'Audio Call',
+                    color: Colors.green,
+                    onTap: () => _startCall(profile, 'audio'),
+                  ),
+                  _buildCallOption(
+                    icon: Icons.videocam,
+                    label: 'Video Call',
+                    color: Colors.purple,
+                    onTap: () => _startCall(profile, 'video'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _buildCallOption({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 30, color: color),
+            const SizedBox(height: 8),
+            Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w500)),
+          ],
+        ),
       ),
     );
   }
 
-  bool _isCallLoading = false;
-
-  Future<void> _startCall({
-    required bool isVideo,
-    required Map<String, dynamic> profile,
-  }) async {
-    if (_isCallLoading) return;
-
-    // Pre-call validation
-    final requiredCoins = isVideo
-        ? 20
-        : 10; // Assuming 20 coins for video, 10 for audio
-
-    // Get user profile to check balance
-    final apiControllerValidation = Provider.of<ApiController>(
-      context,
-      listen: false,
-    );
-    try {
-      final userProfile = await apiControllerValidation.fetchMaleMe();
-      final currentBalance = userProfile['data']['balance'] ?? 0;
-
-      // Check if user has sufficient balance
-      if (currentBalance < requiredCoins) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Insufficient balance to start call.')),
-        );
-        return;
-      }
-    } catch (e) {
-      // If we can't get balance, show error and continue with assumption of sufficient funds
-      print('Could not fetch balance: $e');
-      // We could choose to block the call here, but for now we'll proceed
-      // Or alternatively, show an error and return
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error checking balance: $e')));
-      return;
-    }
-
-    // Check if selected user is online (assuming online status is in profile)
-    final isOnline =
-        profile['isOnline'] ?? true; // Default to true if not specified
-    if (!isOnline) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('The selected user is currently offline.'),
-        ),
-      );
-      return;
-    }
-
-    // Check if there's already an active call
-    if (_hasActiveCall) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('You already have an active call session.'),
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _isCallLoading = true;
-    });
-
-    final apiController = Provider.of<ApiController>(context, listen: false);
-    try {
-      final response = await apiController.startCall(
-        receiverId: profile['_id'].toString(),
-        callType: isVideo ? 'video' : 'audio',
-      );
-
-      if (response['success'] == true) {
-        final data = response['data'];
-
-        // Create CallCredentials from API response
-        final credentials = CallCredentials(
-          callId: data['callId'],
-          channelName: data['channelName'],
-          agoraToken: data['agoraToken'],
-          receiverId: profile['_id'].toString(),
-          callType: isVideo ? 'video' : 'audio',
-        );
-
-        // Navigate to outgoing call screen with new flow
+  Future<void> _startCall(Map<String, dynamic> profile, String callType) async {
+    if (mounted) {
+      Navigator.pop(context); // Close the bottom sheet
+      
+      // Navigate to call screen
+      if (mounted) {
         await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => OutgoingCallScreen(
-              receiverName: profile['name']?.toString() ?? 'Unknown',
-              receiverImage:
-                  _getImageUrlFromProfile(profile) ?? 'assets/img_1.png',
-              callType: isVideo ? 'video' : 'audio',
-              credentials: credentials,
+            builder: (context) => CallScreen(
+              channelName: 'friends_call',
+              callType: callType,
+              receiverName: profile['name'] ?? 'Unknown',
             ),
           ),
         );
-      } else if (response['message'] ==
-          'You already have an active call session') {
-        final data = response['data'];
-        await showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Active Call Detected'),
-            content: const Text(
-              'You already have an active call session. Would you like to resume it or force end it?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(ctx).pop();
-                  // Resume: open call page with existing callId
-                  if (data != null && data['callId'] != null) {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => InCallScreen(
-                          receiverName:
-                              profile['name']?.toString() ?? 'Unknown',
-                          receiverImage:
-                              _getImageUrlFromProfile(profile) ??
-                              'assets/img_1.png',
-                          callType: data['callType'] ?? 'audio',
-                          credentials: CallCredentials(
-                            callId: data['callId'],
-                            channelName: data['channelName'] ?? data['callId'],
-                            agoraToken: data['agoraToken'] ?? '',
-                            receiverId: profile['_id'].toString(),
-                            callType: data['callType'] ?? 'audio',
-                          ),
-                        ),
-                      ),
-                    );
-                  }
-                },
-                child: const Text('Resume Call'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(ctx).pop();
-                  // Force end: call endCall API with duration 0
-                  try {
-                    await apiController.endCall(
-                      receiverId: data != null && data['receiverId'] != null
-                          ? data['receiverId'].toString()
-                          : profile['_id'].toString(),
-                      duration: 0,
-                      callType: data != null && data['callType'] != null
-                          ? data['callType']
-                          : (isVideo ? 'video' : 'audio'),
-                      callId: data != null && data['callId'] != null
-                          ? data['callId']
-                          : '',
-                    );
-                    // Show success message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Previous call forcibly ended. You can now start a new call.',
-                        ),
-                      ),
-                    );
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to force end call: $e')),
-                    );
-                  }
-                },
-                child: const Text('Force End Call'),
-              ),
-            ],
-          ),
-        );
-      } else if (response['message']?.toLowerCase().contains('insufficient') ??
-          false) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Insufficient coins to start call.')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response['message'] ?? 'Failed to start call'),
-          ),
-        );
-      }
-    } catch (e) {
-      String errorMsg = 'Error: $e';
-      // Try to extract backend message if possible
-      final match = RegExp(r'message":"([^"]+)"').firstMatch(errorMsg);
-      if (match != null) {
-        errorMsg = match.group(1)!;
-      }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(errorMsg)));
-    } finally {
-      if (mounted) setState(() => _isCallLoading = false);
-    }
-  }
-
-  // Placeholder for centralized call state management
-  // In a real implementation, this would integrate with a shared call state model
-  bool get _hasActiveCall {
-    // Check if there's an active call using the CallManager
-    final callManager = CallManager();
-    return callManager.hasActiveCall;
-  }
-
-  @override
-  void dispose() {
-    _loadingTimer?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _loadSentFollowRequests() async {
-    try {
-      final apiController = Provider.of<ApiController>(context, listen: false);
-      await apiController.fetchSentFollowRequests();
-    } catch (e) {
-      if (mounted) {
-        // Only show error if it's not a token error (handled by the controller)
-        final errorMessage = e.toString().toLowerCase();
-        if (!errorMessage.contains('no valid token') &&
-            !errorMessage.contains('please log in again') &&
-            !errorMessage.contains('invalid token')) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to load sent follow requests: $e')),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _loadProfiles() async {
-    _startUILoadingTimeout();
-    try {
-      if (_filter == 'Near By') {
-        LocationPermission permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied ||
-            permission == LocationPermission.deniedForever) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Location permission is required for Nearby'),
-            ),
-          );
-          return;
-        }
-        Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-        );
-        await _fetchProfilesByFilter(
-          'Near By',
-          position.latitude,
-          position.longitude,
-        );
-      } else {
-        await _fetchProfilesByFilter(_filter);
-      }
-    } catch (e) {
-      print('Error loading profiles: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load profiles: $e')));
-      }
-    }
-  }
-
-  void _loadStaticData() {
-    // Static data based on the API response structure provided
-    final staticProfiles = [
-      {
-        "_id": "696501a81b996e284c122cff",
-        "name": "Female E",
-        "gender": "female",
-        "bio": "Hi there! How are you!",
-        "images": [
-          {
-            "_id": "696519ffe95614370e8b16c8",
-            "imageUrl":
-                "https://res.cloudinary.com/dqtasamcu/image/upload/v1768233446/admin_uploads/hb3zfycdzk329tgvzkbt.jpg",
-          },
-        ],
-        "onlineStatus": true,
-        "age": 23,
-      },
-      {
-        "_id": "695f711c945b800e3a11b9a9",
-        "name": "Female D",
-        "gender": "female",
-        "bio": "Hi there! How are you!",
-        "images": [
-          {
-            "_id": "695f9de94667fdc61869359e",
-            "imageUrl":
-                "https://res.cloudinary.com/dqtasamcu/image/upload/v1767874001/admin_uploads/nt4wtrvyh9pg4k0h3ll2.jpg",
-          },
-        ],
-        "onlineStatus": true,
-        "age": 23,
-      },
-      {
-        "_id": "695b49eca40ac5f37a01913a",
-        "name": "Female C",
-        "gender": "female",
-        "bio": "Hi there!",
-        "images": [
-          {
-            "_id": "695b4a4ca40ac5f37a019140",
-            "imageUrl":
-                "https://res.cloudinary.com/dqtasamcu/image/upload/v1767590449/admin_uploads/rdri3unpbitymhlbzhqj.jpg",
-          },
-        ],
-        "onlineStatus": true,
-        "age": 23,
-      },
-    ];
-
-    // Update the controller with static data
-    final apiController = Provider.of<ApiController>(context, listen: false);
-    apiController.setStaticProfiles(staticProfiles);
-  }
-
-  List<Map<String, dynamic>> _applyFilter(List<Map<String, dynamic>> profiles) {
-    // Always return profiles; API call is handled by filter chip selection
-    return profiles;
-  }
-
-  Future<void> _fetchProfilesByFilter(
-    String filter, [
-    double? lat,
-    double? lng,
-  ]) async {
-    final apiController = Provider.of<ApiController>(context, listen: false);
-    try {
-      switch (filter) {
-        case 'Follow':
-          await apiController.fetchDashboardSectionFemales(
-            section: 'follow',
-            page: 1,
-            limit: 10,
-          );
-          break;
-        case 'New':
-          await apiController.fetchDashboardSectionFemales(
-            section: 'new',
-            page: 1,
-            limit: 10,
-          );
-          break;
-        case 'Near By':
-          await apiController.fetchDashboardSectionFemales(
-            section: 'nearby',
-            page: 1,
-            limit: 10,
-            latitude: lat,
-            longitude: lng,
-          );
-          break;
-        case 'All':
-          await apiController.fetchBrowseFemales(page: 1, limit: 10);
-          break;
-        default:
-          await apiController.fetchBrowseFemales(page: 1, limit: 10);
-      }
-    } catch (e) {
-      print('Error loading new females: $e');
-      // If it's a 404 error (section not supported), try loading all females instead
-      if (e.toString().toLowerCase().contains('404') ||
-          e.toString().toLowerCase().contains('resource not found')) {
-        print('404 detected for new section, falling back to browse API');
-        try {
-          final fallbackApiController = Provider.of<ApiController>(
-            context,
-            listen: false,
-          );
-          await fallbackApiController.fetchBrowseFemales(page: 1, limit: 10);
-        } catch (fallbackError) {
-          print('Fallback also failed: $fallbackError');
-          if (mounted && context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Failed to load new users, showing all users: $fallbackError',
-                ),
-              ),
-            );
-          }
-        }
-      } else {
-        // For other errors, show the error message
-        if (mounted && context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to load new users: $e')),
-          );
-        }
-      }
-    }
-  }
-
-  // --- Followed profiles fetch method ---
-  Future<void> _loadFollowedProfiles() async {
-    setState(() {
-      _isLoadingFollowed = true;
-      _followedError = null;
-    });
-    try {
-      final apiController = Provider.of<ApiController>(context, listen: false);
-      final results = await apiController.fetchFollowedFemales(
-        page: 1,
-        limit: 10,
-      );
-      setState(() {
-        _followedProfiles = results;
-        _isLoadingFollowed = false;
-      });
-    } catch (e) {
-      setState(() {
-        _followedError = e.toString();
-        _isLoadingFollowed = false;
-      });
-    }
-  }
-
-  // Method to load all females from browse API
-  Future<void> _loadAllFemales() async {
-    try {
-      final apiController = Provider.of<ApiController>(context, listen: false);
-
-      // Show loading state
-      _startUILoadingTimeout();
-
-      // Load all females using the browse method
-      await apiController.fetchBrowseFemales(page: 1, limit: 10);
-    } catch (e) {
-      print('Error loading all females: $e');
-
-      // Show error message
-      if (mounted && context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to load users: $e')));
       }
     }
   }
@@ -607,11 +287,7 @@ class _HomeScreenState extends State<MainHome> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _QuickActionsBottomSheet(
-        onRechargePressed: () {
-          rechargeWallet(250); // Call the API for 250 coins
-        },
-      ),
+      builder: (_) => const _QuickActionsBottomSheet(),
     );
   }
 
@@ -621,7 +297,6 @@ class _HomeScreenState extends State<MainHome> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F5FF),
-      resizeToAvoidBottomInset: true,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: AppBar(
@@ -675,149 +350,45 @@ class _HomeScreenState extends State<MainHome> {
           foregroundColor: Colors.white,
         ),
       ),
-      // Navigation handled by MainNavigationScreen
       bottomNavigationBar: Container(height: 0),
     );
   }
 
   Widget _buildHomeTab(ApiController apiController) {
-    debugPrint(
-      '[UI DEBUG] Current filter: [33m$_filter[0m, femaleProfiles.length: [36m${apiController.femaleProfiles.length}[0m, isLoading: [35m${apiController.isLoading}[0m',
-    );
-    // --- INFINITE LOADING FIX ---
-    // 1. If loading and not timed out, show spinner, but set a hard timeout fallback
-    if (apiController.isLoading && !_uiLoadingTimeout) {
-      _showDebug('UI: Still loading, showing spinner.');
+    if (apiController.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-
-    // 2. If loading timed out, show error and allow retry or fallback
-    if (_uiLoadingTimeout && apiController.isLoading) {
-      _showDebug('UI: Loading timed out, showing fallback.');
-      // Always provide a way out of loading, but do not show demo data button
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Loading is taking too long.'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                _startUILoadingTimeout();
-                _loadProfiles();
-              },
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // 3. If error, show error and allow retry/fallback
     if (apiController.error != null) {
-      _showDebug('UI error: \u001b[31m${apiController.error}\u001b[0m');
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Error: ${apiController.error}'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadProfiles,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
+      return Center(child: Text('Error: ${apiController.error}'));
     }
 
-    // 4. If no profiles, show fallback and allow refresh/fallback
     final profiles = _applyFilter(apiController.femaleProfiles);
-    if (profiles.isEmpty) {
-      _showDebug('UI: No profiles found after all attempts.');
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('No profiles found'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadProfiles,
-              child: const Text('Refresh'),
-            ),
-          ],
-        ),
-      );
-    }
 
-    // 5. Success: show main content
-    _showDebug('UI: Showing profiles (${profiles.length})');
-    return SafeArea(
-      child: CustomScrollView(
+    // Debug logging
+    print('=== PROFILE DEBUG ===');
+    print('Filter: $_filter');
+    print('All profiles count: ${apiController.femaleProfiles.length}');
+    print('Followed profiles count: ${_followedProfiles.length}');
+    print('Filtered profiles count: ${profiles.length}');
+    print('API Controller profiles reference: ${apiController.femaleProfiles.hashCode}');
+    print('Local _followedProfiles reference: ${_followedProfiles.hashCode}');
+    
+    // Auto-refresh if profiles disappear
+    if (apiController.femaleProfiles.isEmpty && _filter == 'All') {
+      print('[AUTO-REFRESH] Profiles disappeared, attempting refresh...');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        apiController.refreshProfiles();
+      });
+    }
+    
+    print('=====================');
+
+    if (profiles.isEmpty && _filter == 'All' && apiController.femaleProfiles.isNotEmpty) {
+      // Fallback to all profiles if filter returns empty but all profiles exist
+      return CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           const SliverToBoxAdapter(child: SizedBox(height: 14)),
-          // Sent Follow Requests Column
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (apiController.sentFollowRequests.isNotEmpty) ...[
-                    const Text(
-                      'Sent Follow Requests:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.purple,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ...apiController.sentFollowRequests.map((req) {
-                      final female = req['femaleUserId'] ?? {};
-                      // Fallback: Try name, then email, then ''
-                      final name = (female != null)
-                          ? (female['name']?.toString() ??
-                                female['email']?.toString() ??
-                                'Unknown')
-                          : 'Unknown';
-                      final status = req['status'] ?? 'pending';
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 6),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 6,
-                          horizontal: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.shade50,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              status,
-                              style: const TextStyle(color: Colors.purple),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                    const SizedBox(height: 12),
-                  ],
-                ],
-              ),
-            ),
-          ),
-          // Filter chips row
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -829,75 +400,31 @@ class _HomeScreenState extends State<MainHome> {
                       label: 'All',
                       selected: _filter == 'All',
                       onSelected: (v) {
-                        if (_filter != 'All') {
-                          setState(() => _filter = 'All');
-                          _loadProfiles();
-                        }
+                        setState(() => _filter = 'All');
                       },
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     FilterChipWidget(
                       label: 'Follow',
                       selected: _filter == 'Follow',
                       onSelected: (v) {
-                        if (_filter != 'Follow') {
-                          setState(() => _filter = 'Follow');
-                          _loadProfiles();
-                        }
+                        setState(() => _filter = 'Follow');
                       },
                     ),
-                    const SizedBox(width: 10),
-                    FilterChipWidget(
-                      label: 'Near By',
-                      selected: _filter == 'Near By',
-                      onSelected: (v) async {
-                        if (_filter != 'Near By') {
-                          setState(() => _filter = 'Near By');
-                          LocationPermission permission =
-                              await Geolocator.requestPermission();
-                          if (permission == LocationPermission.denied ||
-                              permission == LocationPermission.deniedForever) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Location permission is required for Nearby',
-                                ),
-                              ),
-                            );
-                            return;
-                          }
-                          Position position =
-                              await Geolocator.getCurrentPosition(
-                                desiredAccuracy: LocationAccuracy.high,
-                              );
-                          await showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Current Location'),
-                              content: Text(
-                                'Latitude:  ${position.latitude}\nLongitude:  ${position.longitude}',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: const Text('OK'),
-                                ),
-                              ],
-                            ),
-                          );
-                          _loadProfiles();
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     FilterChipWidget(
                       label: 'New',
                       selected: _filter == 'New',
                       onSelected: (v) {
-                        if (_filter != 'New') {
-                          setState(() => _filter = 'New');
-                          _loadProfiles();
-                        }
+                        setState(() => _filter = 'New');
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    FilterChipWidget(
+                      label: 'Near By',
+                      selected: _filter == 'Near By',
+                      onSelected: (v) {
+                        setState(() => _filter = 'Near By');
                       },
                     ),
                   ],
@@ -905,132 +432,354 @@ class _HomeScreenState extends State<MainHome> {
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 10)),
-          SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final profile = profiles[index];
-
-              final String name = profile['name']?.toString() ?? '';
-              final String bio = profile['bio']?.toString() ?? '';
-              final String ageStr = profile['age']?.toString() ?? '';
-
-              return Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10, bottom: 16),
-                child: _BlockableProfileCard(
-                  name: name,
-                  badgeImagePath: 'assets/vector.png',
-                  imagePath:
-                      _getImageUrlFromProfile(profile) ?? 'assets/img_1.png',
-                  language: bio.isNotEmpty ? bio : 'Bio not available',
-                  age: ageStr,
-                  callRate: '10/min',
-                  videoRate: '20/min',
-                  onCardTap: () => _navigateToFemaleProfile(profile),
-                  onAudioCallTap: _isCallLoading
-                      ? null
-                      : () => _startCall(isVideo: false, profile: profile),
-                  onVideoCallTap: _isCallLoading
-                      ? null
-                      : () => _startCall(isVideo: true, profile: profile),
-                  femaleUserId: profile['_id']?.toString() ?? '',
-                  femaleName: name,
-                ),
-              );
-            }, childCount: profiles.length),
+          SliverPadding(
+            padding: const EdgeInsets.only(top: 10),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.75,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  if (index >= apiController.femaleProfiles.length) {
+                    return null;
+                  }
+                  final profile = apiController.femaleProfiles[index];
+                  final bio = profile['bio']?.toString() ?? '';
+                  final age = profile['age'];
+                  String ageStr = '';
+                  if (age is int) {
+                    ageStr = age.toString();
+                  } else if (age is String) {
+                    ageStr = age;
+                  } else {
+                    ageStr = 'N/A';
+                  }
+                  final followStatus = apiController.getFollowStatus(profile['_id'] ?? '');
+                  return ProfileCardWidget(
+                    name: profile['name'] ?? 'Unknown',
+                    language: bio.isNotEmpty ? bio : 'Bio not available',
+                    age: ageStr,
+                    imagePath: _getImageUrlFromProfile(profile) ?? 'assets/img_1.png',
+                    callRate: profile['callRate']?.toString() ?? '10/min',
+                    videoRate: profile['videoRate']?.toString() ?? '20/min',
+                    badgeImagePath: '',
+                    followStatus: followStatus,
+                    onFollowTap: () async {
+                      try {
+                        if (followStatus == 'none') {
+                          await apiController.sendFollowRequest(profile['_id']);
+                        } else if (followStatus == 'pending') {
+                          await apiController.cancelFollowRequest(profile['_id']);
+                        } else if (followStatus == 'following') {
+                          await apiController.unfollowUser(profile['_id']);
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                          );
+                        }
+                      }
+                    },
+                    onCardTap: () {
+                      _showCallTypePopup(profile);
+                    },
+                    onAudioCallTap: () {
+                      _showCallTypePopup(profile);
+                    },
+                    onVideoCallTap: () {
+                      _showCallTypePopup(profile);
+                    },
+                  );
+                },
+                childCount: apiController.femaleProfiles.length,
+              ),
+            ),
           ),
-          // Add extra bottom padding to prevent overflow
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
-      ),
+      );
+    } else if (profiles.isEmpty) {
+      return const Center(child: Text('No profiles found'));
+    }
+
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        const SliverToBoxAdapter(child: SizedBox(height: 14)),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10.0),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  FilterChipWidget(
+                    label: 'All',
+                    selected: _filter == 'All',
+                    onSelected: (v) {
+                      setState(() => _filter = 'All');
+                    },
+                  ),
+                  const SizedBox(width: 10),
+                  FilterChipWidget(
+                    label: 'Follow',
+                    selected: _filter == 'Follow',
+                    onSelected: (v) {
+                      setState(() => _filter = 'Follow');
+                    },
+                  ),
+                  const SizedBox(width: 10),
+                  FilterChipWidget(
+                    label: 'Near By',
+                    selected: _filter == 'Near By',
+                    onSelected: (v) {
+                      setState(() => _filter = 'Near By');
+                    },
+                  ),
+                  const SizedBox(width: 10),
+                  FilterChipWidget(
+                    label: 'New',
+                    selected: _filter == 'New',
+                    onSelected: (v) {
+                      setState(() => _filter = 'New');
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SliverToBoxAdapter(child: SizedBox(height: 10)),
+        SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final profile = profiles[index];
+
+            final String name = profile['name']?.toString() ?? '';
+            final String bio = profile['bio']?.toString() ?? '';
+            final String ageStr = profile['age']?.toString() ?? '';
+
+            return Padding(
+              padding: const EdgeInsets.only(left: 10, right: 10, bottom: 16),
+              child: ProfileCardWidget(
+                name: name,
+                badgeImagePath: 'assets/vector.png',
+                imagePath: _getImageUrlFromProfile(profile) ?? 'assets/img_1.png',
+                language: bio.isNotEmpty ? bio : 'Bio not available',
+                age: ageStr,
+                callRate: profile['callRate']?.toString() ?? '10/min',
+                videoRate: profile['videoRate']?.toString() ?? '20/min',
+                followStatus: apiController.getFollowStatus(profile['_id'] ?? ''),
+                onFollowTap: () async {
+                  try {
+                    final status = apiController.getFollowStatus(profile['_id'] ?? '');
+                    if (status == 'none') {
+                      await apiController.sendFollowRequest(profile['_id']);
+                    } else if (status == 'pending') {
+                      await apiController.cancelFollowRequest(profile['_id']);
+                    } else if (status == 'following') {
+                      await apiController.unfollowUser(profile['_id']);
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                      );
+                    }
+                  }
+                },
+                onCardTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FemaleProfileScreen(
+                        user: FemaleUser.fromJson(profile),
+                      ),
+                    ),
+                  );
+                },
+                onAudioCallTap: () {
+                  // Calls removed - show message
+                  _showCallTypePopup(profile);
+                },
+                onVideoCallTap: () {
+                  // Calls removed - show message
+                  _showCallTypePopup(profile);
+                },
+              ),
+            );
+          }, childCount: profiles.length),
+        ),
+      ],
     );
-    // --- END INFINITE LOADING FIX ---
+  }
+
+  List<Map<String, dynamic>> _applyFilter(List<Map<String, dynamic>> allProfiles) {
+    if (_filter == 'Follow') {
+      // Show followed profiles
+      return _followedProfiles;
+    } else if (_filter == 'All') {
+      return allProfiles;
+    } else if (_filter == 'Near By') {
+      // Return nearby profiles (same as all for now)
+      return allProfiles;
+    } else if (_filter == 'New') {
+      // Return new profiles (same as all for now)
+      return allProfiles;
+    }
+    return allProfiles;
   }
 }
 
 /// Quick sheet and promo card
 class _QuickActionsBottomSheet extends StatelessWidget {
-  final VoidCallback onRechargePressed;
-  const _QuickActionsBottomSheet({required this.onRechargePressed});
+  const _QuickActionsBottomSheet({super.key});
 
   @override
   Widget build(BuildContext context) {
     return FractionallySizedBox(
       heightFactor: 0.4,
       child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 10,
-              offset: Offset(0, -5),
-            ),
-          ],
+        decoration: const BoxDecoration(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
+        child: SafeArea(
+          top: true,
           child: Column(
             children: [
-              const Text(
-                "250 Coins",
-                style: TextStyle(
-                  color: Colors.purple,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 20,
+              Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.black26,
+                  borderRadius: BorderRadius.circular(3),
                 ),
               ),
-              const SizedBox(height: 4),
-              Text.rich(
-                TextSpan(
-                  children: [
-                    const TextSpan(
-                      text: "@ Rs.200 ",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        decoration: TextDecoration.lineThrough,
-                        fontSize: 14,
-                      ),
-                    ),
-                    TextSpan(
-                      text: "Rs 50",
-                      style: TextStyle(
-                        color: Colors.pinkAccent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: ElevatedButton(
-                    onPressed: onRechargePressed,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.pinkAccent,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                    child: const Text(
-                      'Add 250 Coins',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
+              Expanded(
+                child: ListView(children: [_PromoCoinsCard(onPressed: () {})]),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _PromoCoinsCard extends StatelessWidget {
+  final VoidCallback onPressed;
+  const _PromoCoinsCard({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFF875B6), Color(0xFFFFC6E5)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            "Limited Time Offer",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset("assets/coins.png", width: 26, height: 26),
+              const SizedBox(width: 8),
+              const Text(
+                "FLAT 80% Off",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Image.asset("assets/coins.png", width: 60, height: 60),
+          const SizedBox(height: 8),
+          const Text(
+            "250 Coins",
+            style: TextStyle(
+              color: Colors.purple,
+              fontWeight: FontWeight.w700,
+              fontSize: 20,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text.rich(
+            TextSpan(
+              children: [
+                const TextSpan(
+                  text: "@ Rs.200 ",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    decoration: TextDecoration.lineThrough,
+                    fontSize: 14,
+                  ),
+                ),
+                TextSpan(
+                  text: "Rs 50",
+                  style: TextStyle(
+                    color: Colors.pinkAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: ElevatedButton(
+                onPressed: onPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.pinkAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                ),
+                child: const Text(
+                  'Add 250 Coins',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1101,11 +850,11 @@ class ProfileCardWidget extends StatelessWidget {
   final String videoRate;
   final String imagePath;
   final String badgeImagePath;
+  final String followStatus;
   final VoidCallback? onCardTap;
   final VoidCallback? onAudioCallTap;
   final VoidCallback? onVideoCallTap;
   final VoidCallback? onFollowTap;
-  final bool isFollowLoading;
 
   const ProfileCardWidget({
     required this.name,
@@ -1115,11 +864,11 @@ class ProfileCardWidget extends StatelessWidget {
     required this.videoRate,
     required this.imagePath,
     required this.badgeImagePath,
+    this.followStatus = 'none',
     this.onCardTap,
     this.onAudioCallTap,
     this.onVideoCallTap,
     this.onFollowTap,
-    this.isFollowLoading = false,
     super.key,
   });
 
@@ -1128,7 +877,7 @@ class ProfileCardWidget extends StatelessWidget {
     return GestureDetector(
       onTap: onCardTap,
       child: Container(
-        // Removed fixed height
+        height: 200,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
@@ -1144,16 +893,7 @@ class ProfileCardWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           child: Stack(
             children: [
-              Positioned.fill(
-                child: imagePath.startsWith('http')
-                    ? Image.network(
-                        imagePath,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            Container(color: Colors.grey[300]),
-                      )
-                    : Image.asset(imagePath, fit: BoxFit.cover),
-              ),
+              Positioned.fill(child: Image.asset(imagePath, fit: BoxFit.cover)),
               Positioned.fill(
                 child: Container(
                   decoration: BoxDecoration(
@@ -1172,7 +912,7 @@ class ProfileCardWidget extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 87),
                 child: Container(
-                  // Removed fixed height
+                  height: 145, // Increased from 130 to prevent overflow with new button
                   color: Colors.black12,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -1199,7 +939,7 @@ class ProfileCardWidget extends StatelessWidget {
                             _BadgeImage(imagePath: badgeImagePath),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const Spacer(),
                         Row(
                           children: [
                             Expanded(
@@ -1222,39 +962,6 @@ class ProfileCardWidget extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            if (onFollowTap != null)
-                              ElevatedButton(
-                                onPressed: onFollowTap,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.pinkAccent,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  textStyle: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                child: isFollowLoading
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
-                                              ),
-                                        ),
-                                      )
-                                    : const Text('Follow'),
-                              ),
                           ],
                         ),
                         const SizedBox(height: 4),
@@ -1273,6 +980,10 @@ class ProfileCardWidget extends StatelessWidget {
                               label: videoRate,
                               iconColor: Colors.white,
                               onTap: onVideoCallTap,
+                            ),
+                            _FollowButton(
+                              status: followStatus,
+                              onTap: onFollowTap,
                             ),
                           ],
                         ),
@@ -1362,255 +1073,56 @@ class _RatePill extends StatelessWidget {
   }
 }
 
-// Wrapper widget to manage follow button loading state per card
-class _FollowableProfileCard extends StatefulWidget {
-  final String name;
-  final String language;
-  final String age;
-  final String callRate;
-  final String videoRate;
-  final String imagePath;
-  final String badgeImagePath;
-  final VoidCallback? onCardTap;
-  final VoidCallback? onAudioCallTap;
-  final VoidCallback? onVideoCallTap;
-  final String femaleUserId;
-  final String femaleName;
+class _FollowButton extends StatelessWidget {
+  final String status;
+  final VoidCallback? onTap;
 
-  const _FollowableProfileCard({
-    required this.name,
-    required this.language,
-    required this.age,
-    required this.callRate,
-    required this.videoRate,
-    required this.imagePath,
-    required this.badgeImagePath,
-    this.onCardTap,
-    this.onAudioCallTap,
-    this.onVideoCallTap,
-    required this.femaleUserId,
-    required this.femaleName,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  State<_FollowableProfileCard> createState() => _FollowableProfileCardState();
-}
-
-class _FollowableProfileCardState extends State<_FollowableProfileCard> {
-  bool _isLoading = false;
-
-  Future<void> _handleFollow() async {
-    if (widget.femaleUserId.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid user ID')));
-      return;
-    }
-    setState(() => _isLoading = true);
-    final apiController = Provider.of<ApiController>(context, listen: false);
-    try {
-      await apiController.sendFollowRequest(widget.femaleUserId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Follow request sent to ${widget.femaleName}'),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send follow request: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
+  const _FollowButton({required this.status, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return ProfileCardWidget(
-      name: widget.name,
-      badgeImagePath: widget.badgeImagePath,
-      imagePath: widget.imagePath,
-      language: widget.language,
-      age: widget.age,
-      callRate: widget.callRate,
-      videoRate: widget.videoRate,
-      onCardTap: widget.onCardTap,
-      onAudioCallTap: widget.onAudioCallTap,
-      onVideoCallTap: widget.onVideoCallTap,
-      onFollowTap: _isLoading ? null : _handleFollow,
-      isFollowLoading: _isLoading,
-    );
-  }
-}
+    String label = 'Follow';
+    IconData icon = Icons.person_add;
+    Color color = Colors.white;
 
-// Updated widget to include block functionality
-class _BlockableProfileCard extends StatefulWidget {
-  final String name;
-  final String language;
-  final String age;
-  final String callRate;
-  final String videoRate;
-  final String imagePath;
-  final String badgeImagePath;
-  final VoidCallback? onCardTap;
-  final VoidCallback? onAudioCallTap;
-  final VoidCallback? onVideoCallTap;
-  final String femaleUserId;
-  final String femaleName;
-
-  const _BlockableProfileCard({
-    Key? key,
-    required this.name,
-    required this.language,
-    required this.age,
-    required this.callRate,
-    required this.videoRate,
-    required this.imagePath,
-    required this.badgeImagePath,
-    this.onCardTap,
-    this.onAudioCallTap,
-    this.onVideoCallTap,
-    required this.femaleUserId,
-    required this.femaleName,
-  }) : super(key: key);
-
-  @override
-  State<_BlockableProfileCard> createState() => _BlockableProfileCardState();
-}
-
-class _BlockableProfileCardState extends State<_BlockableProfileCard> {
-  bool _isLoading = false;
-  bool _isBlocking = false;
-
-  Future<void> _handleFollow() async {
-    if (widget.femaleUserId.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid user ID')));
-      return;
-    }
-    setState(() => _isLoading = true);
-    final apiController = Provider.of<ApiController>(context, listen: false);
-    try {
-      await apiController.sendFollowRequest(widget.femaleUserId);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Follow request sent to ${widget.femaleName}'),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send follow request: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _handleBlock() async {
-    if (widget.femaleUserId.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid user ID')));
-      return;
+    if (status == 'pending') {
+      label = 'Pending';
+      icon = Icons.hourglass_empty;
+      color = Colors.orangeAccent;
+    } else if (status == 'following') {
+      label = 'Following';
+      icon = Icons.person_off; // Option to unfollow
+      color = Colors.greenAccent;
     }
 
-    // Confirm blocking action
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Block user'),
-        content: Text(
-          'Are you sure you want to block ${widget.femaleName}? '
-          'This will remove all connections.',
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color, width: 1.2),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Block'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      setState(() => _isBlocking = true);
-      final apiController = Provider.of<ApiController>(context, listen: false);
-      try {
-        await apiController.blockUser(femaleUserId: widget.femaleUserId);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('User blocked successfully')),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Failed to block user: $e')));
-        }
-      } finally {
-        if (mounted) setState(() => _isBlocking = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        ProfileCardWidget(
-          name: widget.name,
-          badgeImagePath: widget.badgeImagePath,
-          imagePath: widget.imagePath,
-          language: widget.language,
-          age: widget.age,
-          callRate: widget.callRate,
-          videoRate: widget.videoRate,
-          onCardTap: widget.onCardTap,
-          onAudioCallTap: widget.onAudioCallTap,
-          onVideoCallTap: widget.onVideoCallTap,
-          onFollowTap: _isLoading ? null : _handleFollow,
-          isFollowLoading: _isLoading,
-        ),
-        Positioned(
-          top: 10,
-          right: 10,
-          child: PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.white),
-            onSelected: (String result) async {
-              if (result == 'block') {
-                await _handleBlock();
-              }
-            },
-            itemBuilder: (BuildContext context) => [
-              PopupMenuItem<String>(
-                value: 'block',
-                child: Row(
-                  children: [
-                    const Icon(Icons.block, color: Colors.red),
-                    const SizedBox(width: 8),
-                    Text('Block User', style: TextStyle(color: Colors.red)),
-                  ],
+        child: Padding(
+          padding: const EdgeInsets.only(left: 6, right: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
         ),
-      ],
+      ),
     );
   }
 }

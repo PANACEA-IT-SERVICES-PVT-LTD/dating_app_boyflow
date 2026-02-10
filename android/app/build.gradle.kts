@@ -33,6 +33,7 @@ android {
         release {
             signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -55,7 +56,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     
     // Add core library desugaring
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 flutter {

@@ -152,29 +152,3 @@ class WebSocketService {
     disconnect();
   }
 }
-
-// Specific WebSocket service for call status updates
-class CallWebSocketService extends WebSocketService {
-  String? _callId;
-
-  void connectForCall(String callId, String baseUrl) {
-    _callId = callId;
-    final url = '$baseUrl/ws/calls/$callId';
-    connect(url);
-  }
-
-  void sendCallEvent(String eventType, {Map<String, dynamic>? data}) {
-    final message = {
-      'type': eventType,
-      'callId': _callId,
-      'timestamp': DateTime.now().toIso8601String(),
-      if (data != null) ...data,
-    };
-    sendMessage(message);
-  }
-
-  void sendCallAccepted() => sendCallEvent('call_accepted');
-  void sendCallRejected() => sendCallEvent('call_rejected');
-  void sendCallEnded() => sendCallEvent('call_ended');
-  void sendCallMissed() => sendCallEvent('call_missed');
-}

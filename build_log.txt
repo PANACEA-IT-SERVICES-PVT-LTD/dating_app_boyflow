@@ -1,0 +1,903 @@
+Running Gradle task 'assembleDebug'...                          
+lib/views/screens/introduce_yourself_screen.dart:453:43: Error: The method 'updateProfileDetails' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'updateProfileDetails'.
+                      await apiController.updateProfileDetails(data: data);
+                                          ^^^^^^^^^^^^^^^^^^^^
+lib/views/screens/introduce_yourself_screen.dart:469:47: Error: The method 'updateProfileAndImage' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'updateProfileAndImage'.
+                          await apiController.updateProfileAndImage(
+                                              ^^^^^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:406:3: Error: Expected a declaration, but got '}'.
+  }
+  ^
+lib/controllers/api_controller.dart:1574:1: Error: Expected a declaration, but got '}'.
+}
+^
+lib/controllers/api_controller.dart:410:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:411:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:413:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:416:25: Error: Undefined name '_apiService'.
+      final res = await _apiService.fetchFollowers();
+                        ^^^^^^^^^^^
+lib/controllers/api_controller.dart:417:7: Error: Setter not found: '_followers'.
+      _followers = res;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:418:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:420:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:424:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:425:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:426:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:428:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:436:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:437:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:439:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:442:25: Error: Undefined name '_apiService'.
+      final res = await _apiService.fetchFollowing();
+                        ^^^^^^^^^^^
+lib/controllers/api_controller.dart:443:7: Error: Setter not found: '_following'.
+      _following = res;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:444:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:446:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:450:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:451:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:452:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:454:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:462:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:463:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:465:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:468:25: Error: Undefined name '_apiService'.
+      final res = await _apiService.fetchSentFollowRequests();
+                        ^^^^^^^^^^^
+lib/controllers/api_controller.dart:469:7: Error: Setter not found: '_sentFollowRequests'.
+      _sentFollowRequests = res;
+      ^^^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:470:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:472:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:476:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:477:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:478:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:480:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:488:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:489:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:491:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:494:28: Error: Undefined name '_apiService'.
+      final result = await _apiService.sendFollowRequest(
+                           ^^^^^^^^^^^
+lib/controllers/api_controller.dart:500:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:502:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:506:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:507:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:508:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:510:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:518:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:519:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:521:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:524:28: Error: Undefined name '_apiService'.
+      final result = await _apiService.cancelFollowRequest(
+                           ^^^^^^^^^^^
+lib/controllers/api_controller.dart:530:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:532:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:536:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:537:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:538:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:540:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:548:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:549:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:551:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:554:28: Error: Undefined name '_apiService'.
+      final result = await _apiService.unfollowUser(
+                           ^^^^^^^^^^^
+lib/controllers/api_controller.dart:561:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:563:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:567:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:568:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:569:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:571:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:580:23: Error: Undefined name '_sentFollowRequests'.
+    final isPending = _sentFollowRequests.any((req) => 
+                      ^^^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:588:25: Error: Undefined name '_sentFollowRequests'.
+    final isFollowing = _sentFollowRequests.any((req) => 
+                        ^^^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:605:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:606:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:608:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:611:28: Error: Undefined name '_apiService'.
+      final result = await _apiService.registerMaleUser(
+                           ^^^^^^^^^^^
+lib/controllers/api_controller.dart:618:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:619:7: Error: Setter not found: '_signupResponse'.
+      _signupResponse = result;
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:621:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:625:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:626:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:627:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:629:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:641:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:642:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:644:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:649:33: Error: Undefined name '_apiService'.
+      final dynamic res = await _apiService.fetchFemaleUsers(
+                                ^^^^^^^^^^^
+lib/controllers/api_controller.dart:690:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:760:9: Error: Setter not found: '_femaleProfiles'.
+        _femaleProfiles = normalizedProfiles;
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:761:9: Error: Setter not found: '_isLoading'.
+        _isLoading = false;
+        ^^^^^^^^^^
+lib/controllers/api_controller.dart:762:9: Error: Setter not found: '_error'.
+        _error = null;
+        ^^^^^^
+lib/controllers/api_controller.dart:765:13: Error: Method not found: 'notifyListeners'.
+            notifyListeners();
+            ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:768:11: Error: Method not found: 'notifyListeners'.
+          notifyListeners();
+          ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:774:9: Error: Setter not found: '_femaleProfiles'.
+        _femaleProfiles = [];
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:775:9: Error: Setter not found: '_isLoading'.
+        _isLoading = false;
+        ^^^^^^^^^^
+lib/controllers/api_controller.dart:776:9: Error: Setter not found: '_error'.
+        _error = null;
+        ^^^^^^
+lib/controllers/api_controller.dart:779:13: Error: Method not found: 'notifyListeners'.
+            notifyListeners();
+            ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:782:11: Error: Method not found: 'notifyListeners'.
+          notifyListeners();
+          ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:802:7: Error: Setter not found: '_femaleProfiles'.
+      _femaleProfiles = [];
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:803:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:804:7: Error: Setter not found: '_error'.
+      _error = _friendlyMessage(serverMessage);
+      ^^^^^^
+lib/controllers/api_controller.dart:807:11: Error: Method not found: 'notifyListeners'.
+          notifyListeners();
+          ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:810:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:812:23: Error: Undefined name '_error'.
+      throw Exception(_error);
+                      ^^^^^^
+lib/controllers/api_controller.dart:815:7: Error: Setter not found: '_femaleProfiles'.
+      _femaleProfiles = [];
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:816:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:817:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:818:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:821:11: Error: Method not found: 'notifyListeners'.
+          notifyListeners();
+          ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:824:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:846:9: Error: Setter not found: '_authToken'.
+        _authToken = token;
+        ^^^^^^^^^^
+lib/controllers/api_controller.dart:861:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:862:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:864:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:868:52: Error: Undefined name '_apiService'.
+      final List<Map<String, dynamic>> res = await _apiService.fetchFollowedFemales(
+                                                   ^^^^^^^^^^^
+lib/controllers/api_controller.dart:873:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:875:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:879:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:880:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:881:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:883:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:900:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:901:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:904:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:907:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:911:33: Error: Undefined name '_apiService'.
+      final dynamic res = await _apiService.fetchDashboardSectionFemales(
+                                ^^^^^^^^^^^
+lib/controllers/api_controller.dart:1043:9: Error: Setter not found: '_femaleProfiles'.
+        _femaleProfiles = onlineProfiles;
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1051:23: Error: Undefined name '_femaleProfiles'.
+      for (final p in _femaleProfiles) {
+                      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1054:51: Error: Undefined name '_femaleProfiles'.
+      debugPrint('[DEBUG] _femaleProfiles hash: ${_femaleProfiles.hashCode}');
+                                                  ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1056:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1059:11: Error: Method not found: 'notifyListeners'.
+          notifyListeners();
+          ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1062:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1074:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1075:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:1076:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1079:11: Error: Method not found: 'notifyListeners'.
+          notifyListeners();
+          ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1082:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1092:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:1093:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:1095:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1098:28: Error: Undefined name '_apiService'.
+      final result = await _apiService.updateProfileDetails(data: data);
+                           ^^^^^^^^^^^
+lib/controllers/api_controller.dart:1099:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1102:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1106:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1107:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:1108:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1110:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1121:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:1122:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:1124:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1127:28: Error: Undefined name '_apiService'.
+      final result = await _apiService.fetchCurrentMaleProfile();
+                           ^^^^^^^^^^^
+lib/controllers/api_controller.dart:1128:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1131:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1135:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1136:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:1137:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1139:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1147:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:1148:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:1150:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1153:28: Error: Undefined name '_apiService'.
+      final result = await _apiService.fetchMaleProfileAndImage();
+                           ^^^^^^^^^^^
+lib/controllers/api_controller.dart:1154:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1156:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1160:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1161:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:1162:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1164:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1204:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:1205:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:1207:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1210:28: Error: Undefined name '_apiService'.
+      final result = await _apiService.blockUser(femaleUserId: femaleUserId);
+                           ^^^^^^^^^^^
+lib/controllers/api_controller.dart:1211:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1213:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1217:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1218:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:1219:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1221:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1231:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:1232:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:1234:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1237:28: Error: Undefined name '_apiService'.
+      final result = await _apiService.fetchBlockedUsersList(
+                           ^^^^^^^^^^^
+lib/controllers/api_controller.dart:1240:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1242:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1246:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1247:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:1248:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1250:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1260:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:1261:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:1263:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1266:28: Error: Undefined name '_apiService'.
+      final result = await _apiService.unblockUser(femaleUserId: femaleUserId);
+                           ^^^^^^^^^^^
+lib/controllers/api_controller.dart:1267:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1269:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1273:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1274:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:1275:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1277:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1285:5: Error: Setter not found: '_femaleProfiles'.
+    _femaleProfiles = profiles;
+    ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1286:5: Error: Setter not found: '_isLoading'.
+    _isLoading = false;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:1287:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:1289:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1299:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:1300:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:1303:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1306:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1310:33: Error: Undefined name '_apiService'.
+      final dynamic res = await _apiService.fetchFemaleUsersFromDashboard(
+                                ^^^^^^^^^^^
+lib/controllers/api_controller.dart:1441:7: Error: Setter not found: '_femaleProfiles'.
+      _femaleProfiles = normalizedProfiles;
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1442:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1443:7: Error: Setter not found: '_error'.
+      _error = null;
+      ^^^^^^
+lib/controllers/api_controller.dart:1446:11: Error: Method not found: 'notifyListeners'.
+          notifyListeners();
+          ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1449:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1456:7: Error: Setter not found: '_femaleProfiles'.
+      _femaleProfiles = [];
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1457:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1458:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:1459:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1462:11: Error: Method not found: 'notifyListeners'.
+          notifyListeners();
+          ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1465:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1477:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:1478:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:1480:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1495:28: Error: Undefined name '_apiService'.
+      final result = await _apiService.updateProfileAndImage(
+                           ^^^^^^^^^^^
+lib/controllers/api_controller.dart:1500:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1502:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1506:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1507:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:1508:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1510:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1545:5: Error: Setter not found: '_isLoading'.
+    _isLoading = true;
+    ^^^^^^^^^^
+lib/controllers/api_controller.dart:1546:5: Error: Setter not found: '_error'.
+    _error = null;
+    ^^^^^^
+lib/controllers/api_controller.dart:1548:7: Error: Method not found: 'notifyListeners'.
+      notifyListeners();
+      ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1551:28: Error: Undefined name '_apiService'.
+      final result = await _apiService.deleteAccount();
+                           ^^^^^^^^^^^
+lib/controllers/api_controller.dart:1557:7: Error: Setter not found: '_authToken'.
+      _authToken = null;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1559:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1561:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1565:7: Error: Setter not found: '_isLoading'.
+      _isLoading = false;
+      ^^^^^^^^^^
+lib/controllers/api_controller.dart:1566:7: Error: Setter not found: '_error'.
+      _error = e.toString();
+      ^^^^^^
+lib/controllers/api_controller.dart:1567:7: Error: Method not found: '_handleTokenError'.
+      _handleTokenError(e);
+      ^^^^^^^^^^^^^^^^^
+lib/controllers/api_controller.dart:1569:9: Error: Method not found: 'notifyListeners'.
+        notifyListeners();
+        ^^^^^^^^^^^^^^^
+lib/services/api_service.dart:543:38: Error: A non-null value must be returned since the return type 'List<Map<String, dynamic>>' doesn't allow null.
+ - 'List' is from 'dart:core'.
+ - 'Map' is from 'dart:core'.
+  Future<List<Map<String, dynamic>>> fetchSentFollowRequests() async {
+                                     ^
+lib/views/screens/settings_screen.dart:55:37: Error: The method 'deleteAccount' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'deleteAccount'.
+                await apiController.deleteAccount();
+                                    ^^^^^^^^^^^^^
+lib/views/screens/followers_screen.dart:30:21: Error: The method 'fetchFollowers' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'fetchFollowers'.
+      apiController.fetchFollowers();
+                    ^^^^^^^^^^^^^^
+lib/views/screens/followers_screen.dart:38:27: Error: The method 'fetchFollowers' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'fetchFollowers'.
+      await apiController.fetchFollowers();
+                          ^^^^^^^^^^^^^^
+lib/views/screens/followers_screen.dart:40:27: Error: The method 'fetchFollowing' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'fetchFollowing'.
+      await apiController.fetchFollowing();
+                          ^^^^^^^^^^^^^^
+lib/views/screens/followers_screen.dart:42:27: Error: The method 'fetchSentFollowRequests' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'fetchSentFollowRequests'.
+      await apiController.fetchSentFollowRequests();
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+lib/views/screens/followers_screen.dart:75:39: Error: The method 'fetchFollowers' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'fetchFollowers'.
+                        apiController.fetchFollowers();
+                                      ^^^^^^^^^^^^^^
+lib/views/screens/followers_screen.dart:82:39: Error: The method 'fetchFollowing' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'fetchFollowing'.
+                        apiController.fetchFollowing();
+                                      ^^^^^^^^^^^^^^
+lib/views/screens/followers_screen.dart:89:39: Error: The method 'fetchSentFollowRequests' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'fetchSentFollowRequests'.
+                        apiController.fetchSentFollowRequests();
+                                      ^^^^^^^^^^^^^^^^^^^^^^^
+lib/views/screens/followers_screen.dart:240:37: Error: The method 'unfollowUser' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'unfollowUser'.
+        onPressed: () => controller.unfollowUser(userId),
+                                    ^^^^^^^^^^^^
+lib/views/screens/followers_screen.dart:245:37: Error: The method 'cancelFollowRequest' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'cancelFollowRequest'.
+        onPressed: () => controller.cancelFollowRequest(userId),
+                                    ^^^^^^^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:103:12: Error: The method 'fetchFollowedFemales' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'fetchFollowedFemales'.
+          .fetchFollowedFemales(page: 1, limit: 20);
+           ^^^^^^^^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:146:21: Error: The method 'fetchSentFollowRequests' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'fetchSentFollowRequests'.
+      apiController.fetchSentFollowRequests(); // Initial fetch of follow requests
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:179:27: Error: The method 'fetchDashboardSectionFemales' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'fetchDashboardSectionFemales'.
+      await apiController.fetchDashboardSectionFemales(section: 'all', page: 1, limit: 20);
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:460:54: Error: The method 'getFollowStatus' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getFollowStatus'.
+                  final followStatus = apiController.getFollowStatus(profile['_id'] ?? '');
+                                                     ^^^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:473:47: Error: The method 'sendFollowRequest' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'sendFollowRequest'.
+                          await apiController.sendFollowRequest(profile['_id']);
+                                              ^^^^^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:475:47: Error: The method 'cancelFollowRequest' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'cancelFollowRequest'.
+                          await apiController.cancelFollowRequest(profile['_id']);
+                                              ^^^^^^^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:477:47: Error: The method 'unfollowUser' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'unfollowUser'.
+                          await apiController.unfollowUser(profile['_id']);
+                                              ^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:574:45: Error: The method 'getFollowStatus' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getFollowStatus'.
+                followStatus: apiController.getFollowStatus(profile['_id'] ?? ''),
+                                            ^^^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:577:50: Error: The method 'getFollowStatus' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getFollowStatus'.
+                    final status = apiController.getFollowStatus(profile['_id'] ?? '');
+                                                 ^^^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:579:43: Error: The method 'sendFollowRequest' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'sendFollowRequest'.
+                      await apiController.sendFollowRequest(profile['_id']);
+                                          ^^^^^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:581:43: Error: The method 'cancelFollowRequest' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'cancelFollowRequest'.
+                      await apiController.cancelFollowRequest(profile['_id']);
+                                          ^^^^^^^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:583:43: Error: The method 'unfollowUser' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'unfollowUser'.
+                      await apiController.unfollowUser(profile['_id']);
+                                          ^^^^^^^^^^^^
+lib/views/screens/female_profile_screen.dart:29:58: Error: The method 'fetchSentFollowRequests' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'fetchSentFollowRequests'.
+      Provider.of<ApiController>(context, listen: false).fetchSentFollowRequests();
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+lib/views/screens/female_profile_screen.dart:155:40: Error: The method 'getFollowStatus' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'getFollowStatus'.
+    final followStatus = apiController.getFollowStatus(widget.user.id);
+                                       ^^^^^^^^^^^^^^^
+lib/views/screens/female_profile_screen.dart:265:53: Error: The method 'sendFollowRequest' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'sendFollowRequest'.
+                                await apiController.sendFollowRequest(widget.user.id);
+                                                    ^^^^^^^^^^^^^^^^^
+lib/views/screens/female_profile_screen.dart:267:53: Error: The method 'cancelFollowRequest' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'cancelFollowRequest'.
+                                await apiController.cancelFollowRequest(widget.user.id);
+                                                    ^^^^^^^^^^^^^^^^^^^
+lib/views/screens/female_profile_screen.dart:269:53: Error: The method 'unfollowUser' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'unfollowUser'.
+                                await apiController.unfollowUser(widget.user.id);
+                                                    ^^^^^^^^^^^^
+lib/views/screens/BlockListScreen1.dart:33:49: Error: The method 'fetchCurrentMaleProfile' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'fetchCurrentMaleProfile'.
+      final profileResult = await apiController.fetchCurrentMaleProfile();
+                                                ^^^^^^^^^^^^^^^^^^^^^^^
+lib/views/screens/BlockListScreen1.dart:41:46: Error: The method 'fetchBlockedUsersList' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'fetchBlockedUsersList'.
+          final result = await apiController.fetchBlockedUsersList(
+                                             ^^^^^^^^^^^^^^^^^^^^^
+lib/views/screens/BlockListScreen1.dart:111:44: Error: The method 'unblockUser' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'unblockUser'.
+        final result = await apiController.unblockUser(
+                                           ^^^^^^^^^^^
+lib/views/screens/BlockListScreen1.dart:148:42: Error: The method 'blockUser' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'blockUser'.
+      final result = await apiController.blockUser(femaleUserId: femaleUserId);
+                                         ^^^^^^^^^
+lib/views/screens/signup.dart:49:42: Error: The method 'registerMaleUser' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'registerMaleUser'.
+      final result = await apiController.registerMaleUser(
+                                         ^^^^^^^^^^^^^^^^
+lib/views/screens/loginVerification.dart:60:43: Error: The method 'verifyOtp' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'verifyOtp'.
+      final success = await apiController.verifyOtp(otp, source: 'login');
+                                          ^^^^^^^^^
+lib/views/screens/signup_verification.dart:65:43: Error: The method 'verifyOtp' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:Boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'verifyOtp'.
+      final success = await apiController.verifyOtp(otp, source: endpoint);
+                                          ^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\programTools\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 8s
+Running Gradle task 'assembleDebug'...                              9.0s
+Gradle task assembleDebug failed with exit code 1

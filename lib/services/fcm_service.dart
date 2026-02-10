@@ -15,8 +15,7 @@ class FCMService {
   FCMService._internal();
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
+  late FlutterLocalNotificationsPlugin _localNotificationsPlugin;
 
   late AndroidNotificationChannel _androidChannel;
   StreamSubscription? _onTokenRefreshSubscription;
@@ -39,6 +38,12 @@ class FCMService {
   /// Initialize FCM and local notifications
   Future<void> initialize() async {
     try {
+      // Check if Firebase is initialized
+      if (Firebase.apps.isEmpty) {
+        debugPrint('Firebase not initialized, skipping FCM setup');
+        return;
+      }
+      
       // Initialize local notifications plugin
       await _initializeLocalNotifications();
 
@@ -72,6 +77,7 @@ class FCMService {
       debugPrint('FCM Service initialized successfully');
     } catch (e) {
       debugPrint('Error initializing FCM Service: $e');
+      debugPrint('Continuing without FCM services');
     }
   }
 
@@ -88,11 +94,15 @@ class FCMService {
     );
 
     // Initialize the plugin
+    _localNotificationsPlugin = FlutterLocalNotificationsPlugin();
+    const initializationSettings = InitializationSettings(
+      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      iOS: DarwinInitializationSettings(),
+    );
+
+    // Initialize with the correct API for the installed version
     await _localNotificationsPlugin.initialize(
-      const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-        iOS: DarwinInitializationSettings(),
-      ),
+      settings: initializationSettings,
     );
   }
 
@@ -202,9 +212,6 @@ class FCMService {
             debugPrint(
               'Notification opened app: ${message.notification?.title}',
             );
-
-            // Navigate to IncomingCallScreen when notification is tapped
-            _navigateToIncomingCallScreen(message);
           },
           onError: (error) {
             debugPrint('Error on message opened app: $error');
@@ -248,10 +255,11 @@ class FCMService {
         FlutterLocalNotificationsPlugin();
 
     await notificationsPlugin.show(
-      0,
-      message.notification?.title,
-      message.notification?.body,
-      platformChannelSpecifics,
+      id: 0,
+      title: message.notification?.title,
+      body: message.notification?.body,
+      payload: null,
+      notificationDetails: platformChannelSpecifics,
     );
   }
 
@@ -276,73 +284,12 @@ class FCMService {
     );
 
     await _localNotificationsPlugin.show(
-      0,
-      message.notification?.title,
-      message.notification?.body,
-      platformChannelSpecifics,
+      id: 0,
+      title: message.notification?.title,
+      body: message.notification?.body,
+      payload: null,
+      notificationDetails: platformChannelSpecifics,
     );
-  }
-
-  /// Navigate to IncomingCallScreen when notification is tapped
-  void _navigateToIncomingCallScreen(RemoteMessage message) {
-    // Extract call data from the notification
-    final callType =
-        message.data['call_type'] ?? message.data['callType'] ?? 'audio';
-    final callerName =
-        message.data['caller_name'] ?? message.data['callerName'] ?? 'Unknown';
-    final callerAvatar =
-        message.data['caller_avatar'] ?? message.data['callerAvatar'] ?? '';
-    final callId =
-        message.data['call_id'] ??
-        message.data['callId'] ??
-        DateTime.now().millisecondsSinceEpoch.toString();
-
-    debugPrint('Navigating to incoming call screen for: $callerName');
-
-    // For navigation to work, you might need to use a navigator key
-    // or a service to handle navigation outside of widgets
-    // This is a simplified approach - you might need to adapt based on your navigation setup
-
-    // Example: Using a global navigator key
-    // You'll need to implement a global navigator key in your app to make this work
-    // For now, we'll just print the navigation intent
-    debugPrint('Would navigate to incoming call screen with:');
-    debugPrint('  - Caller: $callerName');
-    debugPrint('  - Type: $callType');
-    debugPrint('  - Avatar: $callerAvatar');
-    debugPrint('  - Call ID: $callId');
-
-    // In a real implementation, you would use a global navigator key
-    // For now, we'll use a callback approach to trigger navigation
-    if (_onNotificationTappedCallback != null) {
-      _onNotificationTappedCallback!(
-        callId,
-        callerName,
-        callerAvatar,
-        callType,
-      );
-    }
-  }
-
-  // Callback for handling notification taps
-  void Function(
-    String callId,
-    String callerName,
-    String callerAvatar,
-    String callType,
-  )?
-  _onNotificationTappedCallback;
-
-  void setOnNotificationTappedCallback(
-    void Function(
-      String callId,
-      String callerName,
-      String callerAvatar,
-      String callType,
-    )
-    callback,
-  ) {
-    _onNotificationTappedCallback = callback;
   }
 
   /// Dispose of subscriptions

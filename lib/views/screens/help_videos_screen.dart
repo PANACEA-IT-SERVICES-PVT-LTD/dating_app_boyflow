@@ -1,5 +1,6 @@
-import 'package:Boy_flow/api_service/api_service.dart';
+import 'package:Boy_flow/services/api_service.dart';
 import 'package:flutter/material.dart';
+import 'package:Boy_flow/views/screens/mainhome.dart';
 import 'package:url_launcher/url_launcher.dart';
 // Removed unused/invalid import
 
@@ -67,7 +68,7 @@ class _HelpVideosScreenState extends State<HelpVideosScreen> {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (_) => const mainhome()),
+                        MaterialPageRoute(builder: (_) => const MainHome()),
                       );
                     },
                     child: const Icon(Icons.arrow_back, color: Colors.white),

@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:Boy_flow/controllers/api_controller.dart';
 import 'package:Boy_flow/models/female_user.dart';
 import 'package:Boy_flow/utils/colors.dart';
 import 'package:Boy_flow/widgets/gift_selection_sheet.dart';
+import 'package:Boy_flow/agora_video_call.dart';
+import 'package:Boy_flow/services/call_notification_service.dart';
 
-class FemaleProfileScreen extends StatelessWidget {
+class FemaleProfileScreen extends StatefulWidget {
   final FemaleUser user;
   const FemaleProfileScreen({Key? key, required this.user}) : super(key: key);
 
+  @override
+  State<FemaleProfileScreen> createState() => _FemaleProfileScreenState();
+}
+
+class _FemaleProfileScreenState extends State<FemaleProfileScreen> {
   LinearGradient get _mainGradient => const LinearGradient(
     colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
     begin: Alignment.topLeft,
@@ -14,7 +23,137 @@ class FemaleProfileScreen extends StatelessWidget {
   );
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ApiController>(context, listen: false).fetchSentFollowRequests();
+    });
+  }
+
+  // Method to show call options dialog with channel selection
+  void _showCallOptionsDialog(BuildContext context) {
+    TextEditingController channelController = TextEditingController(
+      text: 'friends_call_123',
+    ); // Default channel
+    bool isVideoCall = true;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text("Call Options"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: channelController,
+                    decoration: const InputDecoration(
+                      labelText: "Channel Name",
+                      hintText: "Enter channel name",
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: RadioListTile<bool>(
+                          title: const Text("Video"),
+                          value: true,
+                          groupValue: isVideoCall,
+                          onChanged: (bool? value) {
+                            if (value != null) {
+                              setDialogState(() {
+                                isVideoCall = value;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      Expanded(
+                        child: RadioListTile<bool>(
+                          title: const Text("Audio"),
+                          value: false,
+                          groupValue: isVideoCall,
+                          onChanged: (bool? value) {
+                            if (value != null) {
+                              setDialogState(() {
+                                isVideoCall = value;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close dialog
+                  },
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    // Start the call with the selected channel name
+                    Navigator.of(context).pop(); // Close dialog
+                    _startCall(context, channelController.text.trim(), isVideoCall);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF00CC),
+                  ),
+                  child: const Text(
+                    "Start",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            );
+          }
+        );
+      },
+    );
+  }
+
+  // Method to start the call
+  void _startCall(BuildContext context, String channelName, bool isVideoCall) {
+    // Get the call notification service instance
+    final callService = CallNotificationService();
+
+    // Simulate sending a call notification to the female user
+    callService.simulateIncomingCall(
+      callerName: "Male User", // This should be the actual male user's name
+      callerId: "1", // This should be the actual male user's ID
+      channelName: channelName,
+      callerUid: 1,
+      isVideoCall: isVideoCall,
+    );
+
+    // For testing purposes, let's also join the call from the caller side
+    // In a real app, you'd have separate apps for caller and receiver
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AgoraVideoCallScreen(
+          channelName: channelName,
+          uid: 1, // Caller UID
+          isCaller: true,
+          remoteUserId: 2, // This should match the female user's expected UID
+          remoteUserName: widget.user.name,
+          isVideoCall: isVideoCall,
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final apiController = Provider.of<ApiController>(context);
+    final followStatus = apiController.getFollowStatus(widget.user.id);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
@@ -56,10 +195,10 @@ class FemaleProfileScreen extends StatelessWidget {
                       CircleAvatar(
                         radius: 36,
                         backgroundImage:
-                            user.avatarUrl != null && user.avatarUrl!.isNotEmpty
-                            ? NetworkImage(user.avatarUrl!)
+                            widget.user.avatarUrl != null && widget.user.avatarUrl!.isNotEmpty
+                            ? NetworkImage(widget.user.avatarUrl!)
                             : null,
-                        child: user.avatarUrl == null || user.avatarUrl!.isEmpty
+                        child: widget.user.avatarUrl == null || widget.user.avatarUrl!.isEmpty
                             ? const Icon(Icons.person, size: 36)
                             : null,
                       ),
@@ -71,7 +210,7 @@ class FemaleProfileScreen extends StatelessWidget {
                             Row(
                               children: [
                                 Text(
-                                  user.name,
+                                  widget.user.name,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -87,7 +226,7 @@ class FemaleProfileScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              "Age: ${user.age} years",
+                              "Age: ${widget.user.age} years",
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: Colors.black54,
@@ -106,8 +245,10 @@ class FemaleProfileScreen extends StatelessWidget {
                       ),
                       Container(
                         decoration: BoxDecoration(
-                          gradient: _mainGradient,
+                          gradient: followStatus == 'none' ? _mainGradient : null,
+                          color: followStatus == 'pending' ? Colors.orangeAccent.withOpacity(0.2) : (followStatus == 'following' ? Colors.greenAccent.withOpacity(0.2) : null),
                           borderRadius: BorderRadius.circular(20),
+                          border: followStatus != 'none' ? Border.all(color: followStatus == 'pending' ? Colors.orangeAccent : Colors.greenAccent) : null,
                         ),
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
@@ -118,16 +259,28 @@ class FemaleProfileScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(20),
                             ),
                           ),
-                          onPressed: () {},
-                          child: ShaderMask(
-                            shaderCallback: (rect) =>
-                                _mainGradient.createShader(rect),
-                            child: const Text(
-                              "Follow",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          onPressed: () async {
+                            try {
+                              if (followStatus == 'none') {
+                                await apiController.sendFollowRequest(widget.user.id);
+                              } else if (followStatus == 'pending') {
+                                await apiController.cancelFollowRequest(widget.user.id);
+                              } else if (followStatus == 'following') {
+                                await apiController.unfollowUser(widget.user.id);
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+                                );
+                              }
+                            }
+                          },
+                          child: Text(
+                            followStatus == 'none' ? "Follow" : (followStatus == 'pending' ? "Pending" : "Following"),
+                            style: TextStyle(
+                              color: followStatus == 'none' ? Colors.white : (followStatus == 'pending' ? Colors.orangeAccent : Colors.greenAccent),
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -215,7 +368,9 @@ class FemaleProfileScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          _showCallOptionsDialog(context);
+                        },
                       ),
                     ),
                   ),
@@ -249,7 +404,7 @@ class FemaleProfileScreen extends StatelessWidget {
                             isScrollControlled: true,
                             backgroundColor: Colors.transparent,
                             builder: (context) => GiftSelectionSheet(
-                              femaleUserId: user.id,
+                              femaleUserId: widget.user.id,
                               onGiftSent: (newBalance) {
                                 // Handle balance update if needed
                                 print('New balance: $newBalance');

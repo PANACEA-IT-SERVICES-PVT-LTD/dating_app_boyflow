@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:http/http.dart' as http;
@@ -10,6 +11,7 @@ import '../models/gift.dart';
 import '../models/send_gift_response.dart';
 import '../models/profile_model.dart';
 import '../api_service/api_endpoint.dart';
+import '../utils/otp_toast_util.dart'; // Import OTP toast utility
 
 class ApiService {
   final Dio _dio = Dio();
@@ -183,30 +185,6 @@ class ApiService {
     }
   }
 
-  /// End an active call (audio or video)
-  Future<Map<String, dynamic>> endCall({
-    required String receiverId,
-    required int duration,
-    required String callType, // "audio" or "video"
-    required String callId,
-  }) async {
-    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.endCall}');
-    final headers = await _getHeaders();
-    final body = json.encode({
-      'receiverId': receiverId,
-      'duration': duration,
-      'callType': callType,
-      'callId': callId,
-    });
-    final response = await http.post(url, headers: headers, body: body);
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      _handleError(response.statusCode, response.body);
-      throw Exception('Failed to end call: ${response.body}');
-    }
-  }
-
   String? _authToken;
   final String baseUrl = ApiEndPoints.baseUrl;
 
@@ -223,68 +201,6 @@ class ApiService {
       'Content-Type': 'application/json',
       if (_authToken != null) 'Authorization': 'Bearer $_authToken',
     };
-  }
-
-  // Start a call (audio or video) - Updated to return credentials needed for Agora
-  Future<Map<String, dynamic>> startCall({
-    required String receiverId,
-    required String callType, // "audio" or "video"
-  }) async {
-    final callUrl = ApiEndPoints.baseUrl + ApiEndPoints.startCall;
-    print('CALL API URL => $callUrl');
-
-    final headers = await _getHeaders();
-    final body = json.encode({'receiverId': receiverId, 'callType': callType});
-
-    final response = await http.post(
-      Uri.parse(callUrl),
-      headers: headers,
-      body: body,
-    );
-
-    print('Start Call Response Status: ${response.statusCode}');
-    print('Start Call Response Body: ${response.body}');
-
-    if (response.statusCode == 200) {
-      final result = json.decode(response.body);
-
-      // Ensure the response includes the required credentials
-      if (result['success'] == true && result['data'] != null) {
-        final data = result['data'] as Map<String, dynamic>;
-
-        // The backend should return these fields:
-        // callId, channelName, agoraToken, receiverId, callType
-        if (data['callId'] == null ||
-            data['channelName'] == null ||
-            data['agoraToken'] == null) {
-          throw Exception('Missing required call credentials from backend');
-        }
-
-        return result;
-      } else {
-        throw Exception('Invalid response format from start call API');
-      }
-    } else {
-      _handleError(response.statusCode, response.body);
-      throw Exception('Failed to start call: ${response.body}');
-    }
-  }
-
-  // Check call status
-  Future<Map<String, dynamic>> checkCallStatus({required String callId}) async {
-    final statusUrl =
-        ApiEndPoints.baseUrl + ApiEndPoints.checkCallStatus + '/$callId/status';
-    print('CHECK CALL STATUS URL => $statusUrl');
-
-    final headers = await _getHeaders();
-
-    final response = await http.get(Uri.parse(statusUrl), headers: headers);
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      _handleError(response.statusCode, response.body);
-      throw Exception('Failed to check call status: ${response.body}');
-    }
   }
 
   // Handle API errors
@@ -583,16 +499,38 @@ class ApiService {
     return {'success': true, 'message': 'Profile updated (stub)'};
   }
 
-  // Update profile details (stub, implement as needed)
+  // Update profile details using PATCH /male-user/profile-details
   Future<Map<String, dynamic>> updateProfileDetails({
-    String? firstName,
-    String? lastName,
-    String? height,
-    String? religion,
-    String? imageUrl,
+    required Map<String, dynamic> data,
   }) async {
-    // TODO: Implement actual update logic
-    return {'success': true, 'message': 'Profile details updated (stub)'};
+    try {
+      final url = Uri.parse(
+        '${ApiEndPoints.baseUrl}${ApiEndPoints.maleProfileDetails}',
+      );
+      final headers = await _getHeaders();
+      
+      // Postman screenshot shows form-data being used for PATCH as well
+      final request = http.MultipartRequest('PATCH', url);
+      request.headers.addAll(headers);
+
+      data.forEach((key, value) {
+        if (value != null) {
+          request.fields[key] = value.toString();
+        }
+      });
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return json.decode(response.body);
+      } else {
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to update profile details');
+      }
+    } catch (e) {
+      throw Exception('Failed to update profile details: $e');
+    }
   }
 
   // Fetch current male profile (stub, implement as needed)
@@ -604,7 +542,7 @@ class ApiService {
   // Fetch sent follow requests
   Future<List<Map<String, dynamic>>> fetchSentFollowRequests() async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrl}/male-user/follow-requests/sent',
+      '${ApiEndPoints.baseUrl}${ApiEndPoints.maleFollowRequestsSent}',
     );
     final headers = await _getHeaders();
     final response = await http.get(url, headers: headers);
@@ -624,23 +562,101 @@ class ApiService {
     }
   }
 
+  // Fetch followers of the male user
+  Future<List<Map<String, dynamic>>> fetchFollowers() async {
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleFollowers}');
+    final headers = await _getHeaders();
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final decoded = json.decode(response.body);
+      final data = decoded['data'];
+      if (data is List) {
+        return data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+      }
+      return [];
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to fetch followers');
+    }
+  }
+
+  // Fetch following users of the male user
+  Future<List<Map<String, dynamic>>> fetchFollowing() async {
+    final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.maleFollowing}');
+    final headers = await _getHeaders();
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final decoded = json.decode(response.body);
+      final data = decoded['data'];
+      if (data is List) {
+        return data.map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e)).toList();
+      }
+      return [];
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to fetch following');
+    }
+  }
+
   // Send follow request to a female user
   Future<Map<String, dynamic>> sendFollowRequest({
     required String femaleUserId,
   }) async {
     final url = Uri.parse(
-      '${ApiEndPoints.baseUrl}/male-user/follow-request/send',
+      '${ApiEndPoints.baseUrl}${ApiEndPoints.maleFollowSend}',
     );
     final headers = await _getHeaders();
     final body = jsonEncode({"femaleUserId": femaleUserId});
 
     final response = await http.post(url, headers: headers, body: body);
 
-    if (response.statusCode == 200) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
       return json.decode(response.body);
     } else {
       _handleError(response.statusCode, response.body);
       throw Exception('Failed to send follow request');
+    }
+  }
+
+  // Cancel follow request
+  Future<Map<String, dynamic>> cancelFollowRequest({
+    required String femaleUserId,
+  }) async {
+    final url = Uri.parse(
+      '${ApiEndPoints.baseUrl}${ApiEndPoints.maleFollowCancel}',
+    );
+    final headers = await _getHeaders();
+    final body = jsonEncode({"femaleUserId": femaleUserId});
+
+    final response = await http.post(url, headers: headers, body: body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to cancel follow request');
+    }
+  }
+
+  // Unfollow a female user
+  Future<Map<String, dynamic>> unfollowUser({
+    required String femaleUserId,
+  }) async {
+    final url = Uri.parse(
+      '${ApiEndPoints.baseUrl}${ApiEndPoints.maleUnfollow}',
+    );
+    final headers = await _getHeaders();
+    final body = jsonEncode({"femaleUserId": femaleUserId});
+
+    final response = await http.post(url, headers: headers, body: body);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return json.decode(response.body);
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to unfollow user');
     }
   }
 
@@ -759,7 +775,17 @@ class ApiService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return json.decode(response.body);
+        final responseBody = json.decode(response.body);
+
+        // Show OTP as toast if available in response
+        if (responseBody['otp'] != null) {
+          OtpToastUtil.showOtpToast(responseBody['otp'].toString());
+        } else if (responseBody['data'] != null &&
+            responseBody['data']['otp'] != null) {
+          OtpToastUtil.showOtpToast(responseBody['data']['otp'].toString());
+        }
+
+        return responseBody;
       } else {
         _handleError(response.statusCode, response.body);
         throw Exception('Failed to register user');
@@ -848,7 +874,7 @@ class ApiService {
   }
 
   // Fetch followed female users
-  Future<Map<String, dynamic>> fetchFollowedFemales({
+  Future<List<Map<String, dynamic>>> fetchFollowedFemales({
     int page = 1,
     int limit = 10,
   }) async {
@@ -874,12 +900,68 @@ class ApiService {
     print('Token: $_authToken');
     print('Body: $body');
     if (response.statusCode == 200) {
+      final decoded = json.decode(response.body);
+      final data = decoded['data'];
+      if (data is List) {
+        return data
+            .map<Map<String, dynamic>>((e) => Map<String, dynamic>.from(e))
+            .toList();
+      } else {
+        return <Map<String, dynamic>>[];
+      }
+    } else {
+      _handleError(response.statusCode, response.body);
+      throw Exception('Failed to fetch followed users');
+    }
+  }
+
+  // Update profile and image
+  Future<Map<String, dynamic>> updateProfileAndImage({
+    required Map<String, String> fields,
+    File? imageFile,
+  }) async {
+    final url = Uri.parse(
+      '${ApiEndPoints.baseUrl}${ApiEndPoints.maleProfileAndImage}',
+    );
+    final headers = await _getHeaders();
+    final request = http.MultipartRequest('POST', url);
+    
+    // Add headers
+    request.headers.addAll(headers);
+
+    // Add fields
+    fields.forEach((key, value) {
+      request.fields[key] = value;
+    });
+
+    // Add image if provided
+    if (imageFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('image', imageFile.path),
+      );
+    }
+
+    print('Request Fields: ${request.fields}');
+    if (request.files.isNotEmpty) {
+      for (var f in request.files) {
+        print('Request File: field=${f.field}, filename=${f.filename}');
+      }
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    print('Response Status: ${response.statusCode}');
+    print('Response Body: ${response.body}');
+
+    if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
       _handleError(response.statusCode, response.body);
-      throw Exception('Failed to fetch followed female users');
+      throw Exception('Failed to update profile and image');
     }
   }
+
 
   // Fetch male user profile and images
   Future<Map<String, dynamic>> fetchMaleProfileAndImage() async {
@@ -962,63 +1044,6 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Failed to unblock user: $e');
-    }
-  }
-
-  // Fetch call history
-  Future<Map<String, dynamic>> fetchCallHistory({
-    int limit = 10,
-    int skip = 0,
-  }) async {
-    try {
-      final url = Uri.parse(
-        '${ApiEndPoints.baseUrl}${ApiEndPoints.callHistory}?limit=$limit&skip=$skip',
-      );
-      final headers = await _getHeaders();
-
-      print('Fetching call history from: $url');
-      print('Headers: $headers');
-
-      final response = await http.get(url, headers: headers);
-
-      print('Call history response status: ${response.statusCode}');
-      print('Call history response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        _handleError(response.statusCode, response.body);
-        throw Exception('Failed to fetch call history');
-      }
-    } catch (e) {
-      print('Error fetching call history: $e');
-      throw Exception('Failed to fetch call history: $e');
-    }
-  }
-
-  // Fetch call statistics
-  Future<Map<String, dynamic>> fetchCallStats() async {
-    try {
-      final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.callStats}');
-      final headers = await _getHeaders();
-
-      print('Fetching call stats from: $url');
-      print('Headers: $headers');
-
-      final response = await http.get(url, headers: headers);
-
-      print('Call stats response status: ${response.statusCode}');
-      print('Call stats response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        _handleError(response.statusCode, response.body);
-        throw Exception('Failed to fetch call stats');
-      }
-    } catch (e) {
-      print('Error fetching call stats: $e');
-      throw Exception('Failed to fetch call stats: $e');
     }
   }
 
@@ -1184,4 +1209,24 @@ class ApiService {
       throw Exception('Failed to fetch profile details: $e');
     }
   }
+
+  // Delete accountPermanently
+  Future<Map<String, dynamic>> deleteAccount() async {
+    try {
+      final url = Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.deleteAccountMale}');
+      final headers = await _getHeaders();
+      
+      final response = await http.delete(url, headers: headers);
+      
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        _handleError(response.statusCode, response.body);
+        throw Exception('Failed to delete account');
+      }
+    } catch (e) {
+      throw Exception('Failed to delete account: $e');
+    }
+  }
+
 }

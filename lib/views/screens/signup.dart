@@ -9,6 +9,7 @@ import '../../widgets/gradient_button.dart';
 import '../../api_service/api_endpoint.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/api_controller.dart';
+import '../../utils/otp_toast_util.dart'; // Import OTP toast utility
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -64,6 +65,13 @@ class _SignupScreenState extends State<SignupScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("✅ $message")));
+
+        // Show OTP as toast if available in response
+        if (result["otp"] != null) {
+          OtpToastUtil.showOtpToast(result["otp"].toString());
+        } else if (result["data"] != null && result["data"]["otp"] != null) {
+          OtpToastUtil.showOtpToast(result["data"]["otp"].toString());
+        }
 
         Navigator.pushReplacementNamed(
           context,

@@ -1,0 +1,24 @@
+Running Gradle task 'assembleDebug'...                          
+lib/services/api_service.dart:543:38: Error: A non-null value must be returned since the return type 'List<Map<String, dynamic>>' doesn't allow null.
+ - 'List' is from 'dart:core'.
+ - 'Map' is from 'dart:core'.
+  Future<List<Map<String, dynamic>>> fetchSentFollowRequests() async {
+                                     ^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\programTools\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 8s
+Running Gradle task 'assembleDebug'...                              8.7s
+Gradle task assembleDebug failed with exit code 1

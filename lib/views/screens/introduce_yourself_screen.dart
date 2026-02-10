@@ -1,16 +1,14 @@
 // ignore_for_file: sort_child_properties_last
 
-import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'dart:io';
 import 'package:provider/provider.dart';
-import 'package:video_player/video_player.dart';
+import '../../controllers/api_controller.dart';
 
 import '../../widgets/gradient_button.dart';
-import '../../controllers/api_controller.dart';
-import '../../controllers/profile_controller.dart';
-import '../../models/profile_model.dart';
 
 // Helper to save token after login
 Future<void> saveLoginToken(String token) async {
@@ -27,54 +25,28 @@ class IntroduceYourselfScreen extends StatefulWidget {
 }
 
 class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
-  List<String> _availableSports = [];
-  List<String> _availableFilm = [];
-  List<String> _availableMusic = [];
-  List<String> _availableTravel = [];
   String? _uploadedPhotoUrl;
 
   final _formKey = GlobalKey<FormState>();
 
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  final _heightController = TextEditingController();
-
-  // 🔹 ADDED (missing from UI image)
   final _mobileController = TextEditingController();
   final _dobController = TextEditingController();
   final _bioController = TextEditingController();
-  final _interestsController = TextEditingController();
-  final _languagesController = TextEditingController();
-  final _relationshipGoalsController = TextEditingController();
-  final _searchPreferencesController = TextEditingController();
-  final _hobbiesController = TextEditingController();
-  final _sportsController = TextEditingController();
-  final _filmController = TextEditingController();
-  final _musicController = TextEditingController();
-  final _travelController = TextEditingController();
+  final _heightController = TextEditingController();
+  final _religionController = TextEditingController();
 
-  // Multi-select state
-  List<String> _selectedSports = [];
-  List<String> _selectedFilm = [];
-  List<String> _selectedMusic = [];
-  List<String> _selectedTravel = [];
-  String? _selectedReligionId;
-  final _latitudeController = TextEditingController();
-  final _longitudeController = TextEditingController();
+  // Gender state
+  String? _selectedGender;
+  final List<String> _genders = ['Male', 'Female', 'Other'];
 
   // State variables for profile data
   List<Map<String, dynamic>> _images = [];
   bool _isLoading = true;
 
-  final List<Map<String, String>> _religions = [
-    {'id': '694f63d08389fc82a4345083', 'name': 'Hindu'},
-    {'id': '694f63d08389fc82a4345084', 'name': 'Muslim'},
-    {'id': '694f63d08389fc82a4345085', 'name': 'Christian'},
-    {'id': '694f63d08389fc82a4345086', 'name': 'Sikh'},
-    {'id': '694f63d08389fc82a4345087', 'name': 'Buddhist'},
-    {'id': '694f63d08389fc82a4345088', 'name': 'Jewish'},
-    {'id': '694f63d08389fc82a4345089', 'name': 'Other'},
-  ];
+
+
 
   // Helper to parse profile data (comma separated or list)
   List<String> _parseProfileList(dynamic value) {
@@ -145,105 +117,102 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
   }
 
   Future<void> _pickImage() async {
+    final messenger = ScaffoldMessenger.of(context);
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      final apiController = Provider.of<ApiController>(
-        context,
-        listen: false,
-      ); // Use existing controller for image upload
+      if (!mounted) return;
+      
+      setState(() {
+        // Store the local file path temporarily
+        _uploadedPhotoUrl = picked.path;
+        _images.insert(0, {'imageUrl': picked.path});
+      });
+      
       try {
-        final result = await apiController.uploadUserImage(
-          imageFile: File(picked.path),
-        );
-        print('DEBUG: image upload result: $result');
-        if (result['success'] == true &&
-            result['urls'] != null &&
-            result['urls'] is List &&
-            result['urls'].isNotEmpty) {
-          setState(() {
-            _uploadedPhotoUrl = result['urls'][0];
-            // Optionally update _images if you want to show all images
-            _images.insert(0, {'imageUrl': _uploadedPhotoUrl});
-          });
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Image uploaded successfully.'),
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Image selected. Ready to upload.'),
           ),
         );
-      } catch (e) {
-        print('DEBUG: Error uploading image: $e');
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
+      } catch (_) {
+        // Ignore inactive messenger errors to prevent crash
       }
     }
   }
 
   // NEW METHOD - Load profile using new API
   Future<void> _loadProfileWithNewAPI() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      // Using the new ProfileController to fetch profile data
-      final profileController = Provider.of<ProfileController>(
-        context,
-        listen: false,
-      );
-      await profileController.fetchProfile();
+      final apiController = Provider.of<ApiController>(context, listen: false);
+      final data = await apiController.fetchMaleMe();
 
       if (!mounted) return;
 
-      setState(() {
-        _isLoading = false;
-        if (profileController.profileData != null) {
-          final profile = profileController.profileData!;
-          _firstNameController.text = profile.firstName;
-          _lastNameController.text = profile.lastName;
-          // Note: gender and dateOfBirth are displayed but not editable in this form
-          _dobController.text = profile.dateOfBirth;
+      if (data['success'] == true && data['data'] != null) {
+        final userData = data['data'];
 
-          // Set the profile image if available
-          if (profile.profileImageUrl != null) {
-            _images = [
-              {'imageUrl': profile.profileImageUrl},
-            ];
+        setState(() {
+          _firstNameController.text = userData['firstName']?.toString() ?? '';
+          _lastNameController.text = userData['lastName']?.toString() ?? '';
+          _mobileController.text = userData['mobileNumber']?.toString() ?? '';
+          _bioController.text = userData['bio']?.toString() ?? '';
+          _heightController.text = userData['height']?.toString() ?? '';
+          _religionController.text = userData['religion']?.toString() ?? '';
+
+          // Handle Date of Birth
+          if (userData['dateOfBirth'] != null) {
+            try {
+              final dob = DateTime.parse(userData['dateOfBirth'].toString());
+              _dobController.text = "${dob.year}-${dob.month.toString().padLeft(2, '0')}-${dob.day.toString().padLeft(2, '0')}";
+            } catch (_) {
+              debugPrint('Error parsing DOB: ${userData['dateOfBirth']}');
+            }
           }
-        }
-      });
+
+          // Handle Gender
+          final gender = userData['gender']?.toString().toLowerCase();
+          if (gender != null) {
+            if (gender == 'male') _selectedGender = 'Male';
+            else if (gender == 'female') _selectedGender = 'Female';
+            else _selectedGender = 'Other';
+          }
+
+          // Handle Images
+          final images = userData['images'];
+          if (images is List && images.isNotEmpty) {
+            final firstImage = images.first;
+             if (firstImage is Map) {
+                 // Check for 'imageUrl' or 'url' or 'path'
+                 final url = firstImage['imageUrl']?.toString() ?? 
+                             firstImage['url']?.toString() ?? 
+                             firstImage['path']?.toString();
+                 if (url != null && url.isNotEmpty) {
+                     _images = [{'imageUrl': url}];
+                 }
+             } else if (firstImage is String) {
+                _images = [{'imageUrl': firstImage}];
+             }
+          }
+        });
+      }
     } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to load profile: $e')));
+      debugPrint('Error loading profile: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _fetchAvailableOptions() async {
-    final apiController = Provider.of<ApiController>(
-      context,
-      listen: false,
-    ); // Use existing controller for other APIs
-    try {
-      final sports = await apiController.fetchAllSports();
-      print('DEBUG: sports response: $sports');
-      final film = await apiController.fetchAllFilm();
-      print('DEBUG: film response: $film');
-      final music = await apiController.fetchAllMusic();
-      print('DEBUG: music response: $music');
-      final travel = await apiController.fetchAllTravel();
-      print('DEBUG: travel response: $travel');
-      if (!mounted) return;
-      setState(() {
-        _availableSports = sports;
-        _availableFilm = film;
-        _availableMusic = music;
-        _availableTravel = travel;
-      });
-    } catch (e) {
-      print('DEBUG: Error fetching options: $e');
-    }
+    // API calls removed - will be replaced with new API
+    // For now, keeping empty lists
   }
 
   @override
@@ -288,7 +257,11 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Introduce Yourself'),
+        title: const Text(
+          'Introduce Yourself',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -310,7 +283,19 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                 child: _images.isNotEmpty && _images[0]['imageUrl'] != null
                     ? CircleAvatar(
                         radius: 60,
-                        backgroundImage: NetworkImage(_images[0]['imageUrl']),
+                        backgroundImage: () {
+                          String path = _images[0]['imageUrl'];
+                          if (path.startsWith('http')) {
+                            return NetworkImage(path);
+                          } else {
+                            if (path.startsWith('file://')) {
+                               try {
+                                 path = Uri.parse(path).toFilePath();
+                               } catch (_) {}
+                            }
+                            return FileImage(File(path));
+                          }
+                        }() as ImageProvider,
                       )
                     : const _DottedBorderBox(label: 'Pick Image'),
               ),
@@ -330,9 +315,43 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                 hint: 'Mobile Number',
                 keyboardType: TextInputType.phone,
               ),
-              _buildRoundedTextField(
-                controller: _dobController,
-                hint: 'Date of Birth (YYYY-MM-DD)',
+              
+              // Date of Birth with DatePicker
+              Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: TextFormField(
+                  controller: _dobController,
+                  readOnly: true,
+                  onTap: () async {
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)), // Default to 18 years ago
+                      firstDate: DateTime(1900),
+                      lastDate: DateTime.now(),
+                    );
+                    if (picked != null) {
+                      // Format: YYYY-MM-DD
+                      final formattedDate = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                      setState(() {
+                        _dobController.text = formattedDate;
+                      });
+                    }
+                  },
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: const Color(0xFFF9E6F5),
+                    hintText: 'Date of Birth (YYYY-MM-DD)',
+                    suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFFE91EC7)),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
               ),
               _buildRoundedTextField(
                 controller: _bioController,
@@ -340,124 +359,43 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                 maxLines: 3,
               ),
               _buildRoundedTextField(
-                controller: _interestsController,
-                hint: 'Interests (comma separated IDs)',
-              ),
-              _buildRoundedTextField(
-                controller: _languagesController,
-                hint: 'Languages (comma separated IDs)',
-              ),
-              _buildRoundedTextField(
-                controller: _relationshipGoalsController,
-                hint: 'Relationship Goals (comma separated IDs)',
-              ),
-              _buildRoundedTextField(
                 controller: _heightController,
-                hint: 'Height',
+                hint: 'Height (in cm)',
                 keyboardType: TextInputType.number,
               ),
               _buildRoundedTextField(
-                controller: _searchPreferencesController,
-                hint: 'Search Preferences',
-              ),
-              _buildRoundedTextField(
-                controller: _hobbiesController,
-                hint: 'Hobbies (comma separated)',
-              ),
-              // Religion Selection Dropdown
-              Padding(
-                padding: const EdgeInsets.only(bottom: 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Religion',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF9E6F5),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        underline: Container(),
-                        value: _selectedReligionId,
-                        hint: const Text('Select Religion'),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedReligionId = newValue;
-                          });
-                        },
-                        items: _religions.map<DropdownMenuItem<String>>((
-                          religion,
-                        ) {
-                          return DropdownMenuItem<String>(
-                            value: religion['id'],
-                            child: Text(religion['name']!),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _buildMultiSelectChips(
-                title: 'Sports',
-                options: _availableSports,
-                selectedValues: _selectedSports,
-                onSelectionChanged: (values) {
-                  setState(() {
-                    _selectedSports = values;
-                    _sportsController.text = values.join(',');
-                  });
-                },
-              ),
-              _buildMultiSelectChips(
-                title: 'Film',
-                options: _availableFilm,
-                selectedValues: _selectedFilm,
-                onSelectionChanged: (values) {
-                  setState(() {
-                    _selectedFilm = values;
-                    _filmController.text = values.join(',');
-                  });
-                },
-              ),
-              _buildMultiSelectChips(
-                title: 'Music',
-                options: _availableMusic,
-                selectedValues: _selectedMusic,
-                onSelectionChanged: (values) {
-                  setState(() {
-                    _selectedMusic = values;
-                    _musicController.text = values.join(',');
-                  });
-                },
-              ),
-              _buildMultiSelectChips(
-                title: 'Travel',
-                options: _availableTravel,
-                selectedValues: _selectedTravel,
-                onSelectionChanged: (values) {
-                  setState(() {
-                    _selectedTravel = values;
-                    _travelController.text = values.join(',');
-                  });
-                },
+                controller: _religionController,
+                hint: 'Religion',
               ),
 
-              _buildRoundedTextField(
-                controller: _latitudeController,
-                hint: 'Latitude',
-                keyboardType: TextInputType.number,
-              ),
-              _buildRoundedTextField(
-                controller: _longitudeController,
-                hint: 'Longitude',
-                keyboardType: TextInputType.number,
+              // Gender Dropdown
+              Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF9E6F5),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      isExpanded: true,
+                      value: _selectedGender,
+                      hint: const Text('Select Gender'),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedGender = newValue;
+                        });
+                      },
+                      items: _genders.map<DropdownMenuItem<String>>((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
               ),
 
               const SizedBox(height: 30),
@@ -465,84 +403,111 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
               GradientButton(
                 text: 'Submit',
                 onPressed: () async {
-                  final apiController = Provider.of<ApiController>(
-                    context,
-                    listen: false,
-                  );
-                  // Parse sports from controller (comma separated to List<String>)
-                  final sportsText = _sportsController.text.trim();
-                  final sportsList = sportsText.isNotEmpty
-                      ? sportsText
-                            .split(',')
-                            .map((e) => e.trim())
-                            .where((e) => e.isNotEmpty)
-                            .toList()
-                      : <String>[];
-                  // Parse film from controller (comma separated to List<String>)
-                  final filmText = _filmController.text.trim();
-                  final filmList = filmText.isNotEmpty
-                      ? filmText
-                            .split(',')
-                            .map((e) => e.trim())
-                            .where((e) => e.isNotEmpty)
-                            .toList()
-                      : <String>[];
-                  // Parse music from controller (comma separated to List<String>)
-                  final musicText = _musicController.text.trim();
-                  final musicList = musicText.isNotEmpty
-                      ? musicText
-                            .split(',')
-                            .map((e) => e.trim())
-                            .where((e) => e.isNotEmpty)
-                            .toList()
-                      : <String>[];
-                  // Parse travel from controller (comma separated to List<String>)
-                  final travelText = _travelController.text.trim();
-                  final travelList = travelText.isNotEmpty
-                      ? travelText
-                            .split(',')
-                            .map((e) => e.trim())
-                            .where((e) => e.isNotEmpty)
-                            .toList()
-                      : <String>[];
+                  if (_formKey.currentState!.validate()) {
+                    setState(() {
+                      _isLoading = true;
+                    });
+                    
+                    final messenger = ScaffoldMessenger.of(context);
 
-                  try {
-                    final sportsResult = await apiController.updateUserSports(
-                      sports: sportsList,
-                    );
-                    final filmResult = await apiController.updateUserFilm(
-                      film: filmList,
-                    );
-                    final musicResult = await apiController.updateUserMusic(
-                      music: musicList,
-                    );
-                    final travelResult = await apiController.updateUserTravel(
-                      travel: travelList,
-                    );
-                    // Update religion if selected
-                    dynamic religionResult;
-                    if (_selectedReligionId != null) {
-                      religionResult = await apiController.updateProfileDetails(
-                        religion: _selectedReligionId!,
+                    try {
+                      final apiController = Provider.of<ApiController>(
+                        context,
+                        listen: false,
                       );
+
+                      final Map<String, dynamic> data = {
+                        'firstName': _firstNameController.text.trim(),
+                        'lastName': _lastNameController.text.trim(),
+                        'mobileNumber': _mobileController.text.trim(),
+                        'dateOfBirth': _dobController.text.trim(),
+                        'bio': _bioController.text.trim(),
+                        'height': _heightController.text.trim(),
+                        'religion': _religionController.text.trim(),
+                      };
+                      
+                      // Calculate age from DOB if possible
+                      try {
+                        if (_dobController.text.isNotEmpty) {
+                          final birthDate = DateTime.parse(_dobController.text.trim());
+                          final today = DateTime.now();
+                          int age = today.year - birthDate.year;
+                          if (today.month < birthDate.month || (today.month == birthDate.month && today.day < birthDate.day)) {
+                            age--;
+                          }
+                          data['age'] = age.toString();
+                        }
+                      } catch (e) {
+                         debugPrint('Error calculating age: $e');
+                      }
+                      
+                      if (_selectedGender != null) {
+                        data['gender'] = _selectedGender!.toLowerCase();
+                      } else {
+                         if (data['gender'] == null) {
+                            data['gender'] = 'male';
+                         }
+                      }
+
+                      // 1. Update text profile details via the new PATCH endpoint
+                      await apiController.updateProfileDetails(data: data);
+                      
+                      // 2. If there is a new image, use the upload method
+                      if (_images.isNotEmpty && _images[0]['imageUrl'] != null) {
+                        String path = _images[0]['imageUrl'];
+                        if (!path.startsWith('http')) {
+                          if (path.startsWith('file://')) {
+                            try {
+                              path = Uri.parse(path).toFilePath();
+                            } catch (_) {}
+                          }
+                          final imageFile = File(path);
+                          
+                          // Convert data to Map<String, String> for the multipart request
+                          final Map<String, String> fields = data.map((k, v) => MapEntry(k, v.toString()));
+                          
+                          await apiController.updateProfileAndImage(
+                            fields: fields,
+                            imageFile: imageFile,
+                          );
+                        }
+                      }
+
+                      if (!mounted) return;
+
+                      try {
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Profile updated successfully'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      } catch (_) {}
+
+                      // Wait for the snackbar to be visible before navigating back
+                      await Future.delayed(const Duration(seconds: 2));
+                      if (mounted) {
+                        Navigator.pop(context, true);
+                      }
+
+                    } catch (e) {
+                      debugPrint('Error updating profile: $e');
+                      if (!mounted) return;
+                      try {
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text('Error: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      } catch (_) {}
+                    } finally {
+                      if (mounted) {
+                        setState(() {
+                          _isLoading = false;
+                        });
+                      }
                     }
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '${sportsResult['message'] ?? 'Sports updated successfully'}\n'
-                          '${filmResult['message'] ?? 'Film preferences updated successfully'}\n'
-                          '${musicResult['message'] ?? 'Music preferences updated successfully'}\n'
-                          '${travelResult['message'] ?? 'Travel preferences updated successfully'}\n'
-                          '${religionResult != null ? (religionResult['message'] ?? 'Religion updated successfully') : 'No religion changes'}',
-                        ),
-                      ),
-                    );
-                  } catch (e) {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to update: $e')),
-                    );
                   }
                 },
                 buttonText: '',

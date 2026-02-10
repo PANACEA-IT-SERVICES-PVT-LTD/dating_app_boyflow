@@ -1,0 +1,18 @@
+lib/views/screens/female_profile_screen.dart:155:    final followStatus = apiController.getFollowStatus(widget.user.id);
+lib/views/screens/female_profile_screen.dart:248:                          gradient: followStatus == 'none' ? _mainGradient : null,
+lib/views/screens/female_profile_screen.dart:249:                          color: followStatus == 'pending' ? Colors.orangeAccent.withOpacity(0.2) : (followStatus == 'following' ? Colors.greenAccent.withOpacity(0.2) : null),
+lib/views/screens/female_profile_screen.dart:251:                          border: followStatus != 'none' ? Border.all(color: followStatus == 'pending' ? Colors.orangeAccent : Colors.greenAccent) : null,
+lib/views/screens/female_profile_screen.dart:264:                              if (followStatus == 'none') {
+lib/views/screens/female_profile_screen.dart:266:                              } else if (followStatus == 'pending') {
+lib/views/screens/female_profile_screen.dart:268:                              } else if (followStatus == 'following') {
+lib/views/screens/female_profile_screen.dart:280:                            followStatus == 'none' ? "Follow" : (followStatus == 'pending' ? "Pending" : "Following"),
+lib/views/screens/female_profile_screen.dart:282:                              color: followStatus == 'none' ? Colors.white : (followStatus == 'pending' ? Colors.orangeAccent : Colors.greenAccent),
+lib/views/screens/mainhome.dart:460:                  final followStatus = apiController.getFollowStatus(profile['_id'] ?? '');
+lib/views/screens/mainhome.dart:469:                    followStatus: followStatus,
+lib/views/screens/mainhome.dart:472:                        if (followStatus == 'none') {
+lib/views/screens/mainhome.dart:474:                        } else if (followStatus == 'pending') {
+lib/views/screens/mainhome.dart:476:                        } else if (followStatus == 'following') {
+lib/views/screens/mainhome.dart:574:                followStatus: apiController.getFollowStatus(profile['_id'] ?? ''),
+lib/views/screens/mainhome.dart:853:  final String followStatus;
+lib/views/screens/mainhome.dart:867:    this.followStatus = 'none',
+lib/views/screens/mainhome.dart:985:                              status: followStatus,

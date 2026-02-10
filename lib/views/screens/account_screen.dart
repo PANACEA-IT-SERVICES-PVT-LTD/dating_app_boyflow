@@ -10,7 +10,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Screens
-import '../screens/call_rate_screen.dart';
+
 import '../screens/withdraws_screen.dart';
 import '../screens/followers_screen.dart';
 import '../screens/support_service_screen.dart';
@@ -335,11 +335,7 @@ class _AccountScreenState extends State<AccountScreen> {
       'label': 'Talktime Transactions',
       'screen': TransactionsScreen(),
     },
-    {
-      'iconPath': 'assets/callrate.png',
-      'label': 'Talktime',
-      'screen': MyCallRate(),
-    },
+
     {
       'iconPath': 'assets/wallet.png',
       'label': 'Levels',
@@ -407,6 +403,8 @@ class _AccountScreenState extends State<AccountScreen> {
         },
       );
 
+      if (!mounted) return;
+
       if (resp.statusCode == 404) {
         // User profile not found - log error and handle gracefully
         print('Account screen: User profile not found (404)');
@@ -420,6 +418,8 @@ class _AccountScreenState extends State<AccountScreen> {
         print('Account screen: Unauthorized access (\${resp.statusCode})');
         return;
       }
+
+      if (!mounted) return;
 
       dynamic body;
       try {
@@ -447,7 +447,14 @@ class _AccountScreenState extends State<AccountScreen> {
 
           final images = data["images"];
           if (images is List && images.isNotEmpty) {
-            _profileImageUrl = images.first.toString();
+            final firstImage = images.first;
+            if (firstImage is Map) {
+              _profileImageUrl = firstImage["imageUrl"]?.toString() ??
+                  firstImage["url"]?.toString() ??
+                  firstImage["path"]?.toString();
+            } else {
+              _profileImageUrl = firstImage.toString();
+            }
           } else {
             _profileImageUrl = null;
           }

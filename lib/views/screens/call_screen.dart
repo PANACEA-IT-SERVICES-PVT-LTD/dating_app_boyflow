@@ -1,422 +1,348 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../controllers/api_controller.dart';
-
-// Call History Item Model
-class CallHistoryItem {
-  final String userId;
-  final String name;
-  final String profileImage;
-  final String callType;
-  final String status;
-  final int duration;
-  final int billableDuration;
-  final DateTime createdAt;
-  final String callId;
-
-  CallHistoryItem({
-    required this.userId,
-    required this.name,
-    required this.profileImage,
-    required this.callType,
-    required this.status,
-    required this.duration,
-    required this.billableDuration,
-    required this.createdAt,
-    required this.callId,
-  });
-
-  factory CallHistoryItem.fromJson(Map<String, dynamic> json) {
-    return CallHistoryItem(
-      userId: json['userId'] ?? '',
-      name: json['name'] ?? 'Unknown',
-      profileImage: json['profileImage'] ?? '',
-      callType: json['callType'] ?? 'audio',
-      status: json['status'] ?? 'unknown',
-      duration: json['duration'] ?? 0,
-      billableDuration: json['billableDuration'] ?? 0,
-      createdAt: DateTime.parse(
-        json['createdAt'] ?? DateTime.now().toIso8601String(),
-      ),
-      callId: json['callId'] ?? '',
-    );
-  }
-}
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:permission_handler/permission_handler.dart';
+import '../../agora_config.dart';
 
 class CallScreen extends StatefulWidget {
-  const CallScreen({super.key});
+  final String channelName;
+  final String callType; // 'audio' or 'video'
+  final String receiverName;
+
+  const CallScreen({
+    Key? key,
+    required this.channelName,
+    required this.callType,
+    required this.receiverName,
+  }) : super(key: key);
 
   @override
-  State<CallScreen> createState() => _CallScreenState();
+  _CallScreenState createState() => _CallScreenState();
 }
 
 class _CallScreenState extends State<CallScreen> {
-  List<CallHistoryItem> _callHistory = [];
-  bool _isLoading = false;
-  bool _isLoadingStats = false;
-  String? _error;
-
-  int _currentPage = 0;
-  bool _hasMore = true;
-
-  // Call stats
-  int _totalCalls = 0;
-  int _totalDuration = 0;
-  int _totalCoinsSpent = 0;
+  bool _isMuted = false;
+  late final RtcEngine _engine;
+  bool _joined = false;
+  int? remoteUid;
+  bool _isCameraOff = false;
 
   @override
   void initState() {
     super.initState();
-    _loadCallHistory();
-    _loadCallStats();
+    initAgora();
+    _simulateConnection();
   }
 
-  Future<void> _loadCallHistory({bool loadMore = false}) async {
-    if (_isLoading) return;
-
-    setState(() {
-      _isLoading = true;
-      if (!loadMore) {
-        _error = null;
-        _currentPage = 0;
-        _callHistory.clear();
-      }
-    });
-
-    try {
-      final apiController = Provider.of<ApiController>(context, listen: false);
-      final result = await apiController.fetchCallHistory(
-        limit: 10,
-        skip: _currentPage * 10,
-      );
-
-      if (result['success'] == true && result['data'] is List) {
-        final List<dynamic> data = result['data'];
-        final List<CallHistoryItem> newItems = data
-            .map((item) => CallHistoryItem.fromJson(item))
-            .toList();
-
-        setState(() {
-          if (loadMore) {
-            _callHistory.addAll(newItems);
-          } else {
-            _callHistory = newItems;
-          }
-          _hasMore = newItems.length == 10; // Assume more if we got full page
-          _currentPage++;
-        });
-      } else {
-        setState(() {
-          _error = result['message'] ?? 'Failed to load call history';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  @override
+  void dispose() {
+    _engine.release();
+    super.dispose();
   }
 
-  Future<void> _loadCallStats() async {
-    if (_isLoadingStats) return;
+  Future<void> initAgora() async {
+    // Request permissions
+    await [Permission.camera, Permission.microphone].request();
 
-    setState(() {
-      _isLoadingStats = true;
-    });
+    // Create and initialize engine
+    _engine = createAgoraRtcEngine();
+    await _engine.initialize(
+      RtcEngineContext(
+        appId: appId,
+        channelProfile: ChannelProfileType.channelProfileCommunication,
+      ),
+    );
 
-    try {
-      final apiController = Provider.of<ApiController>(context, listen: false);
-      final result = await apiController.fetchCallStats();
+    // Set client role
+    await _engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
 
-      if (result['success'] == true && result['data'] != null) {
-        final data = result['data'];
-        setState(() {
-          _totalCalls = data['totalCalls'] ?? 0;
-          _totalDuration = data['totalDuration'] ?? 0;
-          _totalCoinsSpent = data['totalCoinsSpent'] ?? 0;
-        });
-      }
-    } catch (e) {
-      // Optionally handle the error if needed
-    } finally {
-      setState(() {
-        _isLoadingStats = false;
-      });
-    }
-  }
-
-  String _formatDuration(int seconds) {
-    final minutes = seconds ~/ 60;
-    final secs = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays == 0) {
-      return 'Today';
-    } else if (difference.inDays == 1) {
-      return 'Yesterday';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
+    // Enable media based on call type
+    if (widget.callType == 'video') {
+      await _engine.enableVideo();
+      await _engine.startPreview();
     } else {
-      return '${date.day}/${date.month}/${date.year}';
+      await _engine.enableAudio();
+    }
+
+    // Register event handlers
+    _engine.registerEventHandler(
+      RtcEngineEventHandler(
+        onJoinChannelSuccess: (connection, elapsed) {
+          print("SUCCESS: JOINED CHANNEL ${connection.channelId}");
+          setState(() => _joined = true);
+        },
+        onUserJoined: (connection, remoteUid, elapsed) {
+          print("SUCCESS: REMOTE USER $remoteUid JOINED");
+          setState(() => this.remoteUid = remoteUid);
+        },
+        onUserOffline: (connection, remoteUid, reason) {
+          print("INFO: USER $remoteUid LEFT");
+          setState(() => this.remoteUid = null);
+        },
+        onError: (err, msg) {
+          print("ERROR: AGORA ERROR $err: $msg");
+        },
+      ),
+    );
+
+    // Join the channel
+    await _engine.joinChannel(
+      token: "",
+      channelId: widget.channelName,
+      uid: 0,
+      options: const ChannelMediaOptions(),
+    );
+  }
+
+  Future<void> _simulateConnection() async {
+    // Simulate call connection process
+    await Future.delayed(const Duration(seconds: 1));
+    // Connection state is now handled by Agora events
+  }
+
+  Future<void> _toggleMute() async {
+    if (mounted) {
+      setState(() {
+        _isMuted = !_isMuted;
+      });
+      _engine.muteLocalAudioStream(_isMuted);
+    }
+  }
+
+  Future<void> _toggleCamera() async {
+    if (mounted) {
+      setState(() {
+        _isCameraOff = !_isCameraOff;
+      });
+      _engine.muteLocalVideoStream(_isCameraOff);
+    }
+  }
+
+  Future<void> _endCall() async {
+    if (mounted) {
+      await _engine.leaveChannel();
+      Navigator.pop(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: AppBar(
-          automaticallyImplyLeading: false,
-          title: const Text(
-            "Call History",
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
-        ),
-      ),
-      body: RefreshIndicator(
-        onRefresh: () => _loadCallHistory(),
-        child: _error != null
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _error!,
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => _loadCallHistory(),
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              )
-            : Column(
-                children: [
-                  // Stats header
-                  Container(
-                    margin: const EdgeInsets.all(16),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.pink.withValues(alpha: 0.3),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Main video area
+          Stack(
+            children: [
+              // Remote video (main view)
+              if (_joined && remoteUid != null)
+                AgoraVideoView(
+                  controller: VideoViewController.remote(
+                    rtcEngine: _engine,
+                    canvas: VideoCanvas(uid: remoteUid!),
+                    connection: RtcConnection(channelId: widget.channelName),
+                  ),
+                )
+              else
+                Container(
+                  color: Colors.black,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Column(
-                          children: [
-                            Text(
-                              '$_totalCalls',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const Text(
-                              'Total Calls',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ],
+                        Icon(
+                          widget.callType == 'video' ? Icons.videocam : Icons.phone,
+                          size: 80,
+                          color: Colors.white38,
                         ),
-                        Column(
-                          children: [
-                            Text(
-                              _formatDuration(_totalDuration),
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const Text(
-                              'Total Time',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          children: [
-                            Text(
-                              '$_totalCoinsSpent',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const Text(
-                              'Coins Spent',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(height: 20),
+                        Text(
+                          _joined
+                              ? (remoteUid != null
+                                  ? 'Call Connected with ${widget.receiverName}'
+                                  : 'Waiting for ${widget.receiverName} to join...')
+                              : 'Connecting to ${widget.channelName}...',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: _joined && remoteUid != null 
+                                ? Colors.green 
+                                : Colors.white70,
+                            fontWeight: _joined && remoteUid != null 
+                                ? FontWeight.bold 
+                                : FontWeight.normal,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  // Call history list
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 0,
-                      ),
-                      itemCount: _callHistory.length + (_hasMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == _callHistory.length) {
-                          // Load more indicator
-                          return _isLoading
-                              ? const Padding(
-                                  padding: EdgeInsets.all(16),
-                                  child: Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                )
-                              : ListTile(
-                                  title: const Text('Load More'),
-                                  onTap: () => _loadCallHistory(loadMore: true),
-                                  trailing: const Icon(Icons.arrow_downward),
-                                );
-                        }
+                ),
 
-                        final call = _callHistory[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 8),
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: call.profileImage.isNotEmpty
-                                  ? NetworkImage(call.profileImage)
-                                  : null,
-                              child: call.profileImage.isEmpty
-                                  ? Text(call.name.substring(0, 1))
-                                  : null,
+              // Local video preview (small)
+              if (_joined && widget.callType == 'video')
+                Positioned(
+                  top: 50,
+                  right: 20,
+                  child: Container(
+                    width: 100,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white, width: 2),
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.black26,
+                    ),
+                    child: _isCameraOff
+                        ? const Center(
+                            child: Icon(
+                              Icons.videocam_off,
+                              color: Colors.white70,
+                              size: 40,
                             ),
-                            title: Text(call.name),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      call.callType == 'video'
-                                          ? Icons.videocam
-                                          : Icons.phone,
-                                      size: 16,
-                                      color: call.callType == 'video'
-                                          ? Colors.pink
-                                          : Colors.green,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '${call.callType.capitalize()} call',
-                                      style: const TextStyle(fontSize: 12),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: call.status == 'completed'
-                                            ? Colors.green
-                                            : Colors.grey,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        call.status,
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Duration: ${_formatDuration(call.duration)}',
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  _formatDate(call.createdAt),
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            trailing: Text(
-                              _formatDuration(call.billableDuration),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.pink,
-                              ),
+                          )
+                        : AgoraVideoView(
+                            controller: VideoViewController(
+                              rtcEngine: _engine,
+                              canvas: const VideoCanvas(uid: 0),
                             ),
                           ),
-                        );
-                      },
+                  ),
+                ),
+            ],
+          ),
+
+          // Top info bar
+          Positioned(
+            top: 80,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Text(
+                    widget.receiverName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _joined 
+                        ? (remoteUid != null 
+                            ? '${widget.callType.toUpperCase()} CALL CONNECTED' 
+                            : '${widget.callType.toUpperCase()} CALL CONNECTING...')
+                        : '${widget.callType.toUpperCase()} CALL INITIATING...',
+                    style: TextStyle(
+                      color: _joined && remoteUid != null 
+                          ? Colors.green 
+                          : Colors.white70,
+                      fontSize: 16,
+                      fontWeight: _joined && remoteUid != null 
+                          ? FontWeight.bold 
+                          : FontWeight.normal,
                     ),
                   ),
                 ],
               ),
-      ),
-      bottomNavigationBar: Container(height: 0),
-    );
-  }
-}
+            ),
+          ),
 
-extension on String {
-  String capitalize() {
-    return isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
+          // Bottom control panel
+          Positioned(
+            bottom: 50,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // Mute button
+                GestureDetector(
+                  onTap: _toggleMute,
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[700],
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _isMuted ? Icons.mic_off : Icons.mic,
+                      color: Colors.white,
+                      size: 30,
+                    ),
+                  ),
+                ),
+
+                // End call button
+                GestureDetector(
+                  onTap: _endCall,
+                  child: Container(
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.call_end,
+                      color: Colors.white,
+                      size: 35,
+                    ),
+                  ),
+                ),
+
+                // Camera toggle (for video calls)
+                if (widget.callType == 'video')
+                  GestureDetector(
+                    onTap: _toggleCamera,
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: _isCameraOff ? Colors.red : Colors.grey[700],
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _isCameraOff ? Icons.videocam_off : Icons.videocam,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                  )
+                else
+                  // Speaker toggle (for audio calls)
+                  GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[700],
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.volume_up,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // Connecting indicator
+          Positioned(
+            bottom: 150,
+            left: 0,
+            right: 0,
+            child: const LinearProgressIndicator(
+              backgroundColor: Colors.grey,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

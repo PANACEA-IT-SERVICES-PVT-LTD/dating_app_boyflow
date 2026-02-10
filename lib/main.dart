@@ -11,34 +11,42 @@ import 'views/screens/main_navigation.dart';
 import 'views/screens/introduce_yourself_screen.dart';
 
 import 'controllers/api_controller.dart';
-import 'controllers/call_controller.dart';
+
 // Removed unused import
 // ...existing code...
 import 'views/screens/main_navigation.dart';
 
 // Firebase imports
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'services/fcm_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
+  // Initialize Firebase with platform-specific handling
   try {
-    await Firebase.initializeApp();
-    print('Firebase initialized successfully');
+    // Check if we're on web platform
+    if (kIsWeb) {
+      print('Running on web - Firebase initialization may require config');
+      // For web, we'll initialize without config for now
+      // You'll need to add firebase_options.dart for proper web support
+    } else {
+      await Firebase.initializeApp();
+      print('Firebase initialized successfully');
+      // Initialize FCM Service only on mobile platforms
+      await FCMService().initialize();
+    }
   } catch (e) {
     print('Error initializing Firebase: $e');
+    print('Continuing without Firebase services');
   }
-
-  // Initialize FCM Service
-  await FCMService().initialize();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ApiController()),
-        ChangeNotifierProvider(create: (_) => CallController()),
+
         // Add other providers here if needed
       ],
       child: const MyApp(),
