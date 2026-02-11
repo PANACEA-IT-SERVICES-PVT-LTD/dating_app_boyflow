@@ -1,12 +1,12 @@
-import 'package:Boy_flow/views/screens/profile_gallery_screen.dart';
-import 'package:Boy_flow/views/screens/female_profile_screen.dart';
-import 'package:Boy_flow/models/female_user.dart';
+import 'package:boy_flow/views/screens/profile_gallery_screen.dart';
+import 'package:boy_flow/views/screens/female_profile_screen.dart';
+import 'package:boy_flow/models/female_user.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:geolocator/geolocator.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:Boy_flow/api_service/api_endpoint.dart';
+import 'package:boy_flow/api_service/api_endpoint.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       final response = await http.post(
-        Uri.parse('${ApiEndPoints.baseUrl}/male-user/location'),
+        Uri.parse('${ApiEndPoints.baseUrls}/male-user/location'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -100,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final token = prefs.getString('token');
 
       final response = await http.post(
-        Uri.parse('${ApiEndPoints.baseUrl}${ApiEndPoints.dashboardEndpoint}'),
+        Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardEndpoint}'),
         headers: {
           'Content-Type': 'application/json',
           if (token != null) 'Authorization': 'Bearer $token',
@@ -141,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
     print('[Recharge] Function entered with amount: $amount');
     try {
       final url = Uri.parse(
-        ApiEndPoints.baseUrl + ApiEndPoints.maleWalletRecharge,
+        ApiEndPoints.baseUrls+ ApiEndPoints.maleWalletRecharge,
       );
       print('[Recharge] Calling: ' + url.toString());
       final response = await http.post(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:Boy_flow/views/screens/BlockListScreen.dart';
-import 'package:Boy_flow/views/screens/login_screen.dart'; // Ensure this exists
+import 'package:boy_flow/views/screens/BlockListScreen.dart';
+import 'package:boy_flow/views/screens/login_screen.dart'; // Ensure this exists
 import 'package:provider/provider.dart';
-import 'package:Boy_flow/controllers/api_controller.dart';
+import 'package:boy_flow/controllers/api_controller.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

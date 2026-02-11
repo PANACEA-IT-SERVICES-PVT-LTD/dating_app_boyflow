@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 import '../../controllers/api_controller.dart';
 import '../../api_service/api_endpoint.dart';
 
@@ -15,6 +16,11 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
   bool isOnline = true;
   bool _isInit = true;
   int _tabIndex = 0; // 0 = followers, 1 = following, 2 = sent requests
+  bool _loading = false;
+  String? _error;
+  List<Map<String, dynamic>> _followers = [];
+  List<Map<String, dynamic>> _following = [];
+  Set<String> _favourites = {};
 
   final Gradient appGradient = const LinearGradient(
     colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
@@ -45,7 +51,7 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
 
     try {
       final url = Uri.parse(
-        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleFollowers}",
+        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleFollowers}",
       );
       final resp = await http.get(url);
 
@@ -106,7 +112,7 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
 
   Future<void> _fetchFavourites() async {
     try {
-      final url = Uri.parse("${ApiEndPoints.baseUrl}${ApiEndPoints.maleMe}");
+      final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.maleMe}");
       final resp = await http.get(url);
 
       dynamic body;
@@ -145,7 +151,7 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
     if (userId.isEmpty) return;
     try {
       final url = Uri.parse(
-        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleAddFavourite}",
+        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleAddFavourite}",
       );
       await http.post(
         url,
@@ -166,7 +172,7 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
     if (userId.isEmpty) return;
     try {
       final url = Uri.parse(
-        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleRemoveFavourite}",
+        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleRemoveFavourite}",
       );
       await http.delete(
         url,
@@ -191,7 +197,7 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
 
     try {
       final url = Uri.parse(
-        "${ApiEndPoints.baseUrl}${ApiEndPoints.maleFollowing}",
+        "${ApiEndPoints.baseUrls}${ApiEndPoints.maleFollowing}",
       );
       final resp = await http.get(url);
 
@@ -247,6 +253,17 @@ class _MyFollowersScreenState extends State<MyFollowersScreen> {
         _loading = false;
         _error = e.toString();
       });
+    }
+  }
+
+  Future<void> _handleRefresh() async {
+    final apiController = Provider.of<ApiController>(context, listen: false);
+    if (_tabIndex == 0) {
+      await apiController.fetchFollowers();
+    } else if (_tabIndex == 1) {
+      await apiController.fetchFollowing();
+    } else {
+      await apiController.fetchSentFollowRequests();
     }
   }
 

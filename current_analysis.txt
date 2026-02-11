@@ -1,0 +1,765 @@
+Analyzing dating_app_boyflow...                                 
+
+   info - Parameter 'key' could be a super parameter - lib\agora_video_call.dart:15:9 - use_super_parameters
+   info - Don't invoke 'print' in production code - lib\agora_video_call.dart:74:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\agora_video_call.dart:82:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\agora_video_call.dart:88:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\agora_video_call.dart:92:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\agora_video_call.dart:105:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\agora_video_call.dart:110:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\agora_video_call.dart:112:7 - avoid_print
+   info - The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/widgets.dart' - lib\controllers\api_controller.dart:6:8 - unnecessary_import
+   info - The import of 'package:flutter/widgets.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\controllers\api_controller.dart:7:8 - unnecessary_import
+warning - Unused import: '../utils/otp_toast_util.dart' - lib\controllers\api_controller.dart:11:8 - unused_import
+warning - Unused import: 'package:geolocator/geolocator.dart' - lib\controllers\api_controller.dart:14:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:35:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:46:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:59:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:63:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:67:7 - avoid_print
+   info - The private field _isOtpVerified could be 'final' - lib\controllers\api_controller.dart:141:8 - prefer_final_fields
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:207:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:218:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:230:35 - unnecessary_null_comparison
+   info - Angle brackets will be interpreted as HTML - lib\controllers\api_controller.dart:699:21 - unintended_html_in_doc_comment
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:704:5 - avoid_print
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:723:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:737:35 - unnecessary_null_comparison
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:818:5 - avoid_print
+warning - The declaration '_isValidObjectId' isn't referenced - lib\controllers\api_controller.dart:975:8 - unused_element
+warning - The declaration '_friendlyMessage' isn't referenced - lib\controllers\api_controller.dart:980:10 - unused_element
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1102:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1122:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1138:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1320:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1342:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1353:35 - unnecessary_null_comparison
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:1387:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:1427:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\routes\app_routes.dart:74:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\routes\app_routes.dart:76:7 - avoid_print
+   info - Parameter 'key' could be a super parameter - lib\examples\chat_messages_example.dart:9:9 - use_super_parameters
+  error - This expression has a type of 'void' so its value can't be used - lib\examples\chat_messages_example.dart:40:17 - use_of_void_result
+  error - This expression has a type of 'void' so its value can't be used - lib\examples\chat_messages_example.dart:40:46 - use_of_void_result
+  error - This expression has a type of 'void' so its value can't be used - lib\examples\chat_messages_example.dart:42:60 - use_of_void_result
+  error - This expression has a type of 'void' so its value can't be used - lib\examples\chat_messages_example.dart:47:32 - use_of_void_result
+   info - Don't invoke 'print' in production code - lib\main.dart:29:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:34:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:39:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:40:5 - avoid_print
+   info - Constructors for public widgets should have a named 'key' parameter - lib\main.dart:73:7 - use_key_in_widget_constructors
+   info - Invalid use of a private type in a public API - lib\main.dart:75:3 - library_private_types_in_public_api
+   info - Don't invoke 'print' in production code - lib\main.dart:88:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:164:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:165:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:178:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:192:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:204:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:217:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:227:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\main.dart:228:7 - avoid_print
+   info - Parameter 'key' could be a super parameter - lib\main_female_app.dart:9:9 - use_super_parameters
+   info - Parameter 'key' could be a super parameter - lib\main_male_app.dart:11:9 - use_super_parameters
+warning - Unused import: 'package:flutter/foundation.dart' - lib\services\api_service.dart:2:8 - unused_import
+warning - Unused import: '../models/female_user.dart' - lib\services\api_service.dart:8:8 - unused_import
+warning - Unused import: '../utils/otp_toast_util.dart' - lib\services\api_service.dart:10:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:44:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:107:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:118:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:119:5 - avoid_print
+   info - Use interpolation to compose strings and values - lib\services\api_service.dart:149:33 - prefer_interpolation_to_compose_strings
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:150:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:237:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:238:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:239:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:248:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:253:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:254:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:268:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:287:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:300:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:306:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:314:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:330:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:355:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:356:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:361:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:364:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:370:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:378:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:415:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:438:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:461:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:484:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:509:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:536:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:563:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:590:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:617:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:636:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:637:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:638:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:644:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:645:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:652:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:656:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:677:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:682:7 - avoid_print
+warning - The exception variable 'e' isn't used, so the 'catch' clause can be removed - lib\services\api_service.dart:684:34 - unused_catch_clause
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:685:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:688:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:761:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:814:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:818:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:819:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:824:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:850:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:855:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:856:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:880:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:881:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:885:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:886:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:912:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:975:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:976:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:977:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:980:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:981:7 - avoid_print
+warning - The receiver can't be 'null' because of short-circuiting, so the null-aware operator '?.' can't be used - lib\services\api_service.dart:995:64 - invalid_null_aware_operator
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:997:15 - avoid_print
+warning - The receiver can't be 'null' because of short-circuiting, so the null-aware operator '?.' can't be used - lib\services\api_service.dart:1002:58 - invalid_null_aware_operator
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1005:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1012:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1040:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1063:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1068:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1073:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1076:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1079:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1094:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1095:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1096:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1099:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1100:7 - avoid_print
+warning - The receiver can't be 'null' because of short-circuiting, so the null-aware operator '?.' can't be used - lib\services\api_service.dart:1114:64 - invalid_null_aware_operator
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1116:15 - avoid_print
+warning - The receiver can't be 'null' because of short-circuiting, so the null-aware operator '?.' can't be used - lib\services\api_service.dart:1121:58 - invalid_null_aware_operator
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1124:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1131:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1159:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1182:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1185:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1190:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1193:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1196:7 - avoid_print
+warning - The declaration '_fetchFemaleUsersFallback' isn't referenced - lib\services\api_service.dart:1202:38 - unused_element
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1211:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1212:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1213:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1216:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1217:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1224:11 - avoid_print
+warning - The receiver can't be 'null' because of short-circuiting, so the null-aware operator '?.' can't be used - lib\services\api_service.dart:1238:64 - invalid_null_aware_operator
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1240:15 - avoid_print
+warning - The receiver can't be 'null' because of short-circuiting, so the null-aware operator '?.' can't be used - lib\services\api_service.dart:1245:58 - invalid_null_aware_operator
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1248:15 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1255:17 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1278:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1301:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1304:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1309:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1312:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1315:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1332:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1333:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1334:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1337:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1338:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1344:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1353:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1358:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1365:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1368:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1373:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1376:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1379:7 - avoid_print
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\services\api_service.dart:1404:11 - use_null_aware_elements
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1415:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1418:7 - avoid_print
+warning - The exception variable 'e' isn't used, so the 'catch' clause can be removed - lib\services\api_service.dart:1422:34 - unused_catch_clause
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1423:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1426:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1448:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1449:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1450:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1453:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1454:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1464:13 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1470:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1476:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1481:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1484:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1487:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1504:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1541:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1542:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1543:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1544:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1587:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1590:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1597:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1598:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1622:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1674:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1706:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1717:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1733:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1734:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1738:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1739:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1748:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1759:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1760:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1764:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1765:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1774:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1783:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1790:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1791:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1808:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1828:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1837:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1845:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1846:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1859:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1883:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1892:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1905:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1906:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1921:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:1937:7 - avoid_print
+  error - The name 'fetchChatMessages' is already defined - lib\services\api_service.dart:2016:32 - duplicate_definition
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:2021:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:2022:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:2026:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:2027:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:2036:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\api_service.dart:2066:7 - avoid_print
+warning - Unused import: 'package:agora_rtc_engine/agora_rtc_engine.dart' - lib\services\call_notification_service.dart:3:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\services\call_notification_service.dart:81:9 - use_super_parameters
+warning - The value of the field '_androidChannel' isn't used - lib\services\fcm_service.dart:20:35 - unused_field
+   info - Unnecessary braces in a string interpolation - lib\services\female_app_agora_manager.dart:45:71 - unnecessary_brace_in_string_interps
+   info - Empty catch block - lib\services\token_service.dart:55:17 - empty_catches
+   info - Constructors for public widgets should have a named 'key' parameter - lib\test_female_app.dart:9:7 - use_key_in_widget_constructors
+   info - Constructors for public widgets should have a named 'key' parameter - lib\views\introduce_yourself_screen.dart:3:7 - use_key_in_widget_constructors
+   info - The file name 'BlockListScreen.dart' isn't a lower_case_with_underscores identifier - lib\views\screens\BlockListScreen.dart:1:1 - file_names
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\views\screens\BlockListScreen.dart:79:17 - deprecated_member_use
+   info - The file name 'BlockListScreen1.dart' isn't a lower_case_with_underscores identifier - lib\views\screens\BlockListScreen1.dart:1:1 - file_names
+warning - Unused import: 'dart:convert' - lib\views\screens\BlockListScreen1.dart:1:8 - unused_import
+warning - Unused import: 'package:http/http.dart' - lib\views\screens\BlockListScreen1.dart:5:8 - unused_import
+warning - Unused import: '../../api_service/api_endpoint.dart' - lib\views\screens\BlockListScreen1.dart:7:8 - unused_import
+warning - Unnecessary type check; the result is always 'true' - lib\views\screens\BlockListScreen1.dart:47:15 - unnecessary_type_check
+   info - Don't use 'BuildContext's across async gaps - lib\views\screens\BlockListScreen1.dart:108:11 - use_build_context_synchronously
+warning - The declaration '_blockUser' isn't referenced - lib\views\screens\BlockListScreen1.dart:142:16 - unused_element
+   info - Unnecessary use of multiple underscores - lib\views\screens\BlockListScreen1.dart:216:37 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\BlockListScreen1.dart:237:45 - deprecated_member_use
+   info - The file name 'Invite_friends_screen.dart' isn't a lower_case_with_underscores identifier - lib\views\screens\Invite_friends_screen.dart:1:1 - file_names
+   info - 'Share' is deprecated and shouldn't be used. Use SharePlus instead - lib\views\screens\Invite_friends_screen.dart:19:5 - deprecated_member_use
+   info - 'share' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead - lib\views\screens\Invite_friends_screen.dart:19:11 - deprecated_member_use
+   info - The file name 'Onboardingscreen.dart' isn't a lower_case_with_underscores identifier - lib\views\screens\Onboardingscreen.dart:1:1 - file_names
+   info - Don't invoke 'print' in production code - lib\views\screens\Onboardingscreen.dart:113:21 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\Onboardingscreen.dart:152:21 - avoid_print
+   info - The file name 'ReportAProblemPage.dart' isn't a lower_case_with_underscores identifier - lib\views\screens\ReportAProblemPage.dart:1:1 - file_names
+   info - 'MaterialStateProperty' is deprecated and shouldn't be used. Use WidgetStateProperty instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre - lib\views\screens\ReportAProblemPage.dart:311:44 - deprecated_member_use
+   info - 'MaterialState' is deprecated and shouldn't be used. Use WidgetState instead. Moved to the Widgets layer to make code available outside of Material. This feature was deprecated after v3.19.0-0.3.pre - lib\views\screens\ReportAProblemPage.dart:314:55 - deprecated_member_use
+   info - Unnecessary use of 'toList' in a spread - lib\views\screens\ReportAProblemPage.dart:345:28 - unnecessary_to_list_in_spreads
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\ReportAProblemPage.dart:376:53 - deprecated_member_use
+   info - The file name 'TransactionsScreen.dart' isn't a lower_case_with_underscores identifier - lib\views\screens\TransactionsScreen.dart:1:1 - file_names
+   info - Parameter 'key' could be a super parameter - lib\views\screens\TransactionsScreen.dart:7:9 - use_super_parameters
+warning - The value of the local variable 'purple' isn't used - lib\views\screens\TransactionsScreen.dart:37:11 - unused_local_variable
+warning - The value of the local variable 'darkText' isn't used - lib\views\screens\TransactionsScreen.dart:39:11 - unused_local_variable
+warning - The value of the local variable 'isDebit' isn't used - lib\views\screens\TransactionsScreen.dart:110:21 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\TransactionsScreen.dart:130:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\TransactionsScreen.dart:147:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\TransactionsScreen.dart:148:48 - deprecated_member_use
+   info - The file name 'WalletTransactionsScreen.dart' isn't a lower_case_with_underscores identifier - lib\views\screens\WalletTransactionsScreen.dart:1:1 - file_names
+   info - Parameter 'key' could be a super parameter - lib\views\screens\WalletTransactionsScreen.dart:8:9 - use_super_parameters
+   info - Unnecessary use of multiple underscores - lib\views\screens\WalletTransactionsScreen.dart:170:31 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\account_screen.dart:103:47 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\views\screens\account_screen.dart:184:45 - curly_braces_in_flow_control_structures
+   info - Unnecessary use of multiple underscores - lib\views\screens\account_screen.dart:284:43 - unnecessary_underscores
+warning - The value of the field '_email' isn't used - lib\views\screens\account_screen.dart:333:11 - unused_field
+warning - The value of the field '_status' isn't used - lib\views\screens\account_screen.dart:334:11 - unused_field
+warning - The value of the field '_walletBalance' isn't used - lib\views\screens\account_screen.dart:343:8 - unused_field
+  error - The name 'PaymentPage' isn't a class - lib\views\screens\account_screen.dart:369:23 - creation_with_non_type
+   info - Don't invoke 'print' in production code - lib\views\screens\account_screen.dart:438:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\account_screen.dart:446:9 - avoid_print
+   info - Constructors for public widgets should have a named 'key' parameter - lib\views\screens\api_user_list_screen.dart:6:7 - use_key_in_widget_constructors
+   info - Invalid use of a private type in a public API - lib\views\screens\api_user_list_screen.dart:8:3 - library_private_types_in_public_api
+   info - Parameter 'key' could be a super parameter - lib\views\screens\call_screen.dart:11:9 - use_super_parameters
+   info - Invalid use of a private type in a public API - lib\views\screens\call_screen.dart:19:3 - library_private_types_in_public_api
+   info - Don't invoke 'print' in production code - lib\views\screens\call_screen.dart:70:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\call_screen.dart:74:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\call_screen.dart:78:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\call_screen.dart:82:11 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\views\screens\call_screen.dart:123:21 - use_build_context_synchronously
+warning - Unused import: 'package:agora_rtc_engine/agora_rtc_engine.dart' - lib\views\screens\call_test_guide.dart:2:8 - unused_import
+warning - Unused import: 'package:permission_handler/permission_handler.dart' - lib\views\screens\call_test_guide.dart:3:8 - unused_import
+warning - Unused import: '../../agora_config.dart' - lib\views\screens\call_test_guide.dart:4:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\views\screens\call_test_guide.dart:9:9 - use_super_parameters
+   info - The private field _isTesting could be 'final' - lib\views\screens\call_test_guide.dart:23:8 - prefer_final_fields
+warning - The value of the field '_isTesting' isn't used - lib\views\screens\call_test_guide.dart:23:8 - unused_field
+warning - Unused import: 'package:provider/provider.dart' - lib\views\screens\calls_history_screen.dart:2:8 - unused_import
+warning - Unused import: '../../controllers/api_controller.dart' - lib\views\screens\calls_history_screen.dart:4:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\views\screens\calls_history_screen.dart:10:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\chat_detail_screen.dart:127:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\chat_detail_screen.dart:256:34 - deprecated_member_use
+warning - The declaration '_buildIconButton' isn't referenced - lib\views\screens\chat_detail_screen.dart:282:10 - unused_element
+   info - The 'child' argument should be last in widget constructor invocations - lib\views\screens\earnings_screen.dart:185:17 - sort_child_properties_last
+   info - Parameter 'key' could be a super parameter - lib\views\screens\female_account_screen.dart:7:9 - use_super_parameters
+   info - Parameter 'key' could be a super parameter - lib\views\screens\female_app_call_screen.dart:12:9 - use_super_parameters
+   info - Don't invoke 'print' in production code - lib\views\screens\female_app_call_screen.dart:69:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\female_app_call_screen.dart:77:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\female_app_call_screen.dart:83:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\female_app_call_screen.dart:89:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\female_app_call_screen.dart:96:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\female_app_call_screen.dart:105:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\female_app_call_screen.dart:108:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\female_app_call_screen.dart:110:7 - avoid_print
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\female_app_call_screen.dart:272:50 - deprecated_member_use
+  error - Classes can only extend other classes - lib\views\screens\female_profile_screen.dart:6:35 - extends_non_class
+  error - Undefined class 'FemaleUser' - lib\views\screens\female_profile_screen.dart:7:9 - undefined_class
+  error - Undefined class 'Key' - lib\views\screens\female_profile_screen.dart:8:30 - undefined_class
+  error - The named parameter 'key' isn't defined - lib\views\screens\female_profile_screen.dart:8:69 - undefined_named_parameter
+  error - Undefined class 'State' - lib\views\screens\female_profile_screen.dart:11:3 - undefined_class
+warning - The method doesn't override an inherited method - lib\views\screens\female_profile_screen.dart:11:30 - override_on_non_overriding_member
+  error - Classes can only extend other classes - lib\views\screens\female_profile_screen.dart:14:41 - extends_non_class
+  error - Undefined class 'LinearGradient' - lib\views\screens\female_profile_screen.dart:17:3 - undefined_class
+  error - The name 'LinearGradient' isn't a class - lib\views\screens\female_profile_screen.dart:17:45 - creation_with_non_type
+  error - The method 'Color' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:18:14 - undefined_method
+  error - The method 'Color' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:18:33 - undefined_method
+  error - Undefined name 'Alignment' - lib\views\screens\female_profile_screen.dart:19:12 - undefined_identifier
+  error - Undefined name 'Alignment' - lib\views\screens\female_profile_screen.dart:20:10 - undefined_identifier
+warning - The method doesn't override an inherited method - lib\views\screens\female_profile_screen.dart:24:8 - override_on_non_overriding_member
+  error - The method 'initState' isn't defined in a superclass of '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:25:11 - undefined_super_member
+  error - Undefined name 'WidgetsBinding' - lib\views\screens\female_profile_screen.dart:26:5 - undefined_identifier
+  error - Undefined name 'Provider' - lib\views\screens\female_profile_screen.dart:27:7 - undefined_identifier
+  error - The name 'ApiController' isn't a type, so it can't be used as a type argument - lib\views\screens\female_profile_screen.dart:27:19 - non_type_as_type_argument
+  error - Undefined name 'context' - lib\views\screens\female_profile_screen.dart:27:34 - undefined_identifier
+  error - The method 'setState' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:34:5 - undefined_method
+  error - Undefined name 'Provider' - lib\views\screens\female_profile_screen.dart:39:29 - undefined_identifier
+  error - The name 'ApiController' isn't a type, so it can't be used as a type argument - lib\views\screens\female_profile_screen.dart:39:41 - non_type_as_type_argument
+  error - Undefined name 'context' - lib\views\screens\female_profile_screen.dart:39:56 - undefined_identifier
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:42:21 - undefined_identifier
+  error - Undefined name 'mounted' - lib\views\screens\female_profile_screen.dart:51:13 - undefined_identifier
+  error - Undefined name 'Navigator' - lib\views\screens\female_profile_screen.dart:52:17 - undefined_identifier
+  error - Undefined name 'context' - lib\views\screens\female_profile_screen.dart:53:13 - undefined_identifier
+  error - The method 'MaterialPageRoute' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:54:13 - undefined_method
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:60:33 - undefined_identifier
+  error - Undefined name 'mounted' - lib\views\screens\female_profile_screen.dart:67:13 - undefined_identifier
+  error - Undefined name 'ScaffoldMessenger' - lib\views\screens\female_profile_screen.dart:68:11 - undefined_identifier
+  error - Undefined name 'context' - lib\views\screens\female_profile_screen.dart:68:32 - undefined_identifier
+  error - The method 'SnackBar' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:69:13 - undefined_method
+  error - The method 'Text' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:70:24 - undefined_method
+  error - Undefined name 'mounted' - lib\views\screens\female_profile_screen.dart:76:11 - undefined_identifier
+  error - Undefined name 'ScaffoldMessenger' - lib\views\screens\female_profile_screen.dart:77:9 - undefined_identifier
+  error - Undefined name 'context' - lib\views\screens\female_profile_screen.dart:78:11 - undefined_identifier
+  error - The method 'SnackBar' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:79:24 - undefined_method
+  error - The method 'Text' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:79:42 - undefined_method
+  error - Undefined name 'mounted' - lib\views\screens\female_profile_screen.dart:82:11 - undefined_identifier
+  error - The method 'setState' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:83:9 - undefined_method
+  error - The method 'showDialog' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:91:12 - undefined_method
+  error - Undefined name 'context' - lib\views\screens\female_profile_screen.dart:92:16 - undefined_identifier
+  error - Undefined class 'BuildContext' - lib\views\screens\female_profile_screen.dart:93:17 - undefined_class
+  error - The method 'AlertDialog' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:94:16 - undefined_method
+  error - The name 'Text' isn't a class - lib\views\screens\female_profile_screen.dart:95:24 - creation_with_non_type
+  error - The name 'Text' isn't a class - lib\views\screens\female_profile_screen.dart:96:26 - creation_with_non_type
+  error - The name 'Widget' isn't a type, so it can't be used as a type argument - lib\views\screens\female_profile_screen.dart:97:21 - non_type_as_type_argument
+  error - The method 'TextButton' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:98:13 - undefined_method
+  error - Undefined name 'Navigator' - lib\views\screens\female_profile_screen.dart:100:17 - undefined_identifier
+  error - The name 'Text' isn't a class - lib\views\screens\female_profile_screen.dart:103:28 - creation_with_non_type
+  error - The method 'TextButton' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:105:13 - undefined_method
+  error - Undefined name 'Navigator' - lib\views\screens\female_profile_screen.dart:107:17 - undefined_identifier
+  error - The name 'Text' isn't a class - lib\views\screens\female_profile_screen.dart:110:28 - creation_with_non_type
+  error - The method 'TextButton' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:112:13 - undefined_method
+  error - Undefined name 'Navigator' - lib\views\screens\female_profile_screen.dart:114:17 - undefined_identifier
+  error - The name 'Text' isn't a class - lib\views\screens\female_profile_screen.dart:116:28 - creation_with_non_type
+  error - Undefined class 'Widget' - lib\views\screens\female_profile_screen.dart:125:3 - undefined_class
+warning - The method doesn't override an inherited method - lib\views\screens\female_profile_screen.dart:125:10 - override_on_non_overriding_member
+  error - Undefined class 'BuildContext' - lib\views\screens\female_profile_screen.dart:125:16 - undefined_class
+  error - Undefined name 'Provider' - lib\views\screens\female_profile_screen.dart:126:27 - undefined_identifier
+  error - The name 'ApiController' isn't a type, so it can't be used as a type argument - lib\views\screens\female_profile_screen.dart:126:39 - non_type_as_type_argument
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:127:56 - undefined_identifier
+  error - The method 'Scaffold' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:129:12 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:130:24 - undefined_identifier
+  error - The method 'PreferredSize' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:131:15 - undefined_method
+  error - The name 'fromHeight' isn't a class - lib\views\screens\female_profile_screen.dart:132:30 - creation_with_non_type
+  error - The method 'Container' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:133:16 - undefined_method
+  error - The method 'BoxDecoration' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:134:23 - undefined_method
+  error - The method 'AppBar' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:135:18 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:136:30 - undefined_identifier
+  error - The name 'BackButton' isn't a class - lib\views\screens\female_profile_screen.dart:138:28 - creation_with_non_type
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:138:46 - undefined_identifier
+  error - The name 'Text' isn't a class - lib\views\screens\female_profile_screen.dart:139:26 - creation_with_non_type
+  error - The method 'TextStyle' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:139:49 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:139:66 - undefined_identifier
+  error - The method 'Icon' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:140:29 - undefined_method
+  error - The values in a const list literal must be constants - lib\views\screens\female_profile_screen.dart:140:29 - non_constant_list_element
+  error - Undefined name 'Icons' - lib\views\screens\female_profile_screen.dart:140:34 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:140:58 - undefined_identifier
+  error - The method 'Stack' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:144:13 - undefined_method
+  error - The method 'SingleChildScrollView' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:146:11 - undefined_method
+  error - The name 'fromLTRB' isn't a class - lib\views\screens\female_profile_screen.dart:147:28 - creation_with_non_type
+  error - The method 'Column' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:148:20 - undefined_method
+  error - Undefined name 'CrossAxisAlignment' - lib\views\screens\female_profile_screen.dart:149:35 - undefined_identifier
+  error - The method 'Container' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:152:17 - undefined_method
+  error - The name 'all' isn't a class - lib\views\screens\female_profile_screen.dart:153:34 - creation_with_non_type
+  error - The method 'BoxDecoration' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:154:31 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:155:28 - undefined_identifier
+  error - Undefined name 'BorderRadius' - lib\views\screens\female_profile_screen.dart:156:35 - undefined_identifier
+  error - The method 'BoxShadow' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:158:23 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:159:32 - undefined_identifier
+  error - The name 'Offset' isn't a class - lib\views\screens\female_profile_screen.dart:161:39 - creation_with_non_type
+  error - The method 'Row' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:165:26 - undefined_method
+  error - The method 'CircleAvatar' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:167:23 - undefined_method
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:170:29 - undefined_identifier
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:170:62 - undefined_identifier
+  error - The method 'NetworkImage' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:171:31 - undefined_method
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:171:44 - undefined_identifier
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:173:32 - undefined_identifier
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:173:65 - undefined_identifier
+  error - The name 'Icon' isn't a class - lib\views\screens\female_profile_screen.dart:174:37 - creation_with_non_type
+  error - Undefined name 'Icons' - lib\views\screens\female_profile_screen.dart:174:42 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\views\screens\female_profile_screen.dart:177:29 - creation_with_non_type
+  error - The method 'Expanded' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:178:23 - undefined_method
+  error - The method 'Column' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:179:32 - undefined_method
+  error - Undefined name 'CrossAxisAlignment' - lib\views\screens\female_profile_screen.dart:180:47 - undefined_identifier
+  error - The method 'Row' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:182:29 - undefined_method
+  error - The method 'Text' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:184:33 - undefined_method
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:185:35 - undefined_identifier
+  error - The name 'TextStyle' isn't a class - lib\views\screens\female_profile_screen.dart:186:48 - creation_with_non_type
+  error - Undefined name 'FontWeight' - lib\views\screens\female_profile_screen.dart:187:49 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\views\screens\female_profile_screen.dart:191:39 - creation_with_non_type
+  error - The method 'Icon' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:192:33 - undefined_method
+  error - Undefined name 'Icons' - lib\views\screens\female_profile_screen.dart:193:35 - undefined_identifier
+  error - Undefined name 'AppColors' - lib\views\screens\female_profile_screen.dart:194:42 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\views\screens\female_profile_screen.dart:199:35 - creation_with_non_type
+  error - The method 'Text' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:200:29 - undefined_method
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:201:39 - undefined_identifier
+  error - The name 'TextStyle' isn't a class - lib\views\screens\female_profile_screen.dart:202:44 - creation_with_non_type
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:204:40 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\views\screens\female_profile_screen.dart:207:35 - creation_with_non_type
+  error - The name 'Text' isn't a class - lib\views\screens\female_profile_screen.dart:208:35 - creation_with_non_type
+  error - The method 'TextStyle' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:210:38 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:212:40 - undefined_identifier
+  error - The method 'Container' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:218:23 - undefined_method
+  error - The method 'BoxDecoration' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:219:37 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:221:62 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:221:132 - undefined_identifier
+  error - Undefined name 'BorderRadius' - lib\views\screens\female_profile_screen.dart:222:41 - undefined_identifier
+  error - Undefined name 'Border' - lib\views\screens\female_profile_screen.dart:223:60 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:223:106 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:223:128 - undefined_identifier
+  error - The method 'ElevatedButton' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:225:32 - undefined_method
+  error - Undefined name 'ElevatedButton' - lib\views\screens\female_profile_screen.dart:226:34 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:227:46 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:228:42 - undefined_identifier
+  error - The method 'RoundedRectangleBorder' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:230:36 - undefined_method
+  error - Undefined name 'BorderRadius' - lib\views\screens\female_profile_screen.dart:231:45 - undefined_identifier
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:237:71 - undefined_identifier
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:239:73 - undefined_identifier
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:241:66 - undefined_identifier
+  error - Undefined name 'mounted' - lib\views\screens\female_profile_screen.dart:244:35 - undefined_identifier
+  error - Undefined name 'ScaffoldMessenger' - lib\views\screens\female_profile_screen.dart:245:33 - undefined_identifier
+  error - The method 'SnackBar' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:246:35 - undefined_method
+  error - The method 'Text' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:246:53 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:246:89 - undefined_identifier
+  error - The method 'Text' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:251:34 - undefined_method
+  error - The method 'TextStyle' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:253:36 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:254:63 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:254:107 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:254:129 - undefined_identifier
+  error - Undefined name 'FontWeight' - lib\views\screens\female_profile_screen.dart:255:43 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\views\screens\female_profile_screen.dart:264:23 - creation_with_non_type
+  error - The method 'Positioned' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:282:11 - undefined_method
+  error - The method 'Container' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:286:20 - undefined_method
+  error - The name 'all' isn't a class - lib\views\screens\female_profile_screen.dart:287:30 - creation_with_non_type
+  error - The method 'BoxDecoration' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:288:27 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:289:24 - undefined_identifier
+  error - The method 'BoxShadow' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:291:19 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:292:28 - undefined_identifier
+  error - The method 'Row' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:297:22 - undefined_method
+  error - The method 'Expanded' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:299:19 - undefined_method
+  error - The method 'Container' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:300:28 - undefined_method
+  error - The method 'BoxDecoration' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:301:35 - undefined_method
+  error - Undefined name 'BorderRadius' - lib\views\screens\female_profile_screen.dart:303:39 - undefined_identifier
+  error - Undefined name 'OutlinedButton' - lib\views\screens\female_profile_screen.dart:305:30 - undefined_identifier
+  error - The method 'Icon' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:306:31 - undefined_method
+  error - Undefined name 'Icons' - lib\views\screens\female_profile_screen.dart:306:36 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:306:55 - undefined_identifier
+  error - The name 'Text' isn't a class - lib\views\screens\female_profile_screen.dart:307:38 - creation_with_non_type
+  error - The method 'TextStyle' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:309:34 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:309:51 - undefined_identifier
+  error - Undefined name 'OutlinedButton' - lib\views\screens\female_profile_screen.dart:311:32 - undefined_identifier
+  error - The method 'BorderSide' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:312:33 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:312:51 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:313:44 - undefined_identifier
+  error - The method 'RoundedRectangleBorder' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:314:34 - undefined_method
+  error - Undefined name 'BorderRadius' - lib\views\screens\female_profile_screen.dart:315:43 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\views\screens\female_profile_screen.dart:322:25 - creation_with_non_type
+  error - The method 'Expanded' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:323:19 - undefined_method
+  error - The method 'Container' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:324:28 - undefined_method
+  error - The method 'BoxDecoration' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:325:35 - undefined_method
+  error - Undefined name 'BorderRadius' - lib\views\screens\female_profile_screen.dart:327:39 - undefined_identifier
+  error - Undefined name 'ElevatedButton' - lib\views\screens\female_profile_screen.dart:329:30 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\views\screens\female_profile_screen.dart:331:37 - creation_with_non_type
+  error - The method 'CircularProgressIndicator' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:334:40 - undefined_method
+  error - The method 'AlwaysStoppedAnimation' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:336:47 - undefined_method
+  error - The name 'Color' isn't a type, so it can't be used as a type argument - lib\views\screens\female_profile_screen.dart:336:70 - non_type_as_type_argument
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:337:37 - undefined_identifier
+  error - The name 'Icon' isn't a class - lib\views\screens\female_profile_screen.dart:341:37 - creation_with_non_type
+  error - Undefined name 'Icons' - lib\views\screens\female_profile_screen.dart:341:42 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:341:61 - undefined_identifier
+  error - The method 'Text' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:342:32 - undefined_method
+  error - The name 'TextStyle' isn't a class - lib\views\screens\female_profile_screen.dart:344:40 - creation_with_non_type
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:344:57 - undefined_identifier
+  error - Undefined name 'ElevatedButton' - lib\views\screens\female_profile_screen.dart:346:32 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:347:44 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:348:40 - undefined_identifier
+  error - The method 'RoundedRectangleBorder' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:350:34 - undefined_method
+  error - Undefined name 'BorderRadius' - lib\views\screens\female_profile_screen.dart:351:43 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\views\screens\female_profile_screen.dart:358:25 - creation_with_non_type
+  error - The method 'Expanded' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:359:19 - undefined_method
+  error - The method 'Container' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:360:28 - undefined_method
+  error - The method 'BoxDecoration' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:361:35 - undefined_method
+  error - Undefined name 'BorderRadius' - lib\views\screens\female_profile_screen.dart:363:39 - undefined_identifier
+  error - Undefined name 'ElevatedButton' - lib\views\screens\female_profile_screen.dart:365:30 - undefined_identifier
+  error - The name 'Icon' isn't a class - lib\views\screens\female_profile_screen.dart:366:37 - creation_with_non_type
+  error - Undefined name 'Icons' - lib\views\screens\female_profile_screen.dart:367:27 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:368:34 - undefined_identifier
+  error - The name 'Text' isn't a class - lib\views\screens\female_profile_screen.dart:370:38 - creation_with_non_type
+  error - The method 'TextStyle' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:372:34 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:372:51 - undefined_identifier
+  error - Undefined name 'ElevatedButton' - lib\views\screens\female_profile_screen.dart:374:32 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:375:44 - undefined_identifier
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:376:40 - undefined_identifier
+  error - The method 'RoundedRectangleBorder' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:378:34 - undefined_method
+  error - Undefined name 'BorderRadius' - lib\views\screens\female_profile_screen.dart:379:43 - undefined_identifier
+  error - The method 'showModalBottomSheet' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:383:27 - undefined_method
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:386:46 - undefined_identifier
+  error - Undefined name 'widget' - lib\views\screens\female_profile_screen.dart:388:45 - undefined_identifier
+   info - Don't invoke 'print' in production code - lib\views\screens\female_profile_screen.dart:391:33 - avoid_print
+  error - Undefined class 'Widget' - lib\views\screens\female_profile_screen.dart:409:3 - undefined_class
+  error - The method 'Padding' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:410:12 - undefined_method
+  error - The name 'only' isn't a class - lib\views\screens\female_profile_screen.dart:411:22 - creation_with_non_type
+  error - The method 'Column' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:412:14 - undefined_method
+  error - Undefined name 'CrossAxisAlignment' - lib\views\screens\female_profile_screen.dart:413:29 - undefined_identifier
+  error - The method 'Text' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:415:11 - undefined_method
+  error - The name 'TextStyle' isn't a class - lib\views\screens\female_profile_screen.dart:417:26 - creation_with_non_type
+  error - Undefined name 'FontWeight' - lib\views\screens\female_profile_screen.dart:417:48 - undefined_identifier
+  error - The name 'SizedBox' isn't a class - lib\views\screens\female_profile_screen.dart:419:17 - creation_with_non_type
+  error - The method 'Wrap' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:420:11 - undefined_method
+  error - The method 'Chip' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:425:26 - undefined_method
+  error - The method 'Text' isn't defined for the type '_FemaleProfileScreenState' - lib\views\screens\female_profile_screen.dart:426:28 - undefined_method
+  error - The name 'Color' isn't a class - lib\views\screens\female_profile_screen.dart:427:44 - creation_with_non_type
+  error - The name 'TextStyle' isn't a class - lib\views\screens\female_profile_screen.dart:428:39 - creation_with_non_type
+  error - Undefined name 'Colors' - lib\views\screens\female_profile_screen.dart:430:30 - undefined_identifier
+   info - The private field _isInit could be 'final' - lib\views\screens\followers_screen.dart:17:8 - prefer_final_fields
+warning - The value of the field '_isInit' isn't used - lib\views\screens\followers_screen.dart:17:8 - unused_field
+warning - The value of the field '_loading' isn't used - lib\views\screens\followers_screen.dart:19:8 - unused_field
+warning - The value of the field '_error' isn't used - lib\views\screens\followers_screen.dart:20:11 - unused_field
+warning - The value of the field '_followers' isn't used - lib\views\screens\followers_screen.dart:21:30 - unused_field
+warning - The value of the field '_following' isn't used - lib\views\screens\followers_screen.dart:22:30 - unused_field
+warning - The declaration '_addFavourite' isn't referenced - lib\views\screens\followers_screen.dart:150:16 - unused_element
+warning - The declaration '_removeFavourite' isn't referenced - lib\views\screens\followers_screen.dart:171:16 - unused_element
+warning - The declaration '_fetchFollowing' isn't referenced - lib\views\screens\followers_screen.dart:192:16 - unused_element
+   info - Parameter 'key' could be a super parameter - lib\views\screens\gifts_screen.dart:6:9 - use_super_parameters
+warning - Unused import: 'package:Boy_flow/services/api_service.dart' - lib\views\screens\help_videos_screen.dart:1:8 - unused_import
+   info - Don't use 'BuildContext's across async gaps - lib\views\screens\help_videos_screen.dart:34:9 - use_build_context_synchronously
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\views\screens\help_videos_screen.dart:96:19 - deprecated_member_use
+warning - Unused import: 'package:Boy_flow/views/screens/profile_gallery_screen.dart' - lib\views\screens\home_screen.dart:1:8 - unused_import
+   info - Constructors in '@immutable' classes should be declared as 'const' - lib\views\screens\home_screen.dart:13:3 - prefer_const_constructors_in_immutables
+   info - Parameter 'key' could be a super parameter - lib\views\screens\home_screen.dart:13:3 - use_super_parameters
+   info - 'desiredAccuracy' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings - lib\views\screens\home_screen.dart:39:9 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\views\screens\home_screen.dart:48:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\home_screen.dart:67:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\home_screen.dart:72:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\home_screen.dart:141:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\home_screen.dart:146:7 - avoid_print
+   info - Use interpolation to compose strings and values - lib\views\screens\home_screen.dart:146:13 - prefer_interpolation_to_compose_strings
+   info - Don't invoke 'print' in production code - lib\views\screens\home_screen.dart:152:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\home_screen.dart:155:9 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\views\screens\home_screen.dart:168:32 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\views\screens\home_screen.dart:172:11 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\views\screens\home_screen.dart:173:32 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\views\screens\home_screen.dart:182:9 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\views\screens\home_screen.dart:183:30 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\views\screens\home_screen.dart:188:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\views\screens\home_screen.dart:189:28 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\views\screens\home_screen.dart:193:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\views\screens\home_screen.dart:195:9 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\views\screens\home_screen.dart:198:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\views\screens\home_screen.dart:200:9 - use_build_context_synchronously
+   info - Don't invoke 'print' in production code - lib\views\screens\home_screen.dart:306:17 - avoid_print
+  error - The returned type 'FemaleProfileScreen' isn't returnable from a 'Widget' function, as required by the closure's context - lib\views\screens\home_screen.dart:364:41 - return_of_invalid_type_from_closure
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\home_screen.dart:376:52 - deprecated_member_use
+warning - Unused import: 'package:agora_rtc_engine/agora_rtc_engine.dart' - lib\views\screens\incoming_call_screen.dart:2:8 - unused_import
+warning - Unused import: 'package:permission_handler/permission_handler.dart' - lib\views\screens\incoming_call_screen.dart:3:8 - unused_import
+warning - Unused import: '../../agora_config.dart' - lib\views\screens\incoming_call_screen.dart:4:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\views\screens\incoming_call_screen.dart:15:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\incoming_call_screen.dart:117:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\incoming_call_screen.dart:149:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\incoming_call_screen.dart:166:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\incoming_call_screen.dart:239:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\incoming_call_screen.dart:246:41 - deprecated_member_use
+warning - Unused import: 'dart:convert' - lib\views\screens\introduce_yourself_screen.dart:6:8 - unused_import
+warning - The value of the field '_uploadedPhotoUrl' isn't used - lib\views\screens\introduce_yourself_screen.dart:28:11 - unused_field
+warning - The declaration '_parseProfileList' isn't referenced - lib\views\screens\introduce_yourself_screen.dart:52:16 - unused_element
+warning - The declaration '_buildMultiSelectChips' isn't referenced - lib\views\screens\introduce_yourself_screen.dart:68:10 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\introduce_yourself_screen.dart:106:58 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\views\screens\introduce_yourself_screen.dart:179:35 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\views\screens\introduce_yourself_screen.dart:180:42 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\views\screens\introduce_yourself_screen.dart:181:18 - curly_braces_in_flow_control_structures
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\views\screens\introduce_yourself_screen.dart:490:39 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\kyc_details_screen.dart:210:61 - deprecated_member_use
+   info - The file name 'loginVerification.dart' isn't a lower_case_with_underscores identifier - lib\views\screens\loginVerification.dart:1:1 - file_names
+   info - Don't invoke 'print' in production code - lib\views\screens\loginVerification.dart:137:7 - avoid_print
+warning - Unused import: 'package:http/http.dart' - lib\views\screens\login_screen.dart:8:8 - unused_import
+warning - Unused import: 'dart:convert' - lib\views\screens\login_screen.dart:9:8 - unused_import
+warning - Unused import: '../../api_service/api_endpoint.dart' - lib\views\screens\login_screen.dart:10:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\views\screens\login_screen.dart:56:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\login_screen.dart:102:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\login_screen.dart:269:35 - avoid_print
+warning - Unused import: 'package:Boy_flow/api_service/api_endpoint.dart' - lib\views\screens\mainhome.dart:2:8 - unused_import
+   info - The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\views\screens\mainhome.dart:7:8 - unnecessary_import
+warning - Unused import: 'package:http/http.dart' - lib\views\screens\mainhome.dart:10:8 - unused_import
+warning - Unused import: 'dart:convert' - lib\views\screens\mainhome.dart:11:8 - unused_import
+warning - Unused import: 'dart:io' - lib\views\screens\mainhome.dart:12:8 - unused_import
+warning - Unused import: 'package:shared_preferences/shared_preferences.dart' - lib\views\screens\mainhome.dart:14:8 - unused_import
+warning - The declaration '_showDebug' isn't referenced - lib\views\screens\mainhome.dart:27:8 - unused_element
+warning - The value of the field '_uiLoadingTimeout' isn't used - lib\views\screens\mainhome.dart:33:8 - unused_field
+warning - The value of the field '_followedProfiles' isn't used - lib\views\screens\mainhome.dart:38:30 - unused_field
+warning - The value of the field '_isLoadingFollowed' isn't used - lib\views\screens\mainhome.dart:39:8 - unused_field
+warning - The value of the field '_followedError' isn't used - lib\views\screens\mainhome.dart:40:11 - unused_field
+warning - The declaration '_loadSentFollowRequests' isn't referenced - lib\views\screens\mainhome.dart:170:16 - unused_element
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:190:5 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\views\screens\mainhome.dart:198:32 - use_build_context_synchronously
+   info - 'desiredAccuracy' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings - lib\views\screens\mainhome.dart:206:11 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:218:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:228:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:284:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:292:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:297:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:302:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:308:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:320:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:328:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:336:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:344:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:354:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:362:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:372:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:377:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:388:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:440:7 - avoid_print
+warning - The declaration '_loadAllFemales' isn't referenced - lib\views\screens\mainhome.dart:490:16 - unused_element
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:498:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:504:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:506:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:541:5 - avoid_print
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\views\screens\mainhome.dart:734:46 - use_build_context_synchronously
+  error - The returned type 'FemaleProfileScreen' isn't returnable from a 'Widget' function, as required by the closure's context - lib\views\screens\mainhome.dart:764:33 - return_of_invalid_type_from_closure
+warning - A value for optional parameter 'key' isn't ever given - lib\views\screens\mainhome.dart:828:41 - unused_element_parameter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\mainhome.dart:1014:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\mainhome.dart:1075:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\mainhome.dart:1092:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\mainhome.dart:1093:38 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\views\screens\mainhome.dart:1206:29 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\views\screens\mainhome.dart:1206:33 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\mainhome.dart:1237:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\mainhome.dart:1293:24 - deprecated_member_use
+   info - Constructors for public widgets should have a named 'key' parameter - lib\views\screens\male_dashboard_screen.dart:3:7 - use_key_in_widget_constructors
+   info - Invalid use of a private type in a public API - lib\views\screens\male_dashboard_screen.dart:5:3 - library_private_types_in_public_api
+   info - Constructors for public widgets should have a named 'key' parameter - lib\views\screens\manual_call_test_screen.dart:4:7 - use_key_in_widget_constructors
+   info - Invalid use of a private type in a public API - lib\views\screens\manual_call_test_screen.dart:6:3 - library_private_types_in_public_api
+   info - Parameter 'key' could be a super parameter - lib\views\screens\my_profile_screen.dart:9:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\my_profile_screen.dart:219:41 - deprecated_member_use
+   info - Unnecessary use of string interpolation - lib\views\screens\my_profile_screen.dart:254:31 - unnecessary_string_interpolations
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\my_profile_screen.dart:428:28 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\my_profile_screen.dart:429:27 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\my_profile_screen.dart:502:56 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\views\screens\payment_page.dart:63:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\views\screens\payment_page.dart:77:26 - use_build_context_synchronously
+warning - Unused import: 'dart:convert' - lib\views\screens\profile_gallery_screen.dart:2:8 - unused_import
+warning - Unused import: 'package:http/http.dart' - lib\views\screens\profile_gallery_screen.dart:3:8 - unused_import
+warning - Unused import: '../../api_service/api_endpoint.dart' - lib\views\screens\profile_gallery_screen.dart:4:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\views\screens\profile_gallery_screen.dart:9:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\profile_gallery_screen.dart:69:43 - deprecated_member_use
+   info - Invalid use of a private type in a public API - lib\views\screens\settings_screen.dart:11:3 - library_private_types_in_public_api
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\views\screens\settings_screen.dart:143:13 - deprecated_member_use
+warning - Unused import: 'package:http/http.dart' - lib\views\screens\signup.dart:3:8 - unused_import
+warning - Unused import: 'dart:convert' - lib\views\screens\signup.dart:4:8 - unused_import
+warning - Unused import: '../../api_service/api_endpoint.dart' - lib\views\screens\signup.dart:9:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\views\screens\signup.dart:47:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\signup.dart:60:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\signup.dart:95:7 - avoid_print
+warning - Unused import: '../../core/routes/app_routes.dart' - lib\views\screens\signup_verification.dart:4:8 - unused_import
+warning - Duplicate import - lib\views\screens\signup_verification.dart:10:8 - duplicate_import
+   info - Don't invoke 'print' in production code - lib\views\screens\started.dart:50:21 - avoid_print
+   info - Parameter 'key' could be a super parameter - lib\views\screens\wallet_screen.dart:7:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\withdraws_screen.dart:78:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\withdraws_screen.dart:110:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\withdraws_screen.dart:160:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\withdraws_screen.dart:273:57 - deprecated_member_use
+   info - The file name 'TransactionItem.dart' isn't a lower_case_with_underscores identifier - lib\widgets\TransactionItem.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\TransactionItem.dart:23:33 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\widgets\gift_selection_sheet.dart:10:9 - use_super_parameters
+   info - Don't use 'BuildContext's across async gaps - lib\widgets\gift_selection_sheet.dart:277:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\widgets\gift_selection_sheet.dart:288:28 - use_build_context_synchronously
+   info - Parameter 'key' could be a super parameter - lib\widgets\gradient_button.dart:11:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\otp_input_fields.dart:64:36 - deprecated_member_use
+   info - The package name 'Boy_flow' isn't a lower_case_with_underscores identifier - pubspec.yaml:1:7 - package_names
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:67:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:68:3 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:69:3 - avoid_print
+  error - This expression has a type of 'void' so its value can't be used - test\api_examples\fetch_chat_messages_test.dart:76:15 - use_of_void_result
+  error - This expression has a type of 'void' so its value can't be used - test\api_examples\fetch_chat_messages_test.dart:77:30 - use_of_void_result
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:78:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:83:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:84:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:85:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:86:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:87:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:88:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:89:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:90:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:91:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:92:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:95:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:96:7 - avoid_print
+  error - This expression has a type of 'void' so its value can't be used - test\api_examples\fetch_chat_messages_test.dart:96:31 - use_of_void_result
+   info - Don't invoke 'print' in production code - test\api_examples\fetch_chat_messages_test.dart:99:5 - avoid_print
+warning - Unused import: 'package:http/http.dart' - test_api_fix.dart:2:8 - unused_import
+   info - Don't invoke 'print' in production code - test_api_fix.dart:5:3 - avoid_print
+   info - Don't invoke 'print' in production code - test_api_fix.dart:18:5 - avoid_print
+   info - Don't invoke 'print' in production code - test_api_fix.dart:23:7 - avoid_print
+warning - The receiver can't be 'null' because of short-circuiting, so the null-aware operator '?.' can't be used - test_api_fix.dart:28:60 - invalid_null_aware_operator
+   info - Don't invoke 'print' in production code - test_api_fix.dart:29:9 - avoid_print
+   info - Don't invoke 'print' in production code - test_api_fix.dart:31:9 - avoid_print
+   info - Don't invoke 'print' in production code - test_api_fix.dart:34:7 - avoid_print
+   info - Don't invoke 'print' in production code - test_api_fix.dart:37:5 - avoid_print
+   info - Don't invoke 'print' in production code - test_api_fix.dart:39:5 - avoid_print
+   info - Don't invoke 'print' in production code - test_dashboard_api.dart:5:3 - avoid_print
+   info - Don't invoke 'print' in production code - test_dashboard_api.dart:14:5 - avoid_print
+   info - Don't invoke 'print' in production code - test_dashboard_api.dart:15:5 - avoid_print
+   info - Don't invoke 'print' in production code - test_dashboard_api.dart:28:7 - avoid_print
+   info - Don't invoke 'print' in production code - test_dashboard_api.dart:29:7 - avoid_print
+   info - Don't invoke 'print' in production code - test_dashboard_api.dart:33:9 - avoid_print
+   info - Don't invoke 'print' in production code - test_dashboard_api.dart:34:9 - avoid_print
+   info - Don't invoke 'print' in production code - test_dashboard_api.dart:38:11 - avoid_print
+   info - Don't invoke 'print' in production code - test_dashboard_api.dart:41:13 - avoid_print
+   info - Don't invoke 'print' in production code - test_dashboard_api.dart:44:15 - avoid_print
+   info - Don't invoke 'print' in production code - test_dashboard_api.dart:50:7 - avoid_print
+   info - Don't invoke 'print' in production code - test_dashboard_api.dart:52:7 - avoid_print
+

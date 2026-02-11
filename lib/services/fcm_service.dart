@@ -27,7 +27,7 @@ class FCMService {
 
   String get saveTokenEndpoint {
     if (!_saveTokenEndpointInitialized) {
-      _saveTokenEndpoint = '${ApiEndPoints.baseUrl}/male-user/save-fcm-token';
+      _saveTokenEndpoint = '${ApiEndPoints.baseUrls}/male-user/save-fcm-token';
       _saveTokenEndpointInitialized = true;
     }
     return _saveTokenEndpoint;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:Boy_flow/controllers/gift_controller.dart';
-import 'package:Boy_flow/models/gift.dart';
+import 'package:boy_flow/controllers/gift_controller.dart';
+import 'package:boy_flow/models/gift.dart';
 
 class GiftSelectionSheet extends StatelessWidget {
   final String femaleUserId;

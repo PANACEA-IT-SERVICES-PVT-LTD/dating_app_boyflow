@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:Boy_flow/views/screens/main_navigation.dart';
+import 'package:boy_flow/views/screens/main_navigation.dart';
 import '../../controllers/api_controller.dart';
 import '../../core/routes/app_routes.dart';
 import '../../widgets/gradient_button.dart';
@@ -97,45 +97,14 @@ class _LoginVerificationScreenState extends State<LoginVerificationScreen> {
       if (!mounted) return;
 
       if (userData['success'] == true && userData['data'] is Map) {
-        final data = userData['data'] as Map<String, dynamic>;
-        
-        // Check profile completion first
-        final profileCompleted = data['profileCompleted'] as bool? ?? false;
-        
-        if (!profileCompleted) {
-          // If profile is not completed, navigate to profile completion
-          Navigator.pushReplacementNamed(context, AppRoutes.introduceYourself);
-          return;
-        }
-        
-        // If profile is completed, check admin approval status
-        final adminApprovalStatus = data['reviewStatus']?.toString() ?? 'PENDING';
-        
-        switch (adminApprovalStatus.toUpperCase()) {
-          case 'APPROVED':
-            // Navigate to homepage if approved
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => MainNavigationScreen()),
-            );
-            break;
-          case 'REJECTED':
-            // Navigate to rejected status screen
-            Navigator.pushReplacementNamed(context, AppRoutes.registrationstatus);
-            break;
-          case 'PENDING':
-          default:
-            // Navigate to under review status screen
-            Navigator.pushReplacementNamed(context, AppRoutes.registrationstatus);
-            break;
-        }
+        // Navigate directly to dashboard after successful OTP
+        Navigator.pushReplacementNamed(context, AppRoutes.mainNavigation);
       } else {
-        // If there's an error fetching user data, navigate to login
+        // If not successful, go back to login
         Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
     } catch (e) {
       print('Error checking user status: $e');
-      // If there's an error, navigate to login
       Navigator.pushReplacementNamed(context, AppRoutes.login);
     } finally {
       if (mounted) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:Boy_flow/controllers/gift_controller.dart';
+import 'package:boy_flow/controllers/gift_controller.dart';
 
 class GiftsScreen extends StatelessWidget {
   const GiftsScreen({Key? key}) : super(key: key);

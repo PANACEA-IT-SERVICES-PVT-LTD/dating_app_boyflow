@@ -1,0 +1,34 @@
+Analyzing api_controller.dart...                                
+
+   info - The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/widgets.dart' - lib\controllers\api_controller.dart:6:8 - unnecessary_import
+   info - The import of 'package:flutter/widgets.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\controllers\api_controller.dart:7:8 - unnecessary_import
+warning - Unused import: '../utils/otp_toast_util.dart' - lib\controllers\api_controller.dart:11:8 - unused_import
+warning - Unused import: 'package:geolocator/geolocator.dart' - lib\controllers\api_controller.dart:14:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:35:7 - avoid_print
+warning - Unnecessary type check; the result is always 'true' - lib\controllers\api_controller.dart:41:11 - unnecessary_type_check
+  error - A value of type 'Map<String, dynamic>' can't be assigned to a variable of type 'List<dynamic>' - lib\controllers\api_controller.dart:49:27 - invalid_assignment
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:52:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:65:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:69:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:73:7 - avoid_print
+   info - The private field _isOtpVerified could be 'final' - lib\controllers\api_controller.dart:147:8 - prefer_final_fields
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:213:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:224:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:236:35 - unnecessary_null_comparison
+  error - The body might complete normally, causing 'null' to be returned, but the return type, 'FutureOr<Map<String, dynamic>>', is a potentially non-nullable type - lib\controllers\api_controller.dart:642:32 - body_might_complete_normally
+   info - Angle brackets will be interpreted as HTML - lib\controllers\api_controller.dart:704:21 - unintended_html_in_doc_comment
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:709:5 - avoid_print
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:728:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:742:35 - unnecessary_null_comparison
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:823:5 - avoid_print
+warning - The declaration '_isValidObjectId' isn't referenced - lib\controllers\api_controller.dart:980:8 - unused_element
+warning - The declaration '_friendlyMessage' isn't referenced - lib\controllers\api_controller.dart:985:10 - unused_element
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1107:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1127:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1143:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1325:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1347:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1358:35 - unnecessary_null_comparison
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:1392:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:1432:7 - avoid_print
+

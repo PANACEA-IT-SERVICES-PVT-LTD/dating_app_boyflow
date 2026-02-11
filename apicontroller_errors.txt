@@ -1,0 +1,54 @@
+Analyzing api_controller.dart...                                
+
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:35:7 - avoid_print
+warning - Unnecessary type check; the result is always 'true' - lib\controllers\api_controller.dart:41:11 - unnecessary_type_check
+  error - A value of type 'Map<String, dynamic>' can't be assigned to a variable of type 'List<dynamic>' - lib\controllers\api_controller.dart:44:27 - invalid_assignment
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:47:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:60:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:64:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:68:7 - avoid_print
+   info - The private field _isOtpVerified could be 'final' - lib\controllers\api_controller.dart:142:8 - prefer_final_fields
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:208:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:219:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:231:35 - unnecessary_null_comparison
+  error - The body might complete normally, causing 'null' to be returned, but the return type, 'FutureOr<Map<String, dynamic>>', is a potentially non-nullable type - lib\controllers\api_controller.dart:637:32 - body_might_complete_normally
+   info - Angle brackets will be interpreted as HTML - lib\controllers\api_controller.dart:699:21 - unintended_html_in_doc_comment
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:704:5 - avoid_print
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:723:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:737:35 - unnecessary_null_comparison
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:818:5 - avoid_print
+warning - The declaration '_isValidObjectId' isn't referenced - lib\controllers\api_controller.dart:975:8 - unused_element
+warning - The declaration '_friendlyMessage' isn't referenced - lib\controllers\api_controller.dart:980:10 - unused_element
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1102:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1122:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1138:35 - unnecessary_null_comparison
+  error - Undefined name 'page' - lib\controllers\api_controller.dart:1163:15 - undefined_identifier
+  error - Undefined name 'limit' - lib\controllers\api_controller.dart:1164:16 - undefined_identifier
+   info - The local variable '_normalizeList' starts with an underscore - lib\controllers\api_controller.dart:1169:34 - no_leading_underscores_for_local_identifiers
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\controllers\api_controller.dart:1206:20 - argument_type_not_assignable
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1206:28 - unnecessary_null_comparison
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\controllers\api_controller.dart:1206:46 - argument_type_not_assignable
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\controllers\api_controller.dart:1208:28 - argument_type_not_assignable
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\controllers\api_controller.dart:1209:27 - argument_type_not_assignable
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1209:35 - unnecessary_null_comparison
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\controllers\api_controller.dart:1210:28 - argument_type_not_assignable
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\controllers\api_controller.dart:1211:27 - argument_type_not_assignable
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1211:35 - unnecessary_null_comparison
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\controllers\api_controller.dart:1212:28 - argument_type_not_assignable
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\controllers\api_controller.dart:1213:27 - argument_type_not_assignable
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1213:36 - unnecessary_null_comparison
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\controllers\api_controller.dart:1214:28 - argument_type_not_assignable
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\controllers\api_controller.dart:1215:27 - argument_type_not_assignable
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1215:35 - unnecessary_null_comparison
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\controllers\api_controller.dart:1216:28 - argument_type_not_assignable
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\controllers\api_controller.dart:1217:27 - argument_type_not_assignable
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1217:38 - unnecessary_null_comparison
+  error - The argument type 'String' can't be assigned to the parameter type 'int'.  - lib\controllers\api_controller.dart:1218:28 - argument_type_not_assignable
+  error - A value of type 'List<Map<String, dynamic>>' can't be returned from the method 'updateProfileAndImage' because it has a return type of 'Future<Map<String, dynamic>>' - lib\controllers\api_controller.dart:1257:14 - return_of_invalid_type
+  error - The name 'fetchChatMessages' is already defined - lib\controllers\api_controller.dart:1412:16 - duplicate_definition
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1415:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1437:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1448:35 - unnecessary_null_comparison
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:1482:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:1522:7 - avoid_print
+

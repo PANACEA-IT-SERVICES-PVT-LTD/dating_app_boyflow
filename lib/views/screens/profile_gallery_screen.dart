@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../api_service/api_endpoint.dart';
-import 'package:Boy_flow/models/female_user.dart';
+import 'package:boy_flow/models/female_user.dart';
 
 class ProfileGalleryScreen extends StatelessWidget {
   final FemaleUser user;

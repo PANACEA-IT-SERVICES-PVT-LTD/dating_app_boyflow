@@ -1,37 +1,38 @@
 // lib/core/routes/app_routes.dart
 // ...existing code...
-import 'package:Boy_flow/views/screens/signup_verification.dart';
+import 'package:boy_flow/views/screens/signup_verification.dart';
 import 'package:flutter/material.dart';
-import 'package:Boy_flow/views/screens/loginVerification.dart';
+import 'package:boy_flow/views/screens/loginVerification.dart';
 
 // Screens
-import 'package:Boy_flow/views/screens/login_screen.dart';
+import 'package:boy_flow/views/screens/login_screen.dart';
 // ...existing code...
-import 'package:Boy_flow/views/screens/onboardingscreen.dart';
-import 'package:Boy_flow/views/screens/verificationfail.dart';
-import 'package:Boy_flow/views/screens/signup.dart';
-import 'package:Boy_flow/views/screens/mainhome.dart';
+import 'package:boy_flow/views/screens/onboardingscreen.dart';
+import 'package:boy_flow/views/screens/verificationfail.dart';
+import 'package:boy_flow/views/screens/signup.dart';
+import 'package:boy_flow/views/screens/mainhome.dart';
 
-import 'package:Boy_flow/views/screens/chat_screen.dart';
-import 'package:Boy_flow/views/screens/notification_screen.dart';
-import 'package:Boy_flow/views/screens/account_screen.dart';
-import 'package:Boy_flow/views/screens/help_videos_screen.dart';
-import 'package:Boy_flow/views/screens/profile_gallery_screen.dart';
-import 'package:Boy_flow/models/female_user.dart';
-import 'package:Boy_flow/views/screens/support_service_screen.dart';
+import 'package:boy_flow/views/screens/chat_screen.dart';
+import 'package:boy_flow/views/screens/notification_screen.dart';
+import 'package:boy_flow/views/screens/account_screen.dart';
+import 'package:boy_flow/views/screens/help_videos_screen.dart';
+import 'package:boy_flow/views/screens/profile_gallery_screen.dart';
+import 'package:boy_flow/models/female_user.dart';
+import 'package:boy_flow/views/screens/support_service_screen.dart';
 
-import 'package:Boy_flow/views/screens/withdraws_screen.dart';
-import 'package:Boy_flow/views/screens/followers_screen.dart';
-import 'package:Boy_flow/views/screens/earnings_screen.dart';
-import 'package:Boy_flow/views/screens/settings_screen.dart';
-import 'package:Boy_flow/views/screens/BlocklistScreen.dart';
-import 'package:Boy_flow/views/screens/kyc_details_screen.dart';
-import 'package:Boy_flow/views/screens/update_kyc_details_screen.dart';
-import 'package:Boy_flow/views/screens/withdraw_request_screen.dart';
-import 'package:Boy_flow/views/screens/withdraw_confirmation_screen.dart';
-import 'package:Boy_flow/views/screens/introduce_yourself_screen.dart';
-import 'package:Boy_flow/views/screens/Invite_friends_screen.dart';
-import 'package:Boy_flow/views/screens/registration_status.dart';
+import 'package:boy_flow/views/screens/withdraws_screen.dart';
+import 'package:boy_flow/views/screens/followers_screen.dart';
+import 'package:boy_flow/views/screens/earnings_screen.dart';
+import 'package:boy_flow/views/screens/settings_screen.dart';
+import 'package:boy_flow/views/screens/BlocklistScreen.dart';
+import 'package:boy_flow/views/screens/kyc_details_screen.dart';
+import 'package:boy_flow/views/screens/update_kyc_details_screen.dart';
+import 'package:boy_flow/views/screens/withdraw_request_screen.dart';
+import 'package:boy_flow/views/screens/withdraw_confirmation_screen.dart';
+import 'package:boy_flow/views/screens/introduce_yourself_screen.dart';
+import 'package:boy_flow/views/screens/Invite_friends_screen.dart';
+import 'package:boy_flow/views/screens/registration_status.dart';
+import 'package:boy_flow/views/screens/main_navigation.dart';
 
 class AppRoutes {
   static const String login = '/login'; // request OTP (email input)
@@ -64,8 +65,9 @@ class AppRoutes {
   static const String withdrawconfirmation = '/Withdrawconfirmation';
   static const String invitefriends = '/Invitefriends';
   static const String introduceYourself = '/IntroduceYourself';
-  static const String registrationstatus = '/RegistrationStatus';
+  static const String registrationstatus = '/registrationStatus';
   static const String signupVerification = '/signupVerification';
+  static const String mainNavigation = '/mainNavigation';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     final args = settings.arguments;
@@ -130,6 +132,11 @@ class AppRoutes {
       case registrationstatus:
         return MaterialPageRoute(
           builder: (_) => const RegistrationStatusScreen(),
+        );
+
+      case mainNavigation:
+        return MaterialPageRoute(
+          builder: (_) => const MainNavigationScreen(),
         );
 
       case chatDetail:

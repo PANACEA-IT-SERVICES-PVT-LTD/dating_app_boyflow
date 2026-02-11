@@ -1,0 +1,130 @@
+Analyzing api_controller.dart...                                
+
+  error - 'ApiController._handleTokenError' ('Future<void> Function(Object)') isn't a valid concrete implementation of 'ApiController._handleTokenError' ('dynamic Function(dynamic)') - lib\controllers\api_controller.dart:16:7 - invalid_implementation_override
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:35:7 - avoid_print
+warning - Unnecessary type check; the result is always 'true' - lib\controllers\api_controller.dart:41:11 - unnecessary_type_check
+  error - A value of type 'Map<String, dynamic>' can't be assigned to a variable of type 'List<dynamic>' - lib\controllers\api_controller.dart:49:27 - invalid_assignment
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:52:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:65:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:69:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:73:7 - avoid_print
+   info - The private field _isOtpVerified could be 'final' - lib\controllers\api_controller.dart:147:8 - prefer_final_fields
+   info - The private field _isChatMessagesLoading could be 'final' - lib\controllers\api_controller.dart:172:8 - prefer_final_fields
+   info - The private field _chatMessages could be 'final' - lib\controllers\api_controller.dart:174:30 - prefer_final_fields
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:213:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:224:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:236:35 - unnecessary_null_comparison
+  error - The body might complete normally, causing 'null' to be returned, but the return type, 'FutureOr<Map<String, dynamic>>', is a potentially non-nullable type - lib\controllers\api_controller.dart:642:32 - body_might_complete_normally
+   info - Angle brackets will be interpreted as HTML - lib\controllers\api_controller.dart:704:21 - unintended_html_in_doc_comment
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:709:5 - avoid_print
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:728:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:742:35 - unnecessary_null_comparison
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:823:5 - avoid_print
+warning - The declaration '_isValidObjectId' isn't referenced - lib\controllers\api_controller.dart:980:8 - unused_element
+warning - The declaration '_friendlyMessage' isn't referenced - lib\controllers\api_controller.dart:985:10 - unused_element
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1107:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1127:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1143:35 - unnecessary_null_comparison
+   info - The private field _isLoading could be 'final' - lib\controllers\api_controller.dart:1197:7 - prefer_final_fields
+warning - The value of the field '_isLoading' isn't used - lib\controllers\api_controller.dart:1197:7 - unused_field
+  error - The name '_isLoading' is already defined - lib\controllers\api_controller.dart:1197:7 - duplicate_definition
+  error - Variables must be declared using the keywords 'const', 'final', 'var' or a type name - lib\controllers\api_controller.dart:1197:7 - missing_const_final_var_or_type
+   info - The private field _error could be 'final' - lib\controllers\api_controller.dart:1198:7 - prefer_final_fields
+warning - The value of the field '_error' isn't used - lib\controllers\api_controller.dart:1198:7 - unused_field
+  error - The name '_error' is already defined - lib\controllers\api_controller.dart:1198:7 - duplicate_definition
+  error - Variables must be declared using the keywords 'const', 'final', 'var' or a type name - lib\controllers\api_controller.dart:1198:7 - missing_const_final_var_or_type
+  error - Undefined name 'e' - lib\controllers\api_controller.dart:1198:16 - undefined_identifier
+   info - Missing type annotation - lib\controllers\api_controller.dart:1199:7 - strict_top_level_inference
+warning - The declaration '_handleTokenError' isn't referenced - lib\controllers\api_controller.dart:1199:7 - unused_element
+  error - The name '_handleTokenError' is already defined - lib\controllers\api_controller.dart:1199:7 - duplicate_definition
+   info - Missing type annotation - lib\controllers\api_controller.dart:1199:25 - strict_top_level_inference
+  error - Methods must have an explicit list of parameters - lib\controllers\api_controller.dart:1200:7 - missing_method_parameters
+  error - The name of a constructor must match the name of the enclosing class - lib\controllers\api_controller.dart:1200:7 - invalid_constructor_name
+   info - Empty constructor bodies should be written using a ';' rather than '{}' - lib\controllers\api_controller.dart:1200:30 - empty_constructor_bodies
+  error - A function body must be provided - lib\controllers\api_controller.dart:1200:30 - missing_function_body
+  error - Expected a class member - lib\controllers\api_controller.dart:1200:30 - expected_class_member
+   info - Missing type annotation - lib\controllers\api_controller.dart:1200:31 - strict_top_level_inference
+  error - 'addPostFrameCallback' must have a method body because 'ApiController' isn't abstract - lib\controllers\api_controller.dart:1200:31 - concrete_class_with_abstract_member
+   info - Use the generic function type syntax to declare the parameter '' - lib\controllers\api_controller.dart:1200:52 - use_function_type_syntax_for_parameters
+  error - Expected an identifier - lib\controllers\api_controller.dart:1200:52 - missing_identifier
+  error - Expected to find ')' - lib\controllers\api_controller.dart:1200:56 - expected_token
+  error - Expected a class member - lib\controllers\api_controller.dart:1203:7 - expected_class_member
+  error - Expected a class member - lib\controllers\api_controller.dart:1203:14 - expected_class_member
+  error - Expected a method, getter, setter or operator declaration - lib\controllers\api_controller.dart:1205:3 - expected_executable
+  error - Undefined name '_isLoading' - lib\controllers\api_controller.dart:1212:5 - undefined_identifier
+  error - Undefined name '_error' - lib\controllers\api_controller.dart:1213:5 - undefined_identifier
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1215:7 - undefined_function
+  error - Undefined name '_apiService' - lib\controllers\api_controller.dart:1219:28 - undefined_identifier
+  error - Undefined name '_isLoading' - lib\controllers\api_controller.dart:1223:7 - undefined_identifier
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1225:9 - undefined_function
+  error - Undefined name '_isLoading' - lib\controllers\api_controller.dart:1229:7 - undefined_identifier
+  error - Undefined name '_error' - lib\controllers\api_controller.dart:1230:7 - undefined_identifier
+  error - The function '_handleTokenError' isn't defined - lib\controllers\api_controller.dart:1231:7 - undefined_function
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1233:9 - undefined_function
+  error - Undefined name '_isLoading' - lib\controllers\api_controller.dart:1241:5 - undefined_identifier
+  error - Undefined name '_error' - lib\controllers\api_controller.dart:1242:5 - undefined_identifier
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1244:7 - undefined_function
+  error - Undefined name '_apiService' - lib\controllers\api_controller.dart:1247:28 - undefined_identifier
+  error - Undefined name '_authToken' - lib\controllers\api_controller.dart:1253:7 - undefined_identifier
+  error - Undefined name '_isLoading' - lib\controllers\api_controller.dart:1255:7 - undefined_identifier
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1257:9 - undefined_function
+  error - Undefined name '_isLoading' - lib\controllers\api_controller.dart:1261:7 - undefined_identifier
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1270:11 - undefined_function
+  error - Undefined name '_error' - lib\controllers\api_controller.dart:1278:9 - undefined_identifier
+  error - The function '_handleTokenError' isn't defined - lib\controllers\api_controller.dart:1279:9 - undefined_function
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1281:11 - undefined_function
+  error - Undefined name '_isLoading' - lib\controllers\api_controller.dart:1290:5 - undefined_identifier
+  error - Undefined name '_error' - lib\controllers\api_controller.dart:1291:5 - undefined_identifier
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1292:5 - undefined_function
+  error - Undefined name '_apiService' - lib\controllers\api_controller.dart:1294:28 - undefined_identifier
+  error - Undefined name '_isLoading' - lib\controllers\api_controller.dart:1295:7 - undefined_identifier
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1296:7 - undefined_function
+  error - Undefined name '_isLoading' - lib\controllers\api_controller.dart:1299:7 - undefined_identifier
+  error - Undefined name '_error' - lib\controllers\api_controller.dart:1300:7 - undefined_identifier
+  error - The function '_handleTokenError' isn't defined - lib\controllers\api_controller.dart:1301:7 - undefined_function
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1302:7 - undefined_function
+  error - Undefined name '_isLoading' - lib\controllers\api_controller.dart:1309:5 - undefined_identifier
+  error - Undefined name '_error' - lib\controllers\api_controller.dart:1310:5 - undefined_identifier
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1311:5 - undefined_function
+  error - Undefined name '_apiService' - lib\controllers\api_controller.dart:1314:28 - undefined_identifier
+  error - Undefined name '_isLoading' - lib\controllers\api_controller.dart:1315:7 - undefined_identifier
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1316:7 - undefined_function
+  error - Undefined name '_isLoading' - lib\controllers\api_controller.dart:1319:7 - undefined_identifier
+  error - Undefined name '_error' - lib\controllers\api_controller.dart:1320:7 - undefined_identifier
+  error - The function '_handleTokenError' isn't defined - lib\controllers\api_controller.dart:1321:7 - undefined_function
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1322:7 - undefined_function
+  error - Undefined name '_isChatMessagesLoading' - lib\controllers\api_controller.dart:1331:5 - undefined_identifier
+  error - Undefined name '_chatMessagesError' - lib\controllers\api_controller.dart:1332:5 - undefined_identifier
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1333:33 - unnecessary_null_comparison
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1335:9 - undefined_function
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1338:7 - undefined_function
+  error - Undefined name '_apiService' - lib\controllers\api_controller.dart:1342:28 - undefined_identifier
+  error - Undefined name '_chatMessages' - lib\controllers\api_controller.dart:1349:9 - undefined_identifier
+  error - Undefined name '_chatMessages' - lib\controllers\api_controller.dart:1351:9 - undefined_identifier
+  error - Undefined name '_isChatMessagesLoading' - lib\controllers\api_controller.dart:1354:7 - undefined_identifier
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1355:35 - unnecessary_null_comparison
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1357:11 - undefined_function
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1360:9 - undefined_function
+  error - Undefined name '_isChatMessagesLoading' - lib\controllers\api_controller.dart:1363:7 - undefined_identifier
+  error - Undefined name '_chatMessagesError' - lib\controllers\api_controller.dart:1364:7 - undefined_identifier
+  error - The function '_handleTokenError' isn't defined - lib\controllers\api_controller.dart:1365:7 - undefined_function
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1366:35 - unnecessary_null_comparison
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1368:11 - undefined_function
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1371:9 - undefined_function
+  error - Undefined name '_chatMessagesError' - lib\controllers\api_controller.dart:1388:5 - undefined_identifier
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1389:5 - undefined_function
+  error - Undefined name '_apiService' - lib\controllers\api_controller.dart:1392:13 - undefined_identifier
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:1400:7 - avoid_print
+  error - Undefined name '_chatMessagesError' - lib\controllers\api_controller.dart:1401:7 - undefined_identifier
+  error - The function '_handleTokenError' isn't defined - lib\controllers\api_controller.dart:1402:7 - undefined_function
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1406:7 - undefined_function
+  error - Undefined name '_chatMessagesError' - lib\controllers\api_controller.dart:1417:5 - undefined_identifier
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1418:5 - undefined_function
+  error - Undefined name '_apiService' - lib\controllers\api_controller.dart:1422:31 - undefined_identifier
+  error - Undefined name '_apiService' - lib\controllers\api_controller.dart:1428:15 - undefined_identifier
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:1440:7 - avoid_print
+  error - Undefined name '_chatMessagesError' - lib\controllers\api_controller.dart:1441:7 - undefined_identifier
+  error - The function '_handleTokenError' isn't defined - lib\controllers\api_controller.dart:1442:7 - undefined_function
+  error - The function 'notifyListeners' isn't defined - lib\controllers\api_controller.dart:1445:7 - undefined_function
+  error - Expected a method, getter, setter or operator declaration - lib\controllers\api_controller.dart:1448:1 - expected_executable
+

@@ -1,0 +1,492 @@
+Resolving dependencies...
+Downloading packages...
+  characters 1.4.0 (1.4.1 available)
+  fluttertoast 8.2.14 (9.0.0 available)
+  image_picker_ios 0.8.13+3 (0.8.13+6 available)
+  matcher 0.12.17 (0.12.18 available)
+  material_color_utilities 0.11.1 (0.13.0 available)
+  meta 1.16.0 (1.18.1 available)
+  path_provider_foundation 2.5.1 (2.6.0 available)
+  test_api 0.7.6 (0.7.9 available)
+  timezone 0.10.1 (0.11.0 available)
+  url_launcher_ios 6.3.6 (6.4.0 available)
+  url_launcher_web 2.4.1 (2.4.2 available)
+Got dependencies!
+11 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+Running Gradle task 'assembleDebug'...                          
+warning: [options] source value 8 is obsolete and will be removed in a future release
+warning: [options] target value 8 is obsolete and will be removed in a future release
+warning: [options] To suppress warnings about obsolete options, use -Xlint:-options.
+3 warnings
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/api_service/api_endpoint.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/core/routes/app_routes.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/login_screen.dart'.
+lib/main.dart:2:8: Error: Not found: 'package:Boy_flow/api_service/api_endpoint.dart'
+import 'package:Boy_flow/api_service/api_endpoint.dart';
+       ^
+lib/main.dart:3:8: Error: Not found: 'package:Boy_flow/core/routes/app_routes.dart'
+import 'package:Boy_flow/core/routes/app_routes.dart';
+       ^
+lib/main.dart:4:8: Error: Not found: 'package:Boy_flow/views/screens/login_screen.dart'
+import 'package:Boy_flow/views/screens/login_screen.dart';
+       ^
+lib/controllers/api_controller.dart:4:8: Error: Not found: 'package:Boy_flow/api_service/api_endpoint.dart'
+import 'package:Boy_flow/api_service/api_endpoint.dart';
+       ^
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/services/api_service.dart'.
+lib/views/screens/mainhome.dart:2:8: Error: Not found: 'package:Boy_flow/api_service/api_endpoint.dart'
+import 'package:Boy_flow/api_service/api_endpoint.dart';
+       ^
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/controllers/api_controller.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/models/female_user.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/female_profile_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/call_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/payment_page.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/BlockListScreen1.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/ReportAProblemPage.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/TransactionsScreen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/WalletTransactionsScreen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/gifts_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/introduce_yourself_screen.dart'.
+lib/controllers/api_controller.dart:5:8: Error: Not found: 'package:Boy_flow/services/api_service.dart'
+import 'package:Boy_flow/services/api_service.dart';
+       ^
+lib/views/screens/mainhome.dart:3:8: Error: Not found: 'package:Boy_flow/controllers/api_controller.dart'
+import 'package:Boy_flow/controllers/api_controller.dart';
+       ^
+lib/views/screens/mainhome.dart:4:8: Error: Not found: 'package:Boy_flow/models/female_user.dart'
+import 'package:Boy_flow/models/female_user.dart';
+       ^
+lib/views/screens/mainhome.dart:5:8: Error: Not found: 'package:Boy_flow/views/screens/female_profile_screen.dart'
+import 'package:Boy_flow/views/screens/female_profile_screen.dart';
+       ^
+lib/views/screens/mainhome.dart:6:8: Error: Not found: 'package:Boy_flow/views/screens/call_screen.dart'
+import 'package:Boy_flow/views/screens/call_screen.dart';
+       ^
+lib/views/screens/mainhome.dart:17:8: Error: Not found: 'package:Boy_flow/views/screens/payment_page.dart'
+import 'package:Boy_flow/views/screens/payment_page.dart';
+       ^
+lib/views/screens/account_screen.dart:1:8: Error: Not found: 'package:Boy_flow/views/screens/BlockListScreen1.dart'
+import 'package:Boy_flow/views/screens/BlockListScreen1.dart';
+       ^
+lib/views/screens/account_screen.dart:2:8: Error: Not found: 'package:Boy_flow/views/screens/ReportAProblemPage.dart'
+import 'package:Boy_flow/views/screens/ReportAProblemPage.dart';
+       ^
+lib/views/screens/account_screen.dart:3:8: Error: Not found: 'package:Boy_flow/views/screens/TransactionsScreen.dart'
+import 'package:Boy_flow/views/screens/TransactionsScreen.dart';
+       ^
+lib/views/screens/account_screen.dart:4:8: Error: Not found: 'package:Boy_flow/views/screens/WalletTransactionsScreen.dart'
+import 'package:Boy_flow/views/screens/WalletTransactionsScreen.dart';
+       ^
+lib/views/screens/account_screen.dart:5:8: Error: Not found: 'package:Boy_flow/views/screens/gifts_screen.dart'
+import 'package:Boy_flow/views/screens/gifts_screen.dart';
+       ^
+lib/views/screens/account_screen.dart:6:8: Error: Not found: 'package:Boy_flow/views/screens/introduce_yourself_screen.dart'
+import 'package:Boy_flow/views/screens/introduce_yourself_screen.dart';
+       ^
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/BlockListScreen.dart'.
+lib/views/screens/settings_screen.dart:3:8: Error: Not found: 'package:Boy_flow/views/screens/login_screen.dart'
+import 'package:Boy_flow/views/screens/login_screen.dart'; // Ensure this exists
+       ^
+lib/views/screens/settings_screen.dart:5:8: Error: Not found: 'package:Boy_flow/controllers/api_controller.dart'
+import 'package:Boy_flow/controllers/api_controller.dart';
+       ^
+lib/services/razorpay_service.dart:2:8: Error: Not found: 'package:Boy_flow/api_service/api_endpoint.dart'
+import 'package:Boy_flow/api_service/api_endpoint.dart';
+       ^
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/signup_verification.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/loginVerification.dart'.
+lib/core/routes/app_routes.dart:8:8: Error: Not found: 'package:Boy_flow/views/screens/login_screen.dart'
+import 'package:Boy_flow/views/screens/login_screen.dart';
+       ^
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/onboardingscreen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/verificationfail.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/signup.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/mainhome.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/chat_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/notification_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/account_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/help_videos_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/profile_gallery_screen.dart'.
+lib/core/routes/app_routes.dart:20:8: Error: Not found: 'package:Boy_flow/models/female_user.dart'
+import 'package:Boy_flow/models/female_user.dart';
+       ^
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/support_service_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/withdraws_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/followers_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/earnings_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/settings_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/BlocklistScreen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/kyc_details_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/update_kyc_details_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/withdraw_request_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/withdraw_confirmation_screen.dart'.
+lib/core/routes/app_routes.dart:32:8: Error: Not found: 'package:Boy_flow/views/screens/introduce_yourself_screen.dart'
+import 'package:Boy_flow/views/screens/introduce_yourself_screen.dart';
+       ^
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/Invite_friends_screen.dart'.
+Error: Couldn't resolve the package 'Boy_flow' in 'package:Boy_flow/views/screens/registration_status.dart'.
+lib/views/screens/settings_screen.dart:2:8: Error: Not found: 'package:Boy_flow/views/screens/BlockListScreen.dart'
+import 'package:Boy_flow/views/screens/BlockListScreen.dart';
+       ^
+lib/core/routes/app_routes.dart:3:8: Error: Not found: 'package:Boy_flow/views/screens/signup_verification.dart'
+import 'package:Boy_flow/views/screens/signup_verification.dart';
+       ^
+lib/core/routes/app_routes.dart:5:8: Error: Not found: 'package:Boy_flow/views/screens/loginVerification.dart'
+import 'package:Boy_flow/views/screens/loginVerification.dart';
+       ^
+lib/core/routes/app_routes.dart:10:8: Error: Not found: 'package:Boy_flow/views/screens/onboardingscreen.dart'
+import 'package:Boy_flow/views/screens/onboardingscreen.dart';
+       ^
+lib/core/routes/app_routes.dart:11:8: Error: Not found: 'package:Boy_flow/views/screens/verificationfail.dart'
+import 'package:Boy_flow/views/screens/verificationfail.dart';
+       ^
+lib/core/routes/app_routes.dart:12:8: Error: Not found: 'package:Boy_flow/views/screens/signup.dart'
+import 'package:Boy_flow/views/screens/signup.dart';
+       ^
+lib/core/routes/app_routes.dart:13:8: Error: Not found: 'package:Boy_flow/views/screens/mainhome.dart'
+import 'package:Boy_flow/views/screens/mainhome.dart';
+       ^
+lib/core/routes/app_routes.dart:15:8: Error: Not found: 'package:Boy_flow/views/screens/chat_screen.dart'
+import 'package:Boy_flow/views/screens/chat_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:16:8: Error: Not found: 'package:Boy_flow/views/screens/notification_screen.dart'
+import 'package:Boy_flow/views/screens/notification_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:17:8: Error: Not found: 'package:Boy_flow/views/screens/account_screen.dart'
+import 'package:Boy_flow/views/screens/account_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:18:8: Error: Not found: 'package:Boy_flow/views/screens/help_videos_screen.dart'
+import 'package:Boy_flow/views/screens/help_videos_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:19:8: Error: Not found: 'package:Boy_flow/views/screens/profile_gallery_screen.dart'
+import 'package:Boy_flow/views/screens/profile_gallery_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:21:8: Error: Not found: 'package:Boy_flow/views/screens/support_service_screen.dart'
+import 'package:Boy_flow/views/screens/support_service_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:23:8: Error: Not found: 'package:Boy_flow/views/screens/withdraws_screen.dart'
+import 'package:Boy_flow/views/screens/withdraws_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:24:8: Error: Not found: 'package:Boy_flow/views/screens/followers_screen.dart'
+import 'package:Boy_flow/views/screens/followers_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:25:8: Error: Not found: 'package:Boy_flow/views/screens/earnings_screen.dart'
+import 'package:Boy_flow/views/screens/earnings_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:26:8: Error: Not found: 'package:Boy_flow/views/screens/settings_screen.dart'
+import 'package:Boy_flow/views/screens/settings_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:27:8: Error: Not found: 'package:Boy_flow/views/screens/BlocklistScreen.dart'
+import 'package:Boy_flow/views/screens/BlocklistScreen.dart';
+       ^
+lib/core/routes/app_routes.dart:28:8: Error: Not found: 'package:Boy_flow/views/screens/kyc_details_screen.dart'
+import 'package:Boy_flow/views/screens/kyc_details_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:29:8: Error: Not found: 'package:Boy_flow/views/screens/update_kyc_details_screen.dart'
+import 'package:Boy_flow/views/screens/update_kyc_details_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:30:8: Error: Not found: 'package:Boy_flow/views/screens/withdraw_request_screen.dart'
+import 'package:Boy_flow/views/screens/withdraw_request_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:31:8: Error: Not found: 'package:Boy_flow/views/screens/withdraw_confirmation_screen.dart'
+import 'package:Boy_flow/views/screens/withdraw_confirmation_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:33:8: Error: Not found: 'package:Boy_flow/views/screens/Invite_friends_screen.dart'
+import 'package:Boy_flow/views/screens/Invite_friends_screen.dart';
+       ^
+lib/core/routes/app_routes.dart:34:8: Error: Not found: 'package:Boy_flow/views/screens/registration_status.dart'
+import 'package:Boy_flow/views/screens/registration_status.dart';
+       ^
+lib/controllers/api_controller.dart:116:9: Error: Type 'ApiService' not found.
+  final ApiService _apiService = ApiService();
+        ^^^^^^^^^^
+lib/controllers/api_controller.dart:135:3: Error: Type 'ApiService' not found.
+  ApiService get apiService => _apiService;
+  ^^^^^^^^^^
+lib/views/screens/mainhome.dart:604:24: Error: Type 'ApiController' not found.
+  Widget _buildHomeTab(ApiController apiController) {
+                       ^^^^^^^^^^^^^
+lib/main.dart:67:24: Error: The getter 'AppRoutes' isn't defined for the type 'MyApp'.
+ - 'MyApp' is from 'package:boy_flow/main.dart' ('lib/main.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'AppRoutes'.
+      onGenerateRoute: AppRoutes.generateRoute,
+                       ^^^^^^^^^
+lib/main.dart:100:24: Error: The getter 'ApiEndPoints' isn't defined for the type '_AuthCheckState'.
+ - '_AuthCheckState' is from 'package:boy_flow/main.dart' ('lib/main.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'ApiEndPoints'.
+          Uri.parse('${ApiEndPoints.baseUrls}/male-user/me'),
+                       ^^^^^^^^^^^^
+lib/main.dart:159:59: Error: The method 'LoginScreen' isn't defined for the type '_AuthCheckState'.
+ - '_AuthCheckState' is from 'package:boy_flow/main.dart' ('lib/main.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'LoginScreen'.
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                                                          ^^^^^^^^^^^
+lib/main.dart:170:57: Error: The method 'LoginScreen' isn't defined for the type '_AuthCheckState'.
+ - '_AuthCheckState' is from 'package:boy_flow/main.dart' ('lib/main.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'LoginScreen'.
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+                                                        ^^^^^^^^^^^
+lib/main.dart:186:57: Error: The method 'LoginScreen' isn't defined for the type '_AuthCheckState'.
+ - '_AuthCheckState' is from 'package:boy_flow/main.dart' ('lib/main.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'LoginScreen'.
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+                                                        ^^^^^^^^^^^
+lib/main.dart:199:57: Error: The method 'LoginScreen' isn't defined for the type '_AuthCheckState'.
+ - '_AuthCheckState' is from 'package:boy_flow/main.dart' ('lib/main.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'LoginScreen'.
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+                                                        ^^^^^^^^^^^
+lib/main.dart:211:57: Error: The method 'LoginScreen' isn't defined for the type '_AuthCheckState'.
+ - '_AuthCheckState' is from 'package:boy_flow/main.dart' ('lib/main.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'LoginScreen'.
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+                                                        ^^^^^^^^^^^
+lib/main.dart:222:53: Error: The method 'LoginScreen' isn't defined for the type '_AuthCheckState'.
+ - '_AuthCheckState' is from 'package:boy_flow/main.dart' ('lib/main.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'LoginScreen'.
+            MaterialPageRoute(builder: (context) => LoginScreen()),
+                                                    ^^^^^^^^^^^
+lib/main.dart:233:51: Error: The method 'LoginScreen' isn't defined for the type '_AuthCheckState'.
+ - '_AuthCheckState' is from 'package:boy_flow/main.dart' ('lib/main.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'LoginScreen'.
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+                                                  ^^^^^^^^^^^
+lib/controllers/api_controller.dart:36:26: Error: The method 'ApiService' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'ApiService'.
+      final apiService = ApiService();
+                         ^^^^^^^^^^
+lib/controllers/api_controller.dart:116:9: Error: 'ApiService' isn't a type.
+  final ApiService _apiService = ApiService();
+        ^^^^^^^^^^
+lib/controllers/api_controller.dart:116:34: Error: Method not found: 'ApiService'.
+  final ApiService _apiService = ApiService();
+                                 ^^^^^^^^^^
+lib/controllers/api_controller.dart:751:11: Error: The getter 'ApiEndPoints' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'ApiEndPoints'.
+        ? ApiEndPoints.loginotpMale
+          ^^^^^^^^^^^^
+lib/controllers/api_controller.dart:752:11: Error: The getter 'ApiEndPoints' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'ApiEndPoints'.
+        : ApiEndPoints.verifyOtpMale;
+          ^^^^^^^^^^^^
+lib/controllers/api_controller.dart:753:30: Error: The getter 'ApiEndPoints' isn't defined for the type 'ApiController'.
+ - 'ApiController' is from 'package:boy_flow/controllers/api_controller.dart' ('lib/controllers/api_controller.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'ApiEndPoints'.
+    final url = Uri.parse("${ApiEndPoints.baseUrls}$endpoint");
+                             ^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:103:41: Error: 'ApiController' isn't a type.
+      final apiController = Provider.of<ApiController>(context, listen: false);
+                                        ^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:136:41: Error: 'ApiController' isn't a type.
+      final apiController = Provider.of<ApiController>(context, listen: false);
+                                        ^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:163:41: Error: 'ApiController' isn't a type.
+      final apiController = Provider.of<ApiController>(context, listen: false);
+                                        ^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:172:41: Error: 'ApiController' isn't a type.
+      final apiController = Provider.of<ApiController>(context, listen: false);
+                                        ^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:279:39: Error: 'ApiController' isn't a type.
+    final apiController = Provider.of<ApiController>(context, listen: false);
+                                      ^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:321:39: Error: 'ApiController' isn't a type.
+    final apiController = Provider.of<ApiController>(context, listen: false);
+                                      ^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:424:39: Error: 'ApiController' isn't a type.
+    final apiController = Provider.of<ApiController>(context, listen: false);
+                                      ^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:459:37: Error: The method 'CallScreen' isn't defined for the type '_HomeScreenState'.
+ - '_HomeScreenState' is from 'package:boy_flow/views/screens/mainhome.dart' ('lib/views/screens/mainhome.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'CallScreen'.
+              builder: (context) => CallScreen(
+                                    ^^^^^^^^^^
+lib/views/screens/mainhome.dart:492:41: Error: 'ApiController' isn't a type.
+      final apiController = Provider.of<ApiController>(context, listen: false);
+                                        ^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:529:59: Error: Not a constant expression.
+            MaterialPageRoute(builder: (context) => const PaymentPage()),
+                                                          ^^^^^^^^^^^
+lib/views/screens/mainhome.dart:538:39: Error: 'ApiController' isn't a type.
+    final apiController = Provider.of<ApiController>(context);
+                                      ^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:604:24: Error: 'ApiController' isn't a type.
+  Widget _buildHomeTab(ApiController apiController) {
+                       ^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:764:33: Error: The method 'FemaleProfileScreen' isn't defined for the type '_HomeScreenState'.
+ - '_HomeScreenState' is from 'package:boy_flow/views/screens/mainhome.dart' ('lib/views/screens/mainhome.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'FemaleProfileScreen'.
+          builder: (context) => FemaleProfileScreen(
+                                ^^^^^^^^^^^^^^^^^^^
+lib/views/screens/mainhome.dart:765:19: Error: The getter 'FemaleUser' isn't defined for the type '_HomeScreenState'.
+ - '_HomeScreenState' is from 'package:boy_flow/views/screens/mainhome.dart' ('lib/views/screens/mainhome.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'FemaleUser'.
+            user: FemaleUser.fromJson(profile),
+                  ^^^^^^^^^^
+lib/views/screens/account_screen.dart:181:57: Error: Not a constant expression.
+                                                  const IntroduceYourselfScreen(),
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^
+lib/views/screens/account_screen.dart:354:17: Error: Method not found: 'IntroduceYourselfScreen'.
+      'screen': IntroduceYourselfScreen(),
+                ^^^^^^^^^^^^^^^^^^^^^^^
+lib/views/screens/account_screen.dart:359:17: Error: Method not found: 'TransactionsScreen'.
+      'screen': TransactionsScreen(),
+                ^^^^^^^^^^^^^^^^^^
+lib/views/screens/account_screen.dart:376:17: Error: Method not found: 'BlockListScreen1'.
+      'screen': BlockListScreen1(),
+                ^^^^^^^^^^^^^^^^
+lib/views/screens/account_screen.dart:381:17: Error: Method not found: 'ReportAProblemPage'.
+      'screen': ReportAProblemPage(),
+                ^^^^^^^^^^^^^^^^^^
+lib/views/screens/account_screen.dart:391:17: Error: Method not found: 'GiftsScreen'.
+      'screen': GiftsScreen(),
+                ^^^^^^^^^^^
+lib/views/screens/account_screen.dart:406:17: Error: Method not found: 'WalletTransactionsScreen'.
+      'screen': WalletTransactionsScreen(),
+                ^^^^^^^^^^^^^^^^^^^^^^^^
+lib/views/screens/settings_screen.dart:22:47: Error: Not a constant expression.
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                              ^^^^^^^^^^^
+lib/views/screens/settings_screen.dart:43:49: Error: 'ApiController' isn't a type.
+              final apiController = Provider.of<ApiController>(
+                                                ^^^^^^^^^^^^^
+lib/views/screens/settings_screen.dart:73:59: Error: Not a constant expression.
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                                          ^^^^^^^^^^^
+lib/views/screens/settings_screen.dart:126:57: Error: Not a constant expression.
+                MaterialPageRoute(builder: (_) => const BlockListScreen()),
+                                                        ^^^^^^^^^^^^^^^
+lib/services/razorpay_service.dart:12:30: Error: Undefined name 'ApiEndPoints'.
+    final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.coinOrder}");
+                             ^^^^^^^^^^^^
+lib/services/razorpay_service.dart:12:54: Error: Undefined name 'ApiEndPoints'.
+    final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.coinOrder}");
+                                                     ^^^^^^^^^^^^
+lib/services/razorpay_service.dart:34:30: Error: Undefined name 'ApiEndPoints'.
+    final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.paymentVerify}");
+                             ^^^^^^^^^^^^
+lib/services/razorpay_service.dart:34:54: Error: Undefined name 'ApiEndPoints'.
+    final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.paymentVerify}");
+                                                     ^^^^^^^^^^^^
+lib/services/razorpay_service.dart:51:30: Error: Undefined name 'ApiEndPoints'.
+    final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.paymentPackages}");
+                             ^^^^^^^^^^^^
+lib/services/razorpay_service.dart:51:54: Error: Undefined name 'ApiEndPoints'.
+    final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.paymentPackages}");
+                                                     ^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:81:56: Error: Couldn't find constructor 'LoginScreen'.
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
+                                                       ^^^^^^^^^^^
+lib/core/routes/app_routes.dart:84:56: Error: Couldn't find constructor 'MainHome'.
+        return MaterialPageRoute(builder: (_) => const MainHome());
+                                                       ^^^^^^^^
+lib/core/routes/app_routes.dart:87:56: Error: Couldn't find constructor 'OnboardingScreen'.
+        return MaterialPageRoute(builder: (_) => const OnboardingScreen());
+                                                       ^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:95:27: Error: Method not found: 'LoginVerificationScreen'.
+          builder: (_) => LoginVerificationScreen(
+                          ^^^^^^^^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:103:33: Error: Couldn't find constructor 'VerificationFailScreen'.
+          builder: (_) => const VerificationFailScreen(),
+                                ^^^^^^^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:107:56: Error: Couldn't find constructor 'SignupScreen'.
+        return MaterialPageRoute(builder: (_) => const SignupScreen());
+                                                       ^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:112:15: Error: Method not found: 'SignupVerificationScreen'.
+              SignupVerificationScreen(email: args['email'], otp: args['otp']),
+              ^^^^^^^^^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:116:56: Error: Couldn't find constructor 'MainHome'.
+        return MaterialPageRoute(builder: (_) => const MainHome());
+                                                       ^^^^^^^^
+lib/core/routes/app_routes.dart:119:56: Error: Couldn't find constructor 'ChatScreen'.
+        return MaterialPageRoute(builder: (_) => const ChatScreen());
+                                                       ^^^^^^^^^^
+lib/core/routes/app_routes.dart:122:56: Error: Couldn't find constructor 'NotificationScreen'.
+        return MaterialPageRoute(builder: (_) => const NotificationScreen());
+                                                       ^^^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:125:56: Error: Couldn't find constructor 'AccountScreen'.
+        return MaterialPageRoute(builder: (_) => const AccountScreen());
+                                                       ^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:128:56: Error: Couldn't find constructor 'HelpVideosScreen'.
+        return MaterialPageRoute(builder: (_) => const HelpVideosScreen());
+                                                       ^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:132:33: Error: Couldn't find constructor 'RegistrationStatusScreen'.
+          builder: (_) => const RegistrationStatusScreen(),
+                                ^^^^^^^^^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:142:19: Error: Method not found: 'FemaleUser'.
+            user: FemaleUser(
+                  ^^^^^^^^^^
+lib/core/routes/app_routes.dart:141:27: Error: Method not found: 'ProfileGalleryScreen'.
+          builder: (_) => ProfileGalleryScreen(
+                          ^^^^^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:153:56: Error: Couldn't find constructor 'RewardLevelsScreen'.
+        return MaterialPageRoute(builder: (_) => const RewardLevelsScreen());
+                                                       ^^^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:156:56: Error: Couldn't find constructor 'MyFollowersScreen'.
+        return MaterialPageRoute(builder: (_) => const MyFollowersScreen());
+                                                       ^^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:159:56: Error: Couldn't find constructor 'MyEarningsScreen'.
+        return MaterialPageRoute(builder: (_) => const MyEarningsScreen());
+                                                       ^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:162:56: Error: Couldn't find constructor 'SupportServiceScreen'.
+        return MaterialPageRoute(builder: (_) => const SupportServiceScreen());
+                                                       ^^^^^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:165:56: Error: Couldn't find constructor 'SettingsScreen'.
+        return MaterialPageRoute(builder: (_) => const SettingsScreen());
+                                                       ^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:168:56: Error: Couldn't find constructor 'BlockListScreen'.
+        return MaterialPageRoute(builder: (_) => const BlockListScreen());
+                                                       ^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:171:56: Error: Couldn't find constructor 'KYCDetailsScreen'.
+        return MaterialPageRoute(builder: (_) => const KYCDetailsScreen());
+                                                       ^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:174:56: Error: Couldn't find constructor 'UpdateKycScreen'.
+        return MaterialPageRoute(builder: (_) => const UpdateKycScreen());
+                                                       ^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:177:56: Error: Couldn't find constructor 'WithdrawRequestScreen'.
+        return MaterialPageRoute(builder: (_) => const WithdrawRequestScreen());
+                                                       ^^^^^^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:181:33: Error: Couldn't find constructor 'WithdrawConfirmationScreen'.
+          builder: (_) => const WithdrawConfirmationScreen(amount: ''),
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:185:56: Error: Couldn't find constructor 'InviteFriendsScreen'.
+        return MaterialPageRoute(builder: (_) => const InviteFriendsScreen());
+                                                       ^^^^^^^^^^^^^^^^^^^
+lib/core/routes/app_routes.dart:189:33: Error: Couldn't find constructor 'IntroduceYourselfScreen'.
+          builder: (_) => const IntroduceYourselfScreen(),
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+Unhandled exception:
+FileSystemException(uri=org-dartlang-untranslatable-uri:package%3ABoy_flow%2Fapi_service%2Fapi_endpoint.dart; message=StandardFileSystem only supports file:* and data:* URIs)
+#0      StandardFileSystem.entityForUri (package:front_end/src/api_prototype/standard_file_system.dart:45)
+#1      asFileUri (package:vm/kernel_front_end.dart:1002)
+#2      writeDepfile (package:vm/kernel_front_end.dart:1165)
+<asynchronous suspension>
+#3      FrontendCompiler.compile (package:frontend_server/frontend_server.dart:729)
+<asynchronous suspension>
+#4      starter (package:frontend_server/starter.dart:102)
+<asynchronous suspension>
+#5      main (file:///C:/b/s/w/ir/x/w/sdk/pkg/frontend_server/bin/frontend_server_starter.dart:13)
+<asynchronous suspension>
+
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\programTools\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 14s
+Running Gradle task 'assembleDebug'...                             14.8s
+Gradle task assembleDebug failed with exit code 1

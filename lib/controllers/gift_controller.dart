@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:Boy_flow/models/gift.dart';
-import 'package:Boy_flow/models/send_gift_response.dart';
-import 'package:Boy_flow/services/api_service.dart';
+import 'package:boy_flow/models/gift.dart';
+import 'package:boy_flow/models/send_gift_response.dart';
+import 'package:boy_flow/services/api_service.dart';
 
 class GiftController extends ChangeNotifier {
   final ApiService _apiService = ApiService();

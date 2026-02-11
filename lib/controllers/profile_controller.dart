@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:Boy_flow/models/profile_model.dart';
-import 'package:Boy_flow/services/api_service.dart';
+import 'package:boy_flow/models/profile_model.dart';
+import 'package:boy_flow/services/api_service.dart';
 
 class ProfileController with ChangeNotifier {
   final ApiService _apiService = ApiService();

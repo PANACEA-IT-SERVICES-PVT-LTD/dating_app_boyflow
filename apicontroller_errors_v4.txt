@@ -1,0 +1,33 @@
+Analyzing api_controller.dart...                                
+
+   info - The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/widgets.dart' - lib\controllers\api_controller.dart:6:8 - unnecessary_import
+   info - The import of 'package:flutter/widgets.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\controllers\api_controller.dart:7:8 - unnecessary_import
+warning - Unused import: '../utils/otp_toast_util.dart' - lib\controllers\api_controller.dart:11:8 - unused_import
+warning - Unused import: 'package:geolocator/geolocator.dart' - lib\controllers\api_controller.dart:14:8 - unused_import
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:35:7 - avoid_print
+warning - Unnecessary type check; the result is always 'true' - lib\controllers\api_controller.dart:41:11 - unnecessary_type_check
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:50:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:63:7 - avoid_print
+  error - Expected to find '}' - lib\controllers\api_controller.dart:66:5 - expected_token
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:67:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:71:7 - avoid_print
+   info - The private field _isOtpVerified could be 'final' - lib\controllers\api_controller.dart:145:8 - prefer_final_fields
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:211:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:222:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:234:35 - unnecessary_null_comparison
+   info - Angle brackets will be interpreted as HTML - lib\controllers\api_controller.dart:703:21 - unintended_html_in_doc_comment
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:708:5 - avoid_print
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:727:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:741:35 - unnecessary_null_comparison
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:822:5 - avoid_print
+warning - The declaration '_isValidObjectId' isn't referenced - lib\controllers\api_controller.dart:979:8 - unused_element
+warning - The declaration '_friendlyMessage' isn't referenced - lib\controllers\api_controller.dart:984:10 - unused_element
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1106:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1126:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1142:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1324:33 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1346:35 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'true' - lib\controllers\api_controller.dart:1357:35 - unnecessary_null_comparison
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:1391:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\controllers\api_controller.dart:1431:7 - avoid_print
+

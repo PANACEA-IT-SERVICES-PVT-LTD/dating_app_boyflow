@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:Boy_flow/models/wallet_transaction.dart';
+import 'package:boy_flow/models/wallet_transaction.dart';
 
 void main() {
   group('WalletTransaction Model Tests', () {

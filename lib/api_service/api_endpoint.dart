@@ -5,8 +5,21 @@ class ApiEndPoints {
   static const String endCall = '/male-user/calls/end';
   static const String callHistory = '/male-user/calls/history';
   static const String callStats = '/male-user/calls/stats';
-  static const String baseUrl = "https://friend-circle-new.vercel.app";
+  static const String baseUrls = "https://friend-circle-new.vercel.app";
   static const String dashboardEndpoint = '/male-user/dashboard';
+  static const String chatRooms = "/chat/rooms";
+  static const String chatStart = "/chat/start";
+  static const String chatRoom = "/chat/room";
+  static const String chatSend = "/chat/send";
+  static const String chatUpload = "/chat/upload";
+  static const String chatMessages = "/chat"; // Will append /:chatRoomId/messages
+  static const String chatClear = "/chat/room"; // Will append /:roomId/clear
+  static const String chatMessage = "/chat/message"; // For single message delete
+  static const String chatMarkRead = "/chat/mark-as-read";
+  static const String chatDisappearing = "/chat"; // Will append /:roomId/disappearing
+  static const String maleBlockList = "/male-user/block-list";
+  static const String maleBlockAction = "/male-user/block-list/block";
+  static const String maleUnblockAction = "/male-user/block-list/unblock";
 
   // Male auth & profile
   static const String signupMale = "/male-user/register";
@@ -29,9 +42,6 @@ class ApiEndPoints {
   static const String maleFollowers = "/male-user/followers";
   static const String maleAddFavourite = "/male-user/add-favourite";
   static const String maleRemoveFavourite = "/male-user/remove-favourite";
-  static const String maleBlockList = "/male-user/block-list";
-  static const String maleUnblock = "/male-user/unblock";
-  static const String maleBlock = "/male-user/block";
   static const String maleFollowSend = "/male-user/follow-request/send";
   static const String maleFollowCancel = "/male-user/follow-request/cancel";
   static const String maleFollowRequestsSent = "/male-user/follow-requests/sent";
@@ -58,4 +68,5 @@ class ApiEndPoints {
   static const String coinOrder = '/male-user/payment/coin/order';
   static const String paymentVerify = '/male-user/payment/verify';
   static const String paymentPackages = '/male-user/payment/packages';
+  static const String walletTransactions = '/male-user/wallet/transactions';
 }

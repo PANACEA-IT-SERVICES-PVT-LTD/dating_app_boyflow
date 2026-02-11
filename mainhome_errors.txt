@@ -1,0 +1,60 @@
+Analyzing mainhome.dart...                                      
+
+warning - Unused import: 'package:Boy_flow/api_service/api_endpoint.dart' - lib\views\screens\mainhome.dart:2:8 - unused_import
+   info - The import of 'package:flutter/foundation.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\views\screens\mainhome.dart:7:8 - unnecessary_import
+warning - Unused import: 'package:http/http.dart' - lib\views\screens\mainhome.dart:10:8 - unused_import
+warning - Unused import: 'dart:convert' - lib\views\screens\mainhome.dart:11:8 - unused_import
+warning - Unused import: 'dart:io' - lib\views\screens\mainhome.dart:12:8 - unused_import
+warning - Unused import: 'package:shared_preferences/shared_preferences.dart' - lib\views\screens\mainhome.dart:14:8 - unused_import
+warning - The declaration '_showDebug' isn't referenced - lib\views\screens\mainhome.dart:27:8 - unused_element
+warning - The value of the field '_uiLoadingTimeout' isn't used - lib\views\screens\mainhome.dart:33:8 - unused_field
+warning - The value of the field '_isLoadingFollowed' isn't used - lib\views\screens\mainhome.dart:39:8 - unused_field
+warning - The value of the field '_followedError' isn't used - lib\views\screens\mainhome.dart:40:11 - unused_field
+warning - The declaration '_loadSentFollowRequests' isn't referenced - lib\views\screens\mainhome.dart:170:16 - unused_element
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:190:5 - avoid_print
+   info - Don't use 'BuildContext's across async gaps - lib\views\screens\mainhome.dart:198:32 - use_build_context_synchronously
+   info - 'desiredAccuracy' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings - lib\views\screens\mainhome.dart:206:11 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:218:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:228:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:284:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:292:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:297:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:302:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:308:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:320:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:328:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:336:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:344:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:354:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:362:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:372:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:377:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:388:11 - avoid_print
+warning - The declaration '_loadFollowedProfiles' isn't referenced - lib\views\screens\mainhome.dart:411:16 - unused_element
+  error - The name '_loadFollowedProfiles' is already defined - lib\views\screens\mainhome.dart:411:16 - duplicate_definition
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:462:7 - avoid_print
+warning - The declaration '_loadAllFemales' isn't referenced - lib\views\screens\mainhome.dart:512:16 - unused_element
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:520:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:526:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:528:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:563:5 - avoid_print
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\views\screens\mainhome.dart:756:46 - use_build_context_synchronously
+warning - The declaration '_loadProfiles' isn't referenced - lib\views\screens\mainhome.dart:780:16 - unused_element
+  error - The name '_loadProfiles' is already defined - lib\views\screens\mainhome.dart:780:16 - duplicate_definition
+   info - Don't invoke 'print' in production code - lib\views\screens\mainhome.dart:786:9 - avoid_print
+warning - The declaration '_startCall' isn't referenced - lib\views\screens\mainhome.dart:801:8 - unused_element
+  error - The name '_startCall' is already defined - lib\views\screens\mainhome.dart:801:8 - duplicate_definition
+warning - The declaration '_getImageUrlFromProfile' isn't referenced - lib\views\screens\mainhome.dart:809:11 - unused_element
+  error - The name '_getImageUrlFromProfile' is already defined - lib\views\screens\mainhome.dart:809:11 - duplicate_definition
+warning - The declaration '_applyFilter' isn't referenced - lib\views\screens\mainhome.dart:816:30 - unused_element
+  error - The name '_applyFilter' is already defined - lib\views\screens\mainhome.dart:816:30 - duplicate_definition
+warning - A value for optional parameter 'key' isn't ever given - lib\views\screens\mainhome.dart:883:41 - unused_element_parameter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\mainhome.dart:1069:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\mainhome.dart:1130:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\mainhome.dart:1147:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\mainhome.dart:1148:38 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\views\screens\mainhome.dart:1261:29 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\views\screens\mainhome.dart:1261:33 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\mainhome.dart:1292:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\views\screens\mainhome.dart:1348:24 - deprecated_member_use
+

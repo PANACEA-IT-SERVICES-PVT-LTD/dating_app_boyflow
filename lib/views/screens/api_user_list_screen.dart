@@ -27,7 +27,7 @@ class _ApiUserListScreenState extends State<ApiUserListScreen> {
     try {
       final response = await http.get(
         Uri.parse(
-          '${ApiEndPoints.baseUrl}${ApiEndPoints.dashboardEndpoint}?section=all&page=1&limit=10',
+          '${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardEndpoint}?section=all&page=1&limit=10',
         ),
       );
       final data = json.decode(response.body);

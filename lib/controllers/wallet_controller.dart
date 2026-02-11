@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:Boy_flow/models/wallet_transaction.dart';
-import 'package:Boy_flow/services/api_service.dart';
+import 'package:boy_flow/models/wallet_transaction.dart';
+import 'package:boy_flow/services/api_service.dart';
 
 class WalletController extends ChangeNotifier {
   final ApiService _apiService = ApiService();

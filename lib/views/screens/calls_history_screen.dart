@@ -33,7 +33,7 @@ class _CallsHistoryScreenState extends State<CallsHistoryScreen> {
     });
 
     try {
-      final url = Uri.parse("${ApiEndPoints.baseUrl}/male-user/calls/history");
+      final url = Uri.parse("${ApiEndPoints.baseUrls}/male-user/calls/history");
       final prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token') ?? prefs.getString('access_token') ?? '';
       

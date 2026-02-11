@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:Boy_flow/controllers/wallet_controller.dart';
-import 'package:Boy_flow/models/wallet_transaction.dart';
+import 'package:boy_flow/controllers/wallet_controller.dart';
+import 'package:boy_flow/models/wallet_transaction.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({Key? key}) : super(key: key);

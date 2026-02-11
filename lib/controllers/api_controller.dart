@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:Boy_flow/api_service/api_endpoint.dart';
-import 'package:Boy_flow/services/api_service.dart';
+import 'package:boy_flow/api_service/api_endpoint.dart';
+import 'package:boy_flow/services/api_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +34,14 @@ class ApiController extends ChangeNotifier {
     try {
       print('[WALLET TRANSACTIONS] Starting fetch...');
       final apiService = ApiService();
-      final transactionData = await apiService.fetchWalletTransactions();
+      final response = await apiService.fetchWalletTransactions();
+
+      // Extract the transactions list from the response
+      List<dynamic> transactionData = [];
+      final data = response['data'] ?? response['transactions'];
+      if (data is List) {
+        transactionData = data;
+      }
 
       print(
         '[WALLET TRANSACTIONS] Received ${transactionData.length} transactions',
@@ -155,6 +162,15 @@ class ApiController extends ChangeNotifier {
   List<Map<String, dynamic>> _followers = [];
   List<Map<String, dynamic>> _following = [];
 
+  // Chat messages state
+  bool _isChatMessagesLoading = false;
+  String? _chatMessagesError;
+  List<Map<String, dynamic>> _chatMessages = [];
+
+  bool get isChatMessagesLoading => _isChatMessagesLoading;
+  String? get chatMessagesError => _chatMessagesError;
+  List<Map<String, dynamic>> get chatMessages => List.unmodifiable(_chatMessages);
+
   bool get isLoading => _isLoading;
   String? get error => _error;
   Map<String, dynamic>? get signupResponse => _signupResponse;
@@ -175,7 +191,7 @@ class ApiController extends ChangeNotifier {
   Future<void> refreshProfiles() async {
     if (_femaleProfiles.isEmpty) {
       debugPrint('[DEBUG] Profiles are empty, attempting to refresh...');
-      await fetchDashboardSectionFemales(section: 'all', page: 1, limit: 20);
+      await fetchDashboardProfiles(section: 'all', page: 1, limit: 20);
     }
   }
 
@@ -650,6 +666,7 @@ class ApiController extends ChangeNotifier {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         notifyListeners();
       });
+      rethrow;
     }
   }
 
@@ -801,7 +818,7 @@ class ApiController extends ChangeNotifier {
     print('[DEBUG] fetchDashboardProfiles called with section: $section');
     _isLoading = true;
     _error = null;
-    notifyListeners(); // Notify immediately to show loading spinner
+    notifyListeners();
 
     try {
       final dynamic res = await _apiService.fetchDashboardProfiles(
@@ -811,88 +828,14 @@ class ApiController extends ChangeNotifier {
         latitude: latitude,
         longitude: longitude,
       );
-      debugPrint("📥 fetchDashboardProfiles ($section) raw response type: ${res.runtimeType}");
-
-      // The ApiService now returns normalized data or a Map with 'data'
-      // We need to extract the list of profiles from it
       
-      List<dynamic> rawList = [];
-      
-      if (res is Map) {
-        // Try to find a list of profiles in the most likely places
-        if (res['data'] != null &&
-            res['data'] is Map &&
-            res['data']['results'] is List) {
-          rawData = res['data']['results'];
-        } else if (res['data'] != null && res['data'] is List) {
-          rawData = res['data'];
-        } else if (res['results'] != null && res['results'] is List) {
-          rawData = res['results'];
-        } else if (res['data'] != null &&
-            res['data'] is Map &&
-            res['data']['results'] is List) {
-          rawData = res['data']['results'];
-        } else if (res['data'] != null &&
-            res['data'] is Map &&
-            res['data']['results'] == null &&
-            res['data'].isNotEmpty) {
-          // If data exists but no results, try to find any list in data
-          final dataMap = res['data'] as Map;
-          final listInData = dataMap.values.firstWhere(
-            (v) => v is List,
-            orElse: () => null,
-          );
-          rawData = listInData ?? [];
-        } else if (res['docs'] != null && res['docs'] is List) {
-          rawData = res['docs'];
-        } else if (res['items'] != null && res['items'] is List) {
-          rawData = res['items'];
-        } else if (res['list'] != null && res['list'] is List) {
-          rawData = res['list'];
-        } else {
-          rawData = [];
-        }
-      } else {
-        try {
-          final jsonForm = (res as dynamic).toJson();
-          if (jsonForm is Map) {
-            if (jsonForm['data'] != null &&
-                jsonForm['data']['results'] != null) {
-              rawData = jsonForm['data']['results'];
-            } else {
-              rawData =
-                  jsonForm['data'] ??
-                  jsonForm['docs'] ??
-                  jsonForm['items'] ??
-                  jsonForm['list'] ??
-                  jsonForm['results'] ??
-                  jsonForm;
-            }
-          } else if (jsonForm is List) {
-            rawData = jsonForm;
-          } else {
-            rawData = res;
-          }
-        } catch (_) {
-          rawData = res;
-        }
-      }
-      List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
-      // Inject fallback demo profiles for 'follow' and 'new' if API returns empty
-      // ...existing code...
-      _femaleProfiles = normalizedProfiles;
-      debugPrint('[DEBUG] _femaleProfiles set:');
-      for (final p in _femaleProfiles) {
-        debugPrint(p.toString());
-      }
+      List<Map<String, dynamic>> normalized = _normalizeList(res);
+      _femaleProfiles = normalized;
       _isLoading = false;
       notifyListeners();
-      
-      return _femaleProfiles;
+      return normalized;
     } catch (e, st) {
-      debugPrint(
-        "❌ fetchDashboardSectionFemales ($section) exception: $e\n$st",
-      );
+      debugPrint("❌ fetchDashboardProfiles ($section) exception: $e\n$st");
       _femaleProfiles = [];
       _isLoading = false;
       _error = e.toString();
@@ -900,6 +843,47 @@ class ApiController extends ChangeNotifier {
       notifyListeners();
       rethrow;
     }
+  }
+
+  List<Map<String, dynamic>> _normalizeList(dynamic input) {
+    if (input == null) return [];
+    if (input is List<Map<String, dynamic>>) return input;
+    
+    dynamic rawData;
+    if (input is Map) {
+      final candidates = ['data', 'results', 'docs', 'items', 'list'];
+      // Check if it's the {data: {results: [...]}} structure
+      if (input['data'] != null && input['data'] is Map && input['data']['results'] != null) {
+        rawData = input['data']['results'];
+      } else {
+        for (final c in candidates) {
+          if (input[c] != null && input[c] is List) {
+            rawData = input[c];
+            break;
+          }
+        }
+      }
+      rawData ??= input; // Fallback to the whole map if no list found
+    } else {
+      rawData = input;
+    }
+
+    if (rawData is List) {
+      return rawData
+          .where((e) => e != null)
+          .map((e) {
+            if (e is Map) return Map<String, dynamic>.from(e);
+            return <String, dynamic>{};
+          })
+          .where((m) => m.isNotEmpty)
+          .toList();
+    }
+    
+    if (rawData is Map) {
+      return [Map<String, dynamic>.from(rawData)];
+    }
+
+    return [];
   }
 
   /// Update specific profile details using PATCH /male-user/profile-details
@@ -1016,87 +1000,6 @@ class ApiController extends ChangeNotifier {
     return message;
   }
 
-  // Block a female user
-  Future<Map<String, dynamic>> blockUser({required String femaleUserId}) async {
-    _isLoading = true;
-    _error = null;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      notifyListeners();
-    });
-    try {
-      final result = await _apiService.blockUser(femaleUserId: femaleUserId);
-      _isLoading = false;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
-      return result;
-    } catch (e) {
-      _isLoading = false;
-      _error = e.toString();
-      _handleTokenError(e);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
-      rethrow;
-    }
-  }
-
-  // Fetch blocked users list
-  Future<Map<String, dynamic>> fetchBlockedUsersList({
-    required String femaleUserId,
-  }) async {
-    _isLoading = true;
-    _error = null;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      notifyListeners();
-    });
-    try {
-      final result = await _apiService.fetchBlockedUsersList(
-        femaleUserId: femaleUserId,
-      );
-      _isLoading = false;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
-      return result;
-    } catch (e) {
-      _isLoading = false;
-      _error = e.toString();
-      _handleTokenError(e);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
-      rethrow;
-    }
-  }
-
-  // Unblock a female user
-  Future<Map<String, dynamic>> unblockUser({
-    required String femaleUserId,
-  }) async {
-    _isLoading = true;
-    _error = null;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      notifyListeners();
-    });
-    try {
-      final result = await _apiService.unblockUser(femaleUserId: femaleUserId);
-      _isLoading = false;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
-      return result;
-    } catch (e) {
-      _isLoading = false;
-      _error = e.toString();
-      _handleTokenError(e);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
-      rethrow;
-    }
-  }
-
   /// Set static profiles for demo purposes
   void setStaticProfiles(List<Map<String, dynamic>> profiles) {
     _femaleProfiles = profiles;
@@ -1164,6 +1067,7 @@ class ApiController extends ChangeNotifier {
 
 
   // Update profile and image with geolocation
+  // Update profile and image with geolocation
   Future<Map<String, dynamic>> updateProfileAndImage({
     required Map<String, String> fields,
     File? imageFile,
@@ -1175,105 +1079,26 @@ class ApiController extends ChangeNotifier {
     });
 
     try {
-      final result = await _apiService.fetchFollowedFemales(
-        page: page,
-        limit: limit,
+      List<http.MultipartFile>? images;
+      if (imageFile != null) {
+        images = [
+          await http.MultipartFile.fromPath('profile_image', imageFile.path)
+        ];
+      }
+
+      final Map<String, dynamic> dynamicFields = Map<String, dynamic>.from(fields);
+
+      final result = await _apiService.updateUserProfile(
+        fields: dynamicFields,
+        images: images,
       );
-
-      debugPrint("📥 fetchFollowedFemales raw response: $result");
-
-      List<Map<String, dynamic>> _normalizeList(dynamic input) {
-        if (input is List<Map<String, dynamic>>) return input;
-        if (input is List) {
-          return input
-              .where((e) => e != null)
-              .map((e) {
-                if (e is Map) return Map<String, dynamic>.from(e);
-                try {
-                  if (e is String) return {'name': e};
-                  if (e is int || e is double) return {'value': e};
-                  if (e is List) return {'list': e};
-                } catch (_) {}
-                return <String, dynamic>{};
-              })
-              .where((m) => m.isNotEmpty)
-              .toList();
-        }
-        if (input is Map) {
-          final mapInput = Map<String, dynamic>.from(input);
-          final candidates = [
-            mapInput['items'],
-            mapInput['list'],
-            mapInput['results'],
-            mapInput['data'],
-            mapInput['docs'],
-          ];
-          for (final c in candidates) {
-            if (c is List) {
-              return _normalizeList(c);
-            }
-          }
-        }
-        return <Map<String, dynamic>>[];
-      }
-
-      dynamic rawData;
-      if (result is Map) {
-        if (result['data'] != null && result['data']['results'] != null) {
-          // Handle new response structure: {data: {results: [...]}},
-          rawData = result['data']['results'];
-        } else if (result['data'] != null) {
-          rawData = result['data'];
-        } else if (result['docs'] != null) {
-          rawData = result['docs'];
-        } else if (result['items'] != null) {
-          rawData = result['items'];
-        } else if (result['list'] != null) {
-          rawData = result['list'];
-        } else if (result['results'] != null) {
-          rawData = result['results'];
-        } else {
-          rawData = result;
-        }
-      } else {
-        try {
-          final jsonForm = (result as dynamic).toJson();
-          if (jsonForm is Map) {
-            // Check for new structure first
-            if (jsonForm['data'] != null &&
-                jsonForm['data']['results'] != null) {
-              rawData = jsonForm['data']['results'];
-            } else {
-              rawData =
-                  jsonForm['data'] ??
-                  jsonForm['docs'] ??
-                  jsonForm['items'] ??
-                  jsonForm['list'] ??
-                  jsonForm['results'] ??
-                  jsonForm;
-            }
-          } else if (jsonForm is List) {
-            rawData = jsonForm;
-          } else {
-            rawData = result;
-          }
-        } catch (_) {
-          rawData = result;
-        }
-      }
-
-      List<Map<String, dynamic>> normalizedProfiles = _normalizeList(rawData);
-
-      _femaleProfiles = normalizedProfiles;
+      
       _isLoading = false;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         notifyListeners();
       });
-
-      return normalizedProfiles;
-    } catch (e, st) {
-      debugPrint("❌ fetchFollowedFemales exception: $e\n$st");
-      _femaleProfiles = [];
+      return result;
+    } catch (e) {
       _isLoading = false;
       _error = e.toString();
       _handleTokenError(e);
@@ -1283,6 +1108,7 @@ class ApiController extends ChangeNotifier {
       rethrow;
     }
   }
+
 
   // Fetch call history
   Future<Map<String, dynamic>> fetchCallHistory({
@@ -1362,6 +1188,391 @@ class ApiController extends ChangeNotifier {
         });
         rethrow;
       }
+    }
+  }
+
+  // Fetch chat rooms
+  Future<Map<String, dynamic>> fetchChatRooms() async {
+    _isLoading = true;
+    _error = null;
+    Future.microtask(() => notifyListeners());
+    try {
+      final result = await _apiService.fetchChatRooms();
+      _isLoading = false;
+      notifyListeners();
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  // Start chat with female user
+  Future<Map<String, dynamic>> startChat(String femaleId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    
+    try {
+      final result = await _apiService.startChat(femaleId);
+      _isLoading = false;
+      notifyListeners();
+      return result;
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString();
+      _handleTokenError(e);
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+
+
+  /// Fetch chat messages for a specific chat room
+  Future<void> fetchChatMessages(String chatRoomId) async {
+    _isChatMessagesLoading = true;
+    _chatMessagesError = null;
+    if (WidgetsBinding.instance != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+    } else {
+      notifyListeners();
+    }
+
+    try {
+      final result = await _apiService.fetchChatMessages(chatRoomId);
+      
+      if (result['success'] == true && result['data'] is List) {
+         final List<dynamic> data = result['data'];
+         // Ensure messages are sorted by createdAt if needed
+         // data.sort((a, b) => (a['createdAt'] ?? '').compareTo(b['createdAt'] ?? ''));
+         
+        _chatMessages = data.map((e) => Map<String, dynamic>.from(e)).toList();
+      } else {
+        _chatMessages = [];
+      }
+      
+      _isChatMessagesLoading = false;
+      if (WidgetsBinding.instance != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+      } else {
+        notifyListeners();
+      }
+    } catch (e) {
+      _isChatMessagesLoading = false;
+      _chatMessagesError = e.toString();
+      _handleTokenError(e);
+      if (WidgetsBinding.instance != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          notifyListeners();
+        });
+      } else {
+        notifyListeners();
+      }
+      // rethrow; // Optional depending on UI needs
+    }
+  }
+
+  // State for sending messages
+  bool _isSendingMessage = false;
+  bool get isSendingMessage => _isSendingMessage;
+
+  /// Send a text or emoji message
+  Future<void> sendTextMessage({
+    required String roomId,
+    required String content,
+    bool isEmoji = false,
+  }) async {
+    _isSendingMessage = true;
+    _chatMessagesError = null;
+    notifyListeners();
+
+    try {
+      await _apiService.sendChatMessage(
+        roomId: roomId,
+        type: isEmoji ? 'emoji' : 'text', 
+        content: content,
+      );
+      // Refresh messages after sending
+      await fetchChatMessages(roomId); 
+    } catch (e) {
+      print('[ERROR] Failed to send message: $e');
+      _chatMessagesError = e.toString();
+      _handleTokenError(e);
+      // Don't rethrow, just show error in UI if needed via state
+    } finally {
+      _isSendingMessage = false;
+      notifyListeners();
+    }
+  }
+
+  /// Send a media message (image, video, audio)
+  Future<void> sendMediaMessage({
+    required String roomId,
+    required File file,
+    required String type, // "image", "video", "audio"
+  }) async {
+    _isSendingMessage = true;
+    _chatMessagesError = null;
+    notifyListeners();
+
+    try {
+      // 1. Upload media
+      final uploadRes = await _apiService.uploadChatMedia(file, type);
+      print('[DEBUG] Media upload response: $uploadRes');
+      
+      String? url;
+    if (uploadRes['success'] == true) {
+      final data = uploadRes['data'];
+      if (data is Map) {
+        url = data['url'] ?? 
+              data['image_url'] ?? 
+              data['path'] ?? 
+              data['images'] ?? 
+              data['videos'] ?? 
+              data['audio'];
+        
+        // If it's a list, take the first element
+        if (url == null) {
+          if (data['images'] is List && (data['images'] as List).isNotEmpty) {
+            url = data['images'][0];
+          } else if (data['videos'] is List && (data['videos'] as List).isNotEmpty) {
+            url = data['videos'][0];
+          }
+        }
+      } else if (data is String) {
+        url = data;
+      } else if (uploadRes['url'] != null) {
+        url = uploadRes['url'];
+      }
+    }
+      
+      if (url != null) {
+        // 2. Send message with URL
+        await _apiService.sendChatMessage(
+          roomId: roomId,
+          type: type,
+          content: url,
+        );
+        
+        // Refresh messages
+        await fetchChatMessages(roomId);
+      } else {
+        throw Exception('Failed to get URL from upload response: ${uploadRes['message'] ?? 'Unknown error'}');
+      }
+    } catch (e) {
+      print('[ERROR] Failed to send media message: $e');
+      _chatMessagesError = e.toString();
+      _handleTokenError(e);
+    } finally {
+      _isSendingMessage = false;
+      notifyListeners();
+    }
+  }
+
+  /// Clear chat room messages
+  Future<void> clearChat({
+    required String roomId,
+    required List<String> messageIds,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _apiService.clearChat(roomId: roomId, messageIds: messageIds);
+      // Refresh messages
+      await fetchChatMessages(roomId);
+    } catch (e) {
+      print('[ERROR] Failed to clear chat: $e');
+      _error = e.toString();
+      _handleTokenError(e);
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Delete a single message for self
+  Future<void> deleteMessage({
+    required String roomId,
+    required String messageId,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _apiService.deleteMessage(messageId: messageId);
+      // Refresh messages
+      await fetchChatMessages(roomId);
+    } catch (e) {
+      print('[ERROR] Failed to delete message: $e');
+      _error = e.toString();
+      _handleTokenError(e);
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Delete a single message for everyone
+  Future<void> deleteMessageForEveryone({
+    required String roomId,
+    required String messageId,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _apiService.deleteMessageForEveryone(messageId: messageId);
+      // Refresh messages
+      await fetchChatMessages(roomId);
+    } catch (e) {
+      print('[ERROR] Failed to delete message for everyone: $e');
+      _error = e.toString();
+      _handleTokenError(e);
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Delete the entire chat room
+  Future<void> deleteChatRoom({
+    required String roomId,
+    required List<String> messageIds,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _apiService.deleteChatRoom(roomId: roomId, messageIds: messageIds);
+      // Refresh chat rooms list
+      await fetchChatRooms();
+    } catch (e) {
+      print('[ERROR] Failed to delete chat room: $e');
+      _error = e.toString();
+      _handleTokenError(e);
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Mark messages as read
+  Future<void> markAsRead({
+    required String roomId,
+    required List<String> messageIds,
+  }) async {
+    try {
+      await _apiService.markAsRead(roomId: roomId, messageIds: messageIds);
+      // We don't necessarily need to reload everything, but we can refresh the room list
+      // to update unread counts
+      await fetchChatRooms();
+    } catch (e) {
+      print('[ERROR] Failed to mark as read: $e');
+      // Quietly handle this as it might be called frequently
+    }
+  }
+
+  /// Toggle disappearing messages for a room
+  Future<void> toggleDisappearingMessages({
+    required String roomId,
+    required bool enabled,
+  }) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _apiService.toggleDisappearingMessages(roomId: roomId, enabled: enabled);
+      // No need to refresh messages, but maybe refresh room details if we had them
+    } catch (e) {
+      print('[ERROR] Failed to toggle disappearing messages: $e');
+      _error = e.toString();
+      _handleTokenError(e);
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  List<dynamic> _blockList = [];
+  List<dynamic> get blockList => _blockList;
+
+  /// Fetch the list of blocked users
+  Future<void> fetchBlockList() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.fetchBlockList();
+      if (response['success'] == true && response['data'] is List) {
+        _blockList = response['data'];
+      }
+    } catch (e) {
+      print('[ERROR] Failed to fetch block list: $e');
+      _error = e.toString();
+      _handleTokenError(e);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Block a user
+  Future<void> blockUser({required String femaleUserId}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _apiService.blockUser(femaleUserId: femaleUserId);
+      await fetchBlockList(); // Refresh the list
+    } catch (e) {
+      print('[ERROR] Failed to block user: $e');
+      _error = e.toString();
+      _handleTokenError(e);
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Unblock a user
+  Future<void> unblockUser({required String femaleUserId}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await _apiService.unblockUser(femaleUserId: femaleUserId);
+      await fetchBlockList(); // Refresh the list
+    } catch (e) {
+      print('[ERROR] Failed to unblock user: $e');
+      _error = e.toString();
+      _handleTokenError(e);
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 }

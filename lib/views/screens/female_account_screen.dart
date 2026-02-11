@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:Boy_flow/controllers/profile_controller.dart';
-import 'package:Boy_flow/models/profile_model.dart';
+import 'package:boy_flow/controllers/profile_controller.dart';
+import 'package:boy_flow/models/profile_model.dart';
 
 class FemaleAccountScreen extends StatelessWidget {
   const FemaleAccountScreen({Key? key}) : super(key: key);

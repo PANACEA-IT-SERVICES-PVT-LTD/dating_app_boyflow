@@ -28,45 +28,25 @@ class _BlockListScreenState extends State<BlockListScreen1> {
 
   Future<void> _fetchBlockedUsers() async {
     try {
-      // Use the ApiController via Provider to fetch the current user profile first
       final apiController = Provider.of<ApiController>(context, listen: false);
-      final profileResult = await apiController.fetchCurrentMaleProfile();
+      await apiController.fetchBlockList();
 
-      if (profileResult["success"] == true && profileResult["data"] is Map) {
-        final userData = profileResult["data"] as Map;
-        _currentMaleUserId = userData["_id"]?.toString();
+      if (!mounted) return;
 
-        if (_currentMaleUserId != null && _currentMaleUserId!.isNotEmpty) {
-          // Now fetch the blocked users list
-          final result = await apiController.fetchBlockedUsersList(
-            femaleUserId: _currentMaleUserId!,
-          );
-
-          if (!mounted) return;
-
-          if (result is Map &&
-              result["success"] == true &&
-              result["data"] is List) {
-            final List list = result["data"] as List;
-
-            setState(() {
-              blockedUsers = list.map<Map<String, String>>((e) {
-                if (e is Map) {
-                  final id = (e["_id"] ?? e["id"] ?? e["femaleUserId"] ?? "")
-                      .toString();
-                  final name =
-                      (e["name"] ?? e["firstName"] ?? e["username"] ?? "User")
-                          .toString();
-                  final img = (e["img"] ?? e["image"] ?? e["avatarUrl"] ?? "")
-                      .toString();
-                  return {"id": id, "name": name, "img": img};
-                }
-                return {"id": "", "name": "User", "img": ""};
-              }).toList();
-            });
+      setState(() {
+        blockedUsers = apiController.blockList.map<Map<String, String>>((e) {
+          if (e is Map) {
+            final blockedUser = e["blockedUserId"];
+            if (blockedUser is Map) {
+              final id = (blockedUser["_id"] ?? blockedUser["id"] ?? "").toString();
+              final name = (blockedUser["name"] ?? blockedUser["firstName"] ?? blockedUser["username"] ?? blockedUser["email"] ?? "User").toString();
+              final img = (blockedUser["img"] ?? blockedUser["image"] ?? blockedUser["avatarUrl"] ?? "").toString();
+              return {"id": id, "name": name, "img": img};
+            }
           }
-        }
-      }
+          return {"id": "", "name": "User", "img": ""};
+        }).where((u) => u["id"]!.isNotEmpty).toList();
+      });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -85,7 +65,7 @@ class _BlockListScreenState extends State<BlockListScreen1> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Unblock user'),
-        content: Text(
+        content: const Text(
           'Are you sure you want to unblock this user? You will be able to interact with them again.',
         ),
         actions: [
@@ -103,32 +83,17 @@ class _BlockListScreenState extends State<BlockListScreen1> {
 
     if (confirmed == true) {
       try {
-        // Use the ApiController via Provider to unblock user
-        final apiController = Provider.of<ApiController>(
-          context,
-          listen: false,
-        );
-        final result = await apiController.unblockUser(
-          femaleUserId: femaleUserId,
-        );
+        final apiController = Provider.of<ApiController>(context, listen: false);
+        await apiController.unblockUser(femaleUserId: femaleUserId);
 
         if (!mounted) return;
 
-        final success = result["success"] == true;
-        final message =
-            result["message"] ??
-            (success
-                ? "User unblocked successfully. You can now interact with them again."
-                : "Failed to unblock user");
-
-        if (success) {
-          setState(() {
-            blockedUsers.removeWhere((user) => user['id'] == femaleUserId);
-          });
-        }
+        setState(() {
+          blockedUsers.removeWhere((user) => user['id'] == femaleUserId);
+        });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(success ? "✅ $message" : "❌ $message")),
+          const SnackBar(content: Text("✅ User unblocked successfully")),
         );
       } catch (e) {
         if (!mounted) return;
@@ -143,21 +108,13 @@ class _BlockListScreenState extends State<BlockListScreen1> {
     if (femaleUserId.isEmpty) return;
 
     try {
-      // Use the ApiController via Provider to block user
       final apiController = Provider.of<ApiController>(context, listen: false);
-      final result = await apiController.blockUser(femaleUserId: femaleUserId);
+      await apiController.blockUser(femaleUserId: femaleUserId);
 
       if (!mounted) return;
 
-      final success = result["success"] == true;
-      final message =
-          result["message"] ??
-          (success
-              ? "User blocked successfully. All connections removed."
-              : "Failed to block user");
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(success ? "✅ $message" : "❌ $message")),
+        const SnackBar(content: Text("✅ User blocked successfully")),
       );
     } catch (e) {
       if (!mounted) return;

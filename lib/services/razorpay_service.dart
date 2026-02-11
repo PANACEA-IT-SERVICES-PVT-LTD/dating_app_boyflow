@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:Boy_flow/api_service/api_endpoint.dart';
+import 'package:boy_flow/api_service/api_endpoint.dart';
 import 'package:http/http.dart' as http;
 
 class RazorpayService {
@@ -9,7 +9,7 @@ class RazorpayService {
 
   // Create coin order
   static Future<Map<String, dynamic>> createCoinOrder(String packageId) async {
-    final url = Uri.parse("${ApiEndPoints.baseUrl}${ApiEndPoints.coinOrder}");
+    final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.coinOrder}");
 
     final response = await http.post(
       url,
@@ -31,7 +31,7 @@ class RazorpayService {
 
   // Verify payment
   static Future<bool> verifyPayment(Map<String, dynamic> payload) async {
-    final url = Uri.parse("${ApiEndPoints.baseUrl}${ApiEndPoints.paymentVerify}");
+    final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.paymentVerify}");
 
     final response = await http.post(
       url,
@@ -48,7 +48,7 @@ class RazorpayService {
 
   // Fetch coin packages
   static Future<List<dynamic>> fetchPackages() async {
-    final url = Uri.parse("${ApiEndPoints.baseUrl}${ApiEndPoints.paymentPackages}");
+    final url = Uri.parse("${ApiEndPoints.baseUrls}${ApiEndPoints.paymentPackages}");
 
     final response = await http.get(
       url,
