@@ -830,7 +830,14 @@ class ApiController extends ChangeNotifier {
       );
       
       List<Map<String, dynamic>> normalized = _normalizeList(res);
-      _femaleProfiles = normalized;
+      
+      // If it's the first page, replace. Otherwise append.
+      if (page == 1) {
+        _femaleProfiles = normalized;
+      } else {
+        _femaleProfiles.addAll(normalized);
+      }
+      
       _isLoading = false;
       notifyListeners();
       return normalized;

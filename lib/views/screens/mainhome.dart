@@ -126,12 +126,11 @@ class _HomeScreenState extends State<MainHome> {
     // Load initial profiles immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startUILoadingTimeout();
-      _loadStaticData(); // Load static data as fallback
-      _loadInitialProfiles();
+      _loadInitialProfiles(); // Primary data source
       _loadFollowedProfiles();
       
       final apiController = Provider.of<ApiController>(context, listen: false);
-      apiController.fetchSentFollowRequests(); // Initial fetch of follow requests
+      apiController.fetchSentFollowRequests();
     });
   }
 
@@ -298,7 +297,7 @@ class _HomeScreenState extends State<MainHome> {
     final apiController = Provider.of<ApiController>(context, listen: false);
     try {
       // Clear old profiles before loading new ones
-      apiController.clearFemaleProfiles();
+      // apiController.clearFemaleProfiles();
 
       switch (filter) {
         case 'Follow':

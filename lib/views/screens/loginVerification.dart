@@ -125,68 +125,88 @@ class _LoginVerificationScreenState extends State<LoginVerificationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "Verify your email",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 22,
-                    color: Colors.black87,
-                  ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  "Enter the 4-digit OTP sent to ${widget.email ?? ''}",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 15, color: Colors.black54),
-                ),
-                const SizedBox(height: 32),
-                OtpInputFields(
-                  onCompleted: (otp) {
-                    for (
-                      int i = 0;
-                      i < otp.length && i < _otpControllers.length;
-                      i++
-                    ) {
-                      _otpControllers[i].text = otp[i].toString();
-                    }
-                    _verifyOtp();
-                  },
-                ),
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    _errorMessage!,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ],
-                const SizedBox(height: 32),
-                GradientButton(
-                  text: _isLoading ? "Verifying..." : "Verify OTP",
-                  onPressed: _isLoading ? null : _verifyOtp,
-                  buttonText: '',
-                ),
-                const SizedBox(height: 24),
-                GestureDetector(
-                  onTap: _resendOtp,
-                  child: const Text(
-                    "Resend OTP",
-                    style: TextStyle(
-                      color: Colors.purple,
-                      fontWeight: FontWeight.w600,
+                child: IntrinsicHeight(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Verify your email",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            "Enter the 4-digit OTP sent to ${widget.email ?? ''}",
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                          OtpInputFields(
+                            onCompleted: (otp) {
+                              for (
+                                int i = 0;
+                                i < otp.length && i < _otpControllers.length;
+                                i++
+                              ) {
+                                _otpControllers[i].text = otp[i].toString();
+                              }
+                              _verifyOtp();
+                            },
+                          ),
+                          if (_errorMessage != null) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              _errorMessage!,
+                              style: const TextStyle(color: Colors.red),
+                            ),
+                          ],
+                          const SizedBox(height: 32),
+                          GradientButton(
+                            text: _isLoading ? "Verifying..." : "Verify OTP",
+                            onPressed: _isLoading ? null : _verifyOtp,
+                            buttonText: '',
+                          ),
+                          const SizedBox(height: 24),
+                          GestureDetector(
+                            onTap: _resendOtp,
+                            child: const Text(
+                              "Resend OTP",
+                              style: TextStyle(
+                                color: Colors.purple,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

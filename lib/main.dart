@@ -22,23 +22,13 @@ import 'services/fcm_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase with platform-specific handling
-  try {
-    // Check if we're on web platform
-    if (kIsWeb) {
-      print('Running on web - Firebase initialization may require config');
-      // For web, we'll initialize without config for now
-      // You'll need to add firebase_options.dart for proper web support
-    } else {
-      await Firebase.initializeApp();
-      print('Firebase initialized successfully');
-      // Initialize FCM Service only on mobile platforms
-      await FCMService().initialize();
-    }
-  } catch (e) {
+  // Initialize Firebase asynchronously to avoid blocking the first frame
+  Firebase.initializeApp().then((_) {
+    print('Firebase initialized successfully');
+    FCMService().initialize();
+  }).catchError((e) {
     print('Error initializing Firebase: $e');
-    print('Continuing without Firebase services');
-  }
+  });
 
   runApp(
     MultiProvider(

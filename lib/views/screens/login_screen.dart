@@ -134,8 +134,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final keyboardInset = mq.viewInsets.bottom;
 
     return Scaffold(
-      // keep this true (default) so scaffold adjusts for keyboard
-      resizeToAvoidBottomInset: true,
+      // set to false to prevent layout squashing when keyboard opens
+      resizeToAvoidBottomInset: false,
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: SingleChildScrollView(

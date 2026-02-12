@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart'; // Added for MediaType
-import 'package:dio/dio.dart';
+// import 'package:dio/dio.dart'; // Removed to reduce APK size
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/female_user.dart';
 import '../api_service/api_endpoint.dart';
@@ -82,7 +82,7 @@ class ApiService {
 
   String? _authToken;
   final String baseUrl = ApiEndPoints.baseUrls;
-  final Dio _dio = Dio();
+  // final Dio _dio = Dio(); // Removed
 
   // Get auth token from shared preferences
   Future<void> _getAuthToken() async {
@@ -1931,16 +1931,14 @@ class ApiService {
       final headers = await _getHeaders();
       print('Fetching gifts from: ${ApiEndPoints.baseUrls}/male-user/gifts');
 
-      final response = await _dio.get(
-        '/male-user/gifts',
-        options: Options(headers: headers),
-      );
+      final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/gifts');
+      final response = await http.get(url, headers: headers);
 
       print('Gifts response status: ${response.statusCode}');
-      print('Gifts response data: ${response.data}');
+      print('Gifts response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
+        final data = json.decode(response.body) as Map<String, dynamic>;
         if (data['success'] == true && data['data'] is List) {
           return List<Gift>.from(
             data['data'].map((item) => Gift.fromJson(item)),
@@ -1952,26 +1950,6 @@ class ApiService {
         throw Exception(
           'Failed to fetch gifts. Status: ${response.statusCode}',
         );
-      }
-    } on DioException catch (e) {
-      print('DioException in gifts: $e');
-      if (e.response != null) {
-        switch (e.response?.statusCode) {
-          case 401:
-            throw Exception('Unauthorized: Please log in again');
-          case 403:
-            throw Exception(
-              'Forbidden: You do not have permission to access gifts',
-            );
-          case 500:
-            throw Exception('Internal Server Error: Please try again later');
-          default:
-            throw Exception(
-              'Error: ${e.response?.statusMessage ?? 'Unknown error'}',
-            );
-        }
-      } else {
-        throw Exception('Network error: Please check your connection');
       }
     } catch (e) {
       print('Unexpected error in gifts: $e');
@@ -1985,17 +1963,15 @@ class ApiService {
       final headers = await _getHeaders();
       print('Sending gift to female user: $femaleUserId, giftId: $giftId');
 
-      final response = await _dio.post(
-        '/male-user/gifts/send',
-        data: {'femaleUserId': femaleUserId, 'giftId': giftId},
-        options: Options(headers: headers),
-      );
+      final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/gifts/send');
+      final body = json.encode({'femaleUserId': femaleUserId, 'giftId': giftId});
+      final response = await http.post(url, headers: headers, body: body);
 
       print('Send gift response status: ${response.statusCode}');
-      print('Send gift response data: ${response.data}');
+      print('Send gift response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
+        final data = json.decode(response.body) as Map<String, dynamic>;
         if (data['success'] == true) {
           return SendGiftResponse.fromJson(data);
         } else {
@@ -2003,30 +1979,6 @@ class ApiService {
         }
       } else {
         throw Exception('Failed to send gift. Status: ${response.statusCode}');
-      }
-    } on DioException catch (e) {
-      print('DioException in send gift: $e');
-      if (e.response != null) {
-        switch (e.response?.statusCode) {
-          case 400:
-            throw Exception(
-              'Invalid request: ${e.response?.data?['message'] ?? 'Validation error'}',
-            );
-          case 401:
-            throw Exception('Unauthorized: Please log in again');
-          case 403:
-            throw Exception(
-              'Forbidden: You do not have permission to send gifts',
-            );
-          case 500:
-            throw Exception('Internal Server Error: Please try again later');
-          default:
-            throw Exception(
-              'Error: ${e.response?.statusMessage ?? 'Unknown error'}',
-            );
-        }
-      } else {
-        throw Exception('Network error: Please check your connection');
       }
     } catch (e) {
       print('Unexpected error in send gift: $e');
@@ -2042,20 +1994,15 @@ class ApiService {
         'Fetching profile details from: ${ApiEndPoints.baseUrls}/male-user/profile-and-image',
       );
 
-      // For multipart form data, we'll send an empty form data as the API expects it
-      final formData = FormData.fromMap({});
-
-      final response = await _dio.post(
-        '/male-user/profile-and-image',
-        data: formData,
-        options: Options(headers: headers),
-      );
+      // Use http package for simple POST request
+      final url = Uri.parse('${ApiEndPoints.baseUrls}/male-user/profile-and-image');
+      final response = await http.post(url, headers: headers);
 
       print('Profile details response status: ${response.statusCode}');
-      print('Profile details response data: ${response.data}');
+      print('Profile details response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
+        final data = json.decode(response.body) as Map<String, dynamic>;
         if (data['success'] == true) {
           return ProfileModel.fromJson(data);
         } else {
@@ -2065,22 +2012,6 @@ class ApiService {
         throw Exception(
           'Failed to fetch profile details. Status: ${response.statusCode}',
         );
-      }
-    } on DioException catch (e) {
-      print('DioException in profile details: $e');
-      if (e.response != null) {
-        switch (e.response?.statusCode) {
-          case 401:
-            throw Exception('Unauthorized: Please log in again');
-          case 500:
-            throw Exception('Internal Server Error: Please try again later');
-          default:
-            throw Exception(
-              'Error: ${e.response?.statusMessage ?? 'Unknown error'}',
-            );
-        }
-      } else {
-        throw Exception('Network error: Please check your connection');
       }
     } catch (e) {
       print('Unexpected error in profile details: $e');
