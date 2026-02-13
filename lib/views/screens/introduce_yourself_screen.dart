@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:boy_flow/widgets/common_top_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -44,9 +45,6 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
   // State variables for profile data
   List<Map<String, dynamic>> _images = [];
   bool _isLoading = true;
-
-
-
 
   // Helper to parse profile data (comma separated or list)
   List<String> _parseProfileList(dynamic value) {
@@ -121,18 +119,16 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
       if (!mounted) return;
-      
+
       setState(() {
         // Store the local file path temporarily
         _uploadedPhotoUrl = picked.path;
         _images.insert(0, {'imageUrl': picked.path});
       });
-      
+
       try {
         messenger.showSnackBar(
-          const SnackBar(
-            content: Text('Image selected. Ready to upload.'),
-          ),
+          const SnackBar(content: Text('Image selected. Ready to upload.')),
         );
       } catch (_) {
         // Ignore inactive messenger errors to prevent crash
@@ -167,7 +163,8 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
           if (userData['dateOfBirth'] != null) {
             try {
               final dob = DateTime.parse(userData['dateOfBirth'].toString());
-              _dobController.text = "${dob.year}-${dob.month.toString().padLeft(2, '0')}-${dob.day.toString().padLeft(2, '0')}";
+              _dobController.text =
+                  "${dob.year}-${dob.month.toString().padLeft(2, '0')}-${dob.day.toString().padLeft(2, '0')}";
             } catch (_) {
               debugPrint('Error parsing DOB: ${userData['dateOfBirth']}');
             }
@@ -176,26 +173,34 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
           // Handle Gender
           final gender = userData['gender']?.toString().toLowerCase();
           if (gender != null) {
-            if (gender == 'male') _selectedGender = 'Male';
-            else if (gender == 'female') _selectedGender = 'Female';
-            else _selectedGender = 'Other';
+            if (gender == 'male')
+              _selectedGender = 'Male';
+            else if (gender == 'female')
+              _selectedGender = 'Female';
+            else
+              _selectedGender = 'Other';
           }
 
           // Handle Images
           final images = userData['images'];
           if (images is List && images.isNotEmpty) {
             final firstImage = images.first;
-             if (firstImage is Map) {
-                 // Check for 'imageUrl' or 'url' or 'path'
-                 final url = firstImage['imageUrl']?.toString() ?? 
-                             firstImage['url']?.toString() ?? 
-                             firstImage['path']?.toString();
-                 if (url != null && url.isNotEmpty) {
-                     _images = [{'imageUrl': url}];
-                 }
-             } else if (firstImage is String) {
-                _images = [{'imageUrl': firstImage}];
-             }
+            if (firstImage is Map) {
+              // Check for 'imageUrl' or 'url' or 'path'
+              final url =
+                  firstImage['imageUrl']?.toString() ??
+                  firstImage['url']?.toString() ??
+                  firstImage['path']?.toString();
+              if (url != null && url.isNotEmpty) {
+                _images = [
+                  {'imageUrl': url},
+                ];
+              }
+            } else if (firstImage is String) {
+              _images = [
+                {'imageUrl': firstImage},
+              ];
+            }
           }
         });
       }
@@ -256,20 +261,7 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          'Introduce Yourself',
-          style: TextStyle(color: Colors.white),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
-            ),
-          ),
-        ),
-      ),
+      appBar: const CommonTopBar(title: 'Introduce Yourself', showCoin: false),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Form(
@@ -283,19 +275,21 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                 child: _images.isNotEmpty && _images[0]['imageUrl'] != null
                     ? CircleAvatar(
                         radius: 60,
-                        backgroundImage: () {
-                          String path = _images[0]['imageUrl'];
-                          if (path.startsWith('http')) {
-                            return NetworkImage(path);
-                          } else {
-                            if (path.startsWith('file://')) {
-                               try {
-                                 path = Uri.parse(path).toFilePath();
-                               } catch (_) {}
-                            }
-                            return FileImage(File(path));
-                          }
-                        }() as ImageProvider,
+                        backgroundImage:
+                            () {
+                                  String path = _images[0]['imageUrl'];
+                                  if (path.startsWith('http')) {
+                                    return NetworkImage(path);
+                                  } else {
+                                    if (path.startsWith('file://')) {
+                                      try {
+                                        path = Uri.parse(path).toFilePath();
+                                      } catch (_) {}
+                                    }
+                                    return FileImage(File(path));
+                                  }
+                                }()
+                                as ImageProvider,
                       )
                     : const _DottedBorderBox(label: 'Pick Image'),
               ),
@@ -315,7 +309,7 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                 hint: 'Mobile Number',
                 keyboardType: TextInputType.phone,
               ),
-              
+
               // Date of Birth with DatePicker
               Padding(
                 padding: const EdgeInsets.only(bottom: 14),
@@ -325,13 +319,16 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                   onTap: () async {
                     final DateTime? picked = await showDatePicker(
                       context: context,
-                      initialDate: DateTime.now().subtract(const Duration(days: 365 * 18)), // Default to 18 years ago
+                      initialDate: DateTime.now().subtract(
+                        const Duration(days: 365 * 18),
+                      ), // Default to 18 years ago
                       firstDate: DateTime(1900),
                       lastDate: DateTime.now(),
                     );
                     if (picked != null) {
                       // Format: YYYY-MM-DD
-                      final formattedDate = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                      final formattedDate =
+                          "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
                       setState(() {
                         _dobController.text = formattedDate;
                       });
@@ -341,7 +338,10 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                     filled: true,
                     fillColor: const Color(0xFFF9E6F5),
                     hintText: 'Date of Birth (YYYY-MM-DD)',
-                    suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFFE91EC7)),
+                    suffixIcon: const Icon(
+                      Icons.calendar_today,
+                      color: Color(0xFFE91EC7),
+                    ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 14,
@@ -387,7 +387,9 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                           _selectedGender = newValue;
                         });
                       },
-                      items: _genders.map<DropdownMenuItem<String>>((String value) {
+                      items: _genders.map<DropdownMenuItem<String>>((
+                        String value,
+                      ) {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Text(value),
@@ -407,7 +409,7 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                     setState(() {
                       _isLoading = true;
                     });
-                    
+
                     final messenger = ScaffoldMessenger.of(context);
 
                     try {
@@ -425,35 +427,40 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                         'height': _heightController.text.trim(),
                         'religion': _religionController.text.trim(),
                       };
-                      
+
                       // Calculate age from DOB if possible
                       try {
                         if (_dobController.text.isNotEmpty) {
-                          final birthDate = DateTime.parse(_dobController.text.trim());
+                          final birthDate = DateTime.parse(
+                            _dobController.text.trim(),
+                          );
                           final today = DateTime.now();
                           int age = today.year - birthDate.year;
-                          if (today.month < birthDate.month || (today.month == birthDate.month && today.day < birthDate.day)) {
+                          if (today.month < birthDate.month ||
+                              (today.month == birthDate.month &&
+                                  today.day < birthDate.day)) {
                             age--;
                           }
                           data['age'] = age.toString();
                         }
                       } catch (e) {
-                         debugPrint('Error calculating age: $e');
+                        debugPrint('Error calculating age: $e');
                       }
-                      
+
                       if (_selectedGender != null) {
                         data['gender'] = _selectedGender!.toLowerCase();
                       } else {
-                         if (data['gender'] == null) {
-                            data['gender'] = 'male';
-                         }
+                        if (data['gender'] == null) {
+                          data['gender'] = 'male';
+                        }
                       }
 
                       // 1. Update text profile details via the new PATCH endpoint
                       await apiController.updateProfileDetails(data: data);
-                      
+
                       // 2. If there is a new image, use the upload method
-                      if (_images.isNotEmpty && _images[0]['imageUrl'] != null) {
+                      if (_images.isNotEmpty &&
+                          _images[0]['imageUrl'] != null) {
                         String path = _images[0]['imageUrl'];
                         if (!path.startsWith('http')) {
                           if (path.startsWith('file://')) {
@@ -462,10 +469,12 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                             } catch (_) {}
                           }
                           final imageFile = File(path);
-                          
+
                           // Convert data to Map<String, String> for the multipart request
-                          final Map<String, String> fields = data.map((k, v) => MapEntry(k, v.toString()));
-                          
+                          final Map<String, String> fields = data.map(
+                            (k, v) => MapEntry(k, v.toString()),
+                          );
+
                           await apiController.updateProfileAndImage(
                             fields: fields,
                             imageFile: imageFile,
@@ -489,7 +498,6 @@ class _IntroduceYourselfScreenState extends State<IntroduceYourselfScreen> {
                       if (mounted) {
                         Navigator.pop(context, true);
                       }
-
                     } catch (e) {
                       debugPrint('Error updating profile: $e');
                       if (!mounted) return;

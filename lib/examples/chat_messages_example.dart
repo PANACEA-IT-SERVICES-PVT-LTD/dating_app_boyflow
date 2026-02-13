@@ -37,16 +37,24 @@ class _ChatMessagesExampleState extends State<ChatMessagesExample> {
       final apiController = Provider.of<ApiController>(context, listen: false);
       final result = await apiController.fetchChatMessages(widget.chatRoomId);
 
-      if (result['success'] == true && result['data'] is List) {
+      // If fetchChatMessages returns void, you need to update it to return a Map or similar result.
+      // For now, add a temporary check to avoid using the result if it's void.
+      if (result != null && result is Map && result['success'] == true && result['data'] is List) {
         setState(() {
           messages = List<Map<String, dynamic>>.from(result['data']);
           isLoading = false;
         });
-      } else {
+      } else if (result != null && result is Map) {
         setState(() {
           errorMessage = result['message'] ?? 'Failed to load messages';
           isLoading = false;
         });
+      } else {
+        setState(() {
+          errorMessage = 'Failed to load messages: No data returned';
+          isLoading = false;
+        });
+      }
       }
     } catch (e) {
       setState(() {

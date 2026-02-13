@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/colors.dart';
 import '../../widgets/gradient_button.dart';
+import 'package:boy_flow/widgets/common_top_bar.dart';
 import '../../views/screens/update_kyc_details_screen.dart';
 
 class KYCDetailsScreen extends StatefulWidget {
@@ -17,27 +18,15 @@ class _KYCDetailsScreenState extends State<KYCDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
-      appBar: AppBar(
-        elevation: 0,
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        title: const Text(
-          'KYC Details',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.buttonStart, AppColors.buttonEnd],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+      appBar: CommonTopBar(
+        title: 'KYC Details',
+        showCoin: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
           ),
-        ),
+        ],
       ),
       body: Column(
         children: [

@@ -512,7 +512,6 @@ class ApiController extends ChangeNotifier {
       return res;
     } catch (e) {
       _isLoading = false;
-      _error = e.toString();
       _handleTokenError(e);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         notifyListeners();
@@ -614,19 +613,24 @@ class ApiController extends ChangeNotifier {
 
   /// Get follow status for a user: 'none', 'pending', 'following'
   String getFollowStatus(String femaleUserId) {
+    if (femaleUserId.isEmpty) return 'none';
+    
     // Check if there's a pending request
-    final isPending = _sentFollowRequests.any((req) => 
-      (req['femaleUserId'] is Map ? req['femaleUserId']['_id'] : req['femaleUserId']) == femaleUserId &&
-      req['status'] == 'pending'
-    );
+    final isPending = _sentFollowRequests.any((req) {
+      if (req == null) return false;
+      final fUser = req['femaleUserId'];
+      final fId = fUser is Map ? fUser['_id'] : fUser;
+      return fId == femaleUserId && req['status'] == 'pending';
+    });
     if (isPending) return 'pending';
 
-    // Check if already following (this depends on backend logic, 
-    // usually active follow requests have status 'accepted' or similar)
-    final isFollowing = _sentFollowRequests.any((req) => 
-      (req['femaleUserId'] is Map ? req['femaleUserId']['_id'] : req['femaleUserId']) == femaleUserId &&
-      req['status'] == 'accepted'
-    );
+    // Check if already following
+    final isFollowing = _sentFollowRequests.any((req) {
+      if (req == null) return false;
+      final fUser = req['femaleUserId'];
+      final fId = fUser is Map ? fUser['_id'] : fUser;
+      return fId == femaleUserId && req['status'] == 'accepted';
+    });
     if (isFollowing) return 'following';
 
     return 'none';
@@ -795,14 +799,11 @@ class ApiController extends ChangeNotifier {
       return res;
     } catch (e) {
       _isLoading = false;
-      _error = e.toString();
+      // Do not set global _error for this background task
       _handleTokenError(e);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         notifyListeners();
       });
-      // If it fails, return empty list or rethrow? 
-      // Existing code might expect rethrow. But typically for lists we might return empty.
-      // Let's rethrow to be safe and consistent with previous behavior if any.
       rethrow; 
     }
   }

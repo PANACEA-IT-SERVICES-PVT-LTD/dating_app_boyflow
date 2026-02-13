@@ -134,166 +134,174 @@ class _LoginScreenState extends State<LoginScreen> {
     final keyboardInset = mq.viewInsets.bottom;
 
     return Scaffold(
-      // set to false to prevent layout squashing when keyboard opens
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
-        child: SingleChildScrollView(
-          // ensure padding for keyboard so the content can scroll above it
-          padding: EdgeInsets.only(bottom: keyboardInset),
-          child: ConstrainedBox(
-            // allow the SingleChildScrollView to take at least the full height
-            constraints: BoxConstraints(
-              minHeight: mq.size.height - mq.padding.top - mq.padding.bottom,
-            ),
-            child: IntrinsicHeight(
-              child: Stack(
-                children: [
-                  Container(
-                    height: mq.size.height,
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.gradientTop,
-                          AppColors.gradientBottom,
-                        ],
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                      ),
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.only(bottom: keyboardInset),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: IntrinsicHeight(
+                  child: Stack(
                     children: [
-                      const SizedBox(height: 45),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          children: [
-                            const Text(
-                              "100% Trusted and secure",
-                              style: TextStyle(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const Spacer(),
-                            Image.asset(
-                              'assets/sheild.png',
-                              height: 24,
-                              width: 24,
-                              color: Colors.white,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        height: 240,
-                        child: Image.asset('assets/LoginImage.png'),
-                      ),
-                      const Spacer(), // pushes the white container to bottom
-                      // bottom white sheet
                       Container(
-                        width: double.infinity,
-                        // make sure the container doesn't exceed available height
-                        // and remains scrollable on small screens
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 20,
-                          horizontal: 24,
-                        ),
+                        height: constraints.maxHeight,
                         decoration: const BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(30),
-                            topRight: Radius.circular(30),
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.gradientTop,
+                              AppColors.gradientBottom,
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
                           ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min, // shrink to fit
-                          children: [
-                            const Text(
-                              "Email Id",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                                color: AppColors.black87,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.inputField,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              child: TextField(
-                                controller: _emailCtrl,
-                                keyboardType: TextInputType.emailAddress,
-                                textInputAction: TextInputAction.done,
-                                decoration: const InputDecoration(
-                                  hintText: 'Enter your email',
-                                  border: InputBorder.none,
-                                ),
-                                onSubmitted: (_) {
-                                  if (!isLoading) _sendOtp();
-                                },
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            const Text(
-                              "We don't share your email",
-                              style: TextStyle(
-                                color: AppColors.otpBorder,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            GradientButton(
-                              text: _submitting ? 'Sending OTP...' : 'Log In',
-                              onPressed: _submitting
-                                  ? null
-                                  : () {
-                                      if (!isLoading) _sendOtp();
-                                    },
-                              buttonText: '',
-                            ),
-                            const SizedBox(height: 12),
-                            Center(
-                              child: GestureDetector(
-                                onTap: () {
-                                  print(
-                                    '🔐 Login Screen: Navigating to signup',
-                                  );
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.signup,
-                                  );
-                                },
-                                child: const Text(
-                                  "Sign Up",
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 45),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
+                              children: [
+                                const Text(
+                                  "100% Trusted and secure",
                                   style: TextStyle(
-                                    decoration: TextDecoration.underline,
-                                    color: AppColors.black87,
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 14,
+                                    color: AppColors.white,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
+                                const Spacer(),
+                                Image.asset(
+                                  'assets/sheild.png',
+                                  height: 24,
+                                  width: 24,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            height: 240,
+                            child: Image.asset('assets/LoginImage.png'),
+                          ),
+                          const Spacer(),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 20,
+                              horizontal: 24,
+                            ),
+                            decoration: const BoxDecoration(
+                              color: AppColors.white,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(30),
+                                topRight: Radius.circular(30),
                               ),
                             ),
-                          ],
-                        ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  "Email Id",
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                    color: AppColors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.95),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColors.gradientBottom, width: 1.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.07),
+                                        blurRadius: 6,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  child: TextField(
+                                    controller: _emailCtrl,
+                                    keyboardType: TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.done,
+                                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+                                    decoration: const InputDecoration(
+                                      hintText: 'Enter your email',
+                                      hintStyle: TextStyle(color: Colors.black54),
+                                      border: InputBorder.none,
+                                    ),
+                                    onSubmitted: (_) {
+                                      if (!isLoading) _sendOtp();
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  "We don't share your email",
+                                  style: TextStyle(
+                                    color: AppColors.otpBorder,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                GradientButton(
+                                  text: _submitting ? 'Sending OTP...' : 'Log In',
+                                  onPressed: _submitting
+                                      ? null
+                                      : () {
+                                          if (!isLoading) _sendOtp();
+                                        },
+                                  buttonText: '',
+                                ),
+                                const SizedBox(height: 12),
+                                Center(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      print(
+                                        '🔐 Login Screen: Navigating to signup',
+                                      );
+                                      Navigator.pushNamed(
+                                        context,
+                                        AppRoutes.signup,
+                                      );
+                                    },
+                                    child: const Text(
+                                      "Sign Up",
+                                      style: TextStyle(
+                                        decoration: TextDecoration.underline,
+                                        color: AppColors.black87,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );

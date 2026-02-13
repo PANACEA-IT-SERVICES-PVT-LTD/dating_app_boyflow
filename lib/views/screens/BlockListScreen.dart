@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:boy_flow/widgets/common_top_bar.dart';
 
 class BlockListScreen extends StatefulWidget {
   const BlockListScreen({super.key});
@@ -48,23 +49,9 @@ class _BlockListScreenState extends State<BlockListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Blocked List",
-          style: TextStyle(color: Colors.white),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFFF00CC), Color(0xFF9A00F0)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
+      appBar: CommonTopBar(
+        title: "Blocked List",
+        showCoin: false,
         actions: [
           Row(
             children: [

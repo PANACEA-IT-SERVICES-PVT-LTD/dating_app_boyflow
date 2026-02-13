@@ -215,9 +215,7 @@ class ApiService {
     double? latitude,
     double? longitude,
   }) async {
-    final url = Uri.parse(
-      '${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardEndpoint}',
-    );
+    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardEndpoint}');
     final headers = await _getHeaders();
 
     // Construct request body
@@ -227,8 +225,10 @@ class ApiService {
       'limit': limit,
     };
 
-    // Add location if available (required for 'nearby' section)
+    // Add location (at root and nested for compatibility)
     if (latitude != null && longitude != null) {
+      body['latitude'] = latitude;
+      body['longitude'] = longitude;
       body['location'] = {
         'latitude': latitude,
         'longitude': longitude,
@@ -240,74 +240,74 @@ class ApiService {
     print('[DEBUG] Body: $body');
 
     try {
-      // Changed from GET to POST as per API requirement
       final response = await http
           .post(url, headers: headers, body: json.encode(body))
           .timeout(
-            const Duration(seconds: 10),
+            const Duration(seconds: 15),
             onTimeout: () {
-              print('[ERROR] Request timed out after 10 seconds');
-              return http.Response('', 408); // Return timeout response
+              print('[ERROR] Request timed out after 15 seconds');
+              return http.Response('', 408);
             },
           );
 
       print('[DEBUG] Response status: ${response.statusCode}');
-      print('[DEBUG] Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         try {
-          // Safely decode JSON
           final result = json.decode(response.body);
+          print('[DEBUG] Response body length: ${response.body.length}');
+          print('[DEBUG] Response body preview: ${response.body.length > 500 ? response.body.substring(0, 500) : response.body}');
           
-          // Check various possible response structures
+          if (result is List) {
+            return {
+              'success': true,
+              'data': {'results': result},
+            };
+          }
+          
           if (result is Map) {
-            // Structure 1: { data: { results: [...] } }
+            // Already correct structure
             if (result.containsKey('data') &&
                 result['data'] is Map &&
                 result['data'].containsKey('results')) {
-              final results = result['data']['results'];
-              print('[DEBUG] Found results in data.results: ${results is List ? results.length : 'not a list'}');
               return result.cast<String, dynamic>();
             }
-            // Structure 2: { data: [...] }
+            // Directly in data
             else if (result.containsKey('data') && result['data'] is List) {
               return {
                 'success': true,
                 'data': {'results': result['data']},
               };
             }
-            // Structure 3: { results: [...] }
+            // In results
             else if (result.containsKey('results') && result['results'] is List) {
               return {
                 'success': true,
                 'data': {'results': result['results']},
               };
             }
-            // Unknown structure - log and return empty
-            else {
-              print('[WARNING] Unknown response structure. Available keys: ${result.keys.toList()}');
-              return {
-                'success': true,
-                'data': {'results': []},
-              };
-            }
-          } else {
-            return {
-              'success': false,
-              'data': {'results': []},
-            };
           }
+          
+          if (result is Map) return result.cast<String, dynamic>();
+          
+          return {
+            'success': true,
+            'data': {'results': []},
+          };
         } catch (formatException) {
           print('[ERROR] JSON decode failed: $formatException');
-          throw Exception('Failed to parse dashboard response: $formatException');
+          throw Exception('Failed to parse dashboard response');
         }
-      } else if (response.statusCode == 401) {
-        throw Exception('Unauthorized: Please log in again');
-      } else if (response.statusCode == 404) {
-        print('[ERROR] Dashboard endpoint not found (404)');
-        throw Exception('Dashboard endpoint not found');
-      } else if (response.statusCode == 408) {
-        throw Exception('Request timeout - please try again');
+      } else if (response.statusCode == 405 || response.statusCode == 404) {
+        // If POST failed with 405 (Method Not Allowed) or 404, try GET as fallback
+        print('[DEBUG] POST failed with ${response.statusCode}, trying GET as fallback...');
+        return await _fetchDashboardProfilesGet(
+          section: section,
+          page: page,
+          limit: limit,
+          latitude: latitude,
+          longitude: longitude,
+        );
       } else {
         throw Exception('Failed to fetch dashboard profiles: HTTP ${response.statusCode}');
       }
@@ -315,6 +315,33 @@ class ApiService {
       print('[ERROR] Exception in fetchDashboardProfiles: $e');
       rethrow;
     }
+  }
+
+  // Fallback GET method
+  Future<Map<String, dynamic>> _fetchDashboardProfilesGet({
+    required String section,
+    int page = 1,
+    int limit = 10,
+    double? latitude,
+    double? longitude,
+  }) async {
+    final Map<String, String> queryParams = {
+      'section': section,
+      'page': page.toString(),
+      'limit': limit.toString(),
+    };
+    if (latitude != null) queryParams['latitude'] = latitude.toString();
+    if (longitude != null) queryParams['longitude'] = longitude.toString();
+
+    final url = Uri.parse('${ApiEndPoints.baseUrls}${ApiEndPoints.dashboardEndpoint}')
+        .replace(queryParameters: queryParams);
+    final headers = await _getHeaders();
+
+    final response = await http.get(url, headers: headers);
+    if (response.statusCode == 200) {
+      return json.decode(response.body);
+    }
+    throw Exception('GET fallback also failed: HTTP ${response.statusCode}');
   }
 
   // Fetch all dropdown options from profile-and-image endpoint
